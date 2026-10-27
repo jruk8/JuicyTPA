@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * The {@code tpall} root: sends a plain request to every online player.
- * Needs concurrent requests enabled; duplicates, blocked pairs and
+ * Bypasses concurrency entirely; duplicates, blocked pairs and
  * block-all receivers are skipped silently.
  */
 public class TpaAllCommand {

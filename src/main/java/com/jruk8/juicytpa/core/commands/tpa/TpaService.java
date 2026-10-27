@@ -78,7 +78,7 @@ public class TpaService {
             return 0;
         }
         var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
-        if (pending.containsKey(key) || (!concurrency().isAllowConcurrent() && hasOutgoing(sender.getUniqueId()))) {
+        if (pending.containsKey(key) || atConcurrencyCap(sender.getUniqueId())) {
             ctx.error(source, m -> m.getTpa().getAlreadyPending(), Map.of());
             return 0;
         }
@@ -103,8 +103,8 @@ public class TpaService {
     /**
      * Sends one request to every listed target, skipping the sender,
      * duplicates and blocked pairs. Block-all mode only skips ask
-     * requests, and warning confirmations are skipped. Needs
-     * concurrent requests enabled.
+     * requests. Bulk sends bypass concurrency entirely: the toggle, the
+     * cap and warning confirmations never apply.
      *
      * @param source the command source
      * @param targets the receiving players
@@ -114,10 +114,6 @@ public class TpaService {
     public int sendBulk(CommandSourceStack source, List<Player> targets, boolean here) {
         if (!(source.getSender() instanceof Player sender)) {
             ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
-            return 0;
-        }
-        if (!concurrency().isAllowConcurrent()) {
-            ctx.error(source, m -> m.getTpa().getNeedsConcurrency(), Map.of());
             return 0;
         }
         int delivered = 0;
@@ -535,6 +531,15 @@ public class TpaService {
 
     private boolean hasOutgoing(UUID sender) {
         return !outgoing(sender).isEmpty();
+    }
+
+    private boolean atConcurrencyCap(UUID sender) {
+        var concurrency = concurrency();
+        if (!concurrency.isAllowConcurrent()) {
+            return hasOutgoing(sender);
+        }
+        int max = concurrency.getMaxConcurrent();
+        return max > 0 && outgoing(sender).size() >= max;
     }
 
     private void remove(TpaRequest request) {

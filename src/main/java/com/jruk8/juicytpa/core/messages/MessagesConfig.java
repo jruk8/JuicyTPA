@@ -209,9 +209,6 @@ public class MessagesConfig extends OkaeriConfig {
         @Comment("Sent when a bulk request finishes (use {count})")
         private String tpallSent = "{prefix}{sc}Sent TP requests to {hl}{count} players{sc}.";
 
-        @Comment("Sent when a bulk request needs concurrency enabled")
-        private String needsConcurrency = "{prefix}{error}Enable concurrent requests to send to several players.";
-
         @Comment("Sent when a pending request is auto-cancelled by another accept (use {player})")
         private String autoCancelled = "{prefix}{plain}TP request to {hl}{player}{plain} was cancelled.";
 

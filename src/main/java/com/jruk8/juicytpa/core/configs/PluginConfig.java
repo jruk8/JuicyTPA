@@ -110,7 +110,13 @@ public class PluginConfig extends OkaeriConfig {
     public static class Concurrency extends OkaeriConfig {
 
         @Comment("Allow players to hold several pending requests at once.")
-        private boolean allowConcurrent = false;
+        private boolean allowConcurrent = true;
+
+        @Comment({
+                "Maximum outgoing requests a player may hold at once.",
+                "Zero or below means unlimited. /tpall bypasses this cap."
+        })
+        private int maxConcurrent = 3;
 
         @Comment({
                 "Cancel the receiver's other pending requests when one is",

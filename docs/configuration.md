@@ -24,7 +24,8 @@ storage:
 tpa:
   requestDuration: 60
   concurrency:
-    allowConcurrent: false
+    allowConcurrent: true
+    maxConcurrent: 3
     cancelExistingOnAccept: true
   receiverFeedback:
     message: true
@@ -133,7 +134,10 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
   out, in seconds. Shown to both parties as a compact duration (`48s`,
   `1m 30s`).
 - `concurrency.allowConcurrent` » let players hold several pending
-  requests at once (default one outgoing at a time).
+  requests at once (off means one outgoing at a time).
+- `concurrency.maxConcurrent` » maximum outgoing requests a player may
+  hold at once (zero or below means unlimited). `/tpall` bypasses the
+  cap and the toggle entirely.
 - `concurrency.cancelExistingOnAccept` » accepting one request cancels
   the receiver's other pending requests. Only applies with
   `allowConcurrent`.

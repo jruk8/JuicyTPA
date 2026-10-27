@@ -41,9 +41,10 @@ for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
   requests as usual; Block All refuses them at once (the sender is
   told); Accept All teleports at once. Modes persist across restarts;
   `/tpahere` always goes through.
-- **Concurrency** off (default) means one outgoing request at a time.
-  With it on, players may hold several; accepting one then cancels the
-  receiver's other pending requests (toggleable).
+- **Concurrency** on (default) means up to `maxConcurrent` (3)
+  outgoing requests at a time (`≤0` unlimited); off means one.
+  Accepting one then cancels the receiver's other pending requests
+  (toggleable). `/tpall` bypasses all of this.
 - **Blocking** (`/tpablock`) toggles a persistent per-player block: a
   blocked sender's requests always fail, whatever the receiver's mode.
   Blocking drops the sender's pending requests to the blocker.
@@ -53,10 +54,11 @@ for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
   player, when one sender spams) button. Thresholds live under
   `tpa.warnings` and long-term counters persist in the database.
 - **Everyone** (`/tpall`, OP) sends a plain request to every online
-  player. It needs concurrent requests enabled; the sender, duplicates,
-  blocked pairs and block-all receivers are skipped. Holders of
-  `juicytpa.tpall` may also use `@a` in `/tpa` and `/tpahere`; without
-  the permission `@a` is hidden from completion and rejected.
+  player. It bypasses concurrency entirely (toggle, cap and warning
+  confirmations never apply); the sender, duplicates, blocked pairs
+  and block-all receivers are skipped. Holders of `juicytpa.tpall` may
+  also use `@a` in `/tpa` and `/tpahere`; without the permission `@a`
+  is hidden from completion and rejected.
 - **`help`** supports an optional query argument that filters the listed
   commands (`/juicytpa help reload`). Entries are filtered by permission,
   so every sender only sees what they may use.

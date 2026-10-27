@@ -15,8 +15,8 @@ and an SQLite store for stats and modes.
   chat prompts plus actionbar nudges.
 - **Modes** » Normal, Block All and Accept All per player, persisted in
   `juicytpa.db` and cycled with a bare `/tpamode` (`/tpa` only).
-- **Concurrency** » one pending request at a time by default, or many
-  with an accept-sweeps-the-rest option.
+- **Concurrency** » up to 3 outgoing requests at a time by default
+  (uncapped with `≤0`), with an accept-sweeps-the-rest option.
 - **Blocking** » persistent per-player blocks that beat every mode.
 - **Warnings** » AFK/canceller sender warnings with resend confirmations,
   plus block-all and block-player nudges.

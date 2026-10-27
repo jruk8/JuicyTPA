@@ -149,6 +149,7 @@ class TpaServiceTest {
     @Test
     @DisplayName("should reject a second outgoing request when concurrency is off")
     void shouldRejectSecondRequest() {
+        pluginConfig.getTpa().getConcurrency().setAllowConcurrent(false);
         Player other = player(UUID.randomUUID(), "Other");
         online.put(other.getUniqueId(), other);
 
@@ -156,6 +157,43 @@ class TpaServiceTest {
         assertEquals(0, service.send(source, other, false));
 
         verify(messenger).send(eq(sender), eq(messages.getTpa().getAlreadyPending()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should cap outgoing requests at maxConcurrent")
+    void shouldCapConcurrentRequests() {
+        Player second = player(UUID.randomUUID(), "Second");
+        online.put(second.getUniqueId(), second);
+        Player third = player(UUID.randomUUID(), "Third");
+        online.put(third.getUniqueId(), third);
+        Player fourth = player(UUID.randomUUID(), "Fourth");
+        online.put(fourth.getUniqueId(), fourth);
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(1, service.send(source, second, false));
+        assertEquals(1, service.send(source, third, false));
+        assertEquals(0, service.send(source, fourth, false));
+
+        assertEquals(3, service.outgoing(senderId).size());
+    }
+
+    @Test
+    @DisplayName("should allow unlimited requests when the cap is not positive")
+    void shouldAllowUnlimitedWithoutCap() {
+        pluginConfig.getTpa().getConcurrency().setMaxConcurrent(0);
+        Player second = player(UUID.randomUUID(), "Second");
+        online.put(second.getUniqueId(), second);
+        Player third = player(UUID.randomUUID(), "Third");
+        online.put(third.getUniqueId(), third);
+        Player fourth = player(UUID.randomUUID(), "Fourth");
+        online.put(fourth.getUniqueId(), fourth);
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(1, service.send(source, second, false));
+        assertEquals(1, service.send(source, third, false));
+        assertEquals(1, service.send(source, fourth, false));
+
+        assertEquals(4, service.outgoing(senderId).size());
     }
 
     @Test
@@ -354,12 +392,27 @@ class TpaServiceTest {
     }
 
     @Test
-    @DisplayName("should gate bulk sends on concurrency")
-    void shouldGateBulkOnConcurrency() {
-        assertEquals(0, service.sendBulk(source, List.of(receiver), false));
+    @DisplayName("should bypass the concurrency toggle for bulk sends")
+    void shouldBypassToggleInBulk() {
+        pluginConfig.getTpa().getConcurrency().setAllowConcurrent(false);
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getNeedsConcurrency()), anyMap());
-        assertTrue(service.incoming(receiverId).isEmpty());
+        assertEquals(1, service.sendBulk(source, List.of(receiver), false));
+
+        assertEquals(1, service.incoming(receiverId).size());
+    }
+
+    @Test
+    @DisplayName("should bypass the concurrency cap for bulk sends")
+    void shouldBypassCapInBulk() {
+        pluginConfig.getTpa().getConcurrency().setMaxConcurrent(1);
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(1, service.sendBulk(source, List.of(receiver, other), false));
+
+        assertEquals(1, service.incoming(receiverId).size());
+        assertEquals(1, service.incoming(other.getUniqueId()).size());
     }
 
     @Test
