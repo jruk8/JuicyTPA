@@ -111,10 +111,14 @@ public final class TpaListService {
             return;
         }
         var tpa = ctx.messages().getTpa();
-        String direction = inbound ? tpa.getListIncoming() : tpa.getListOutgoing();
-        String type = inbound != here ? tpa.getRequestTypeAsk() : tpa.getRequestTypeHere();
+        String category;
+        if (inbound) {
+            category = here ? tpa.getListIncomingHere() : tpa.getListIncomingAsk();
+        } else {
+            category = here ? tpa.getListOutgoingAsk() : tpa.getListOutgoingHere();
+        }
         chat(viewer, m -> m.getTpa().getListLine(), Map.of(
-                "category", direction + " " + type,
+                "category", category,
                 "players", TpaListFormatter.join(names, tpa.getListComma(), tpa.getListAnd(), tpa.getListMore())));
     }
 

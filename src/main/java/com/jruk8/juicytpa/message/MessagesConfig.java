@@ -264,16 +264,22 @@ public class MessagesConfig extends OkaeriConfig {
         private String listEmpty = "{prefix}{plain}You have no pending TP requests.";
 
         @Comment("Header of the /tpalist listing")
-        private String listHeader = "\\n{prefix}{brand} TPA List:";
+        private String listHeader = "\\n{prefix}{brand}TPA List:";
 
         @Comment("One /tpalist category line (use {category} and {players})")
         private String listLine = "{brand}• {plain}{category} {brand}» {hl}{players}";
 
-        @Comment("Direction word for incoming requests in /tpalist categories")
-        private String listIncoming = "Incoming";
+        @Comment("Category for incoming /tpa requests in /tpalist")
+        private String listIncomingAsk = "Wants TP to you";
 
-        @Comment("Direction word for outgoing requests in /tpalist categories")
-        private String listOutgoing = "Outgoing";
+        @Comment("Category for incoming /tpahere requests in /tpalist")
+        private String listIncomingHere = "Wants TP to them";
+
+        @Comment("Category for outgoing /tpahere requests in /tpalist")
+        private String listOutgoingAsk = "Your TP requests";
+
+        @Comment("Category for outgoing /tpa requests in /tpalist")
+        private String listOutgoingHere = "Your TP here requests";
 
         @Comment("Name separator in /tpalist lines")
         private String listComma = "{hl},";
