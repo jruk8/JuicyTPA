@@ -244,4 +244,72 @@ class TpaWarnManagerTest {
 
         assertEquals(Optional.empty(), warns.nudgeForHarass(receiver, sender));
     }
+
+    @Test
+    @DisplayName("should clear AFK statistics on accept")
+    void shouldClearAfkOnAccept() {
+        stats.recordExpiry(receiver, 60);
+        stats.recordExpiry(receiver, 60);
+        stats.recordExpiry(receiver, 60);
+        warns.accepted(request());
+
+        assertEquals(Optional.empty(), warns.warnKind(receiver));
+    }
+
+    @Test
+    @DisplayName("should clear AFK statistics on deny")
+    void shouldClearAfkOnDeny() {
+        stats.recordExpiry(receiver, 60);
+        stats.recordExpiry(receiver, 60);
+        stats.recordExpiry(receiver, 60);
+        warns.denied(request());
+
+        assertEquals(Optional.empty(), warns.warnKind(receiver));
+    }
+
+    @Test
+    @DisplayName("should clear canceller statistics on accept")
+    void shouldClearCancellerOnAccept() {
+        stats.recordDenied(receiver, 30);
+        stats.recordDenied(receiver, 30);
+        stats.recordDenied(receiver, 30);
+        warns.accepted(request());
+
+        assertEquals(Optional.empty(), warns.warnKind(receiver));
+    }
+
+    @Test
+    @DisplayName("should keep the canceller chain on deny")
+    void shouldKeepCancellerOnDeny() {
+        stats.recordDenied(receiver, 30);
+        stats.recordDenied(receiver, 30);
+        stats.recordDenied(receiver, 30);
+        warns.denied(request());
+
+        assertEquals(Optional.of(TpaWarnManager.WarnKind.CANCELLER), warns.warnKind(receiver));
+    }
+
+    @Test
+    @DisplayName("should clear harassment hits on accept")
+    void shouldClearHarassOnAccept() {
+        warns.delivered(request());
+        warns.delivered(request());
+        warns.delivered(request());
+        warns.accepted(request());
+        warns.delivered(request());
+
+        assertEquals(Optional.empty(), warns.nudgeForHarass(receiver, sender));
+    }
+
+    @Test
+    @DisplayName("should clear harassment hits on deny")
+    void shouldClearHarassOnDeny() {
+        warns.delivered(request());
+        warns.delivered(request());
+        warns.delivered(request());
+        warns.denied(request());
+        warns.delivered(request());
+
+        assertEquals(Optional.empty(), warns.nudgeForHarass(receiver, sender));
+    }
 }

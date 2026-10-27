@@ -71,4 +71,30 @@ class TpaWarnStoreTest {
         assertEquals(0, stats.unanswered(player));
         assertEquals(0, stats.denied(player));
     }
+
+    @Test
+    @DisplayName("should reset unanswered statistics without touching denies")
+    void shouldResetUnanswered() {
+        stats.recordExpiry(player, 60);
+        stats.recordDenied(player, 30);
+        stats.resetUnanswered(player);
+
+        assertEquals(0, stats.unanswered(player));
+        assertEquals(0, stats.pendingSeconds(player));
+        assertEquals(1, stats.denied(player));
+        assertEquals(30, stats.deniedSeconds(player));
+    }
+
+    @Test
+    @DisplayName("should reset denied statistics without touching expiries")
+    void shouldResetDenied() {
+        stats.recordExpiry(player, 60);
+        stats.recordDenied(player, 30);
+        stats.resetDenied(player);
+
+        assertEquals(0, stats.denied(player));
+        assertEquals(0, stats.deniedSeconds(player));
+        assertEquals(1, stats.unanswered(player));
+        assertEquals(60, stats.pendingSeconds(player));
+    }
 }
