@@ -1,4 +1,59 @@
 # Changelog
+## [1.3.0] - 2026-10-27
+
+### Documentation
+
+- Document defaultLanguage and jtpa: strict refs
+
+- Document shortcut roots and /tpa help
+
+
+### Features
+
+- Add defaultLanguage server default
+
+> auto keeps following each unpinned player's client locale; any
+> other key forces that language unless the player pinned one.
+> Unknown keys warn once and behave as auto.
+
+- Mirror all roots and aliases under jtpa:
+
+> Every standalone root, the hub root and every alias also registers
+> as jtpa:<label>, so admins always have an unambiguous strict ref
+> when another plugin claims a label.
+
+- Handle empty help listings
+
+> A query matching nothing reports helpNoMatch; listings with every
+> entry hidden by permission report helpNoCommands. English only;
+> other languages fall back to EN.
+
+- Add tpahelp tpaversion tpareload shortcut roots
+
+> Always-on roots (with jtpa: twins) reusing the hub help, version
+> and reload nodes under their own permissions; channel aliases
+> cannot steal their labels.
+
+- Run help from /tpa help with player-wins edge
+
+> The help selector shows the listing (needs juicytpa.help too),
+> unless a player named help is online; help completes first in
+> target suggestions.
+
+
+### Miscellaneous
+
+- Update for v1.2.0 [skip ci]
+
+
+### Testing
+
+- Cover server default and namespaced twins
+
+- Cover empty help listings
+
+- Cover shortcut roots and help selector
+
 ## [1.2.0] - 2026-10-27
 
 ### Bug Fixes
