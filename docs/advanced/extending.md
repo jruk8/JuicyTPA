@@ -1,23 +1,24 @@
 ---
-icon: material/puzzle
+icon: material/wrench
 ---
 
-# Plugin API
+# Extending JuicyTPA
 
-> For: developers extending JuicyTPA.
+> For: developers changing JuicyTPA itself. To hook it from another
+> plugin, see the [Plugin API](api/index.md) instead.
 
-This page explains where new code plugs in. Every module follows the same
-shape: a package under `com.jruk8.juicytpa.core`, its own config class (or
-section), and a registrar implementing `Bootstrap` that is invoked from
-`JuicyTPAPlugin.setupCoreModules()`.
+This page explains where new code plugs in. Every module follows the
+same shape: a top-level package under `com.jruk8.juicytpa`, its own
+config class (or section), and a registrar implementing `Bootstrap`
+that is invoked from `JuicyTPAPlugin.setupCoreModules()`.
 
 Dependencies flow one way, constructor-injected: configs -> services ->
 commands/placeholders. There are no singletons or static state.
 
 ## Add a Command
 
-1. Create a command class in a new subpackage of `core.commands` (e.g.
-   `core.commands.user.fun`) that builds a Brigadier node with
+1. Create a command class in a new subpackage of `command` (e.g.
+   `command.user.fun`) that builds a Brigadier node with
    `Commands.literal(...)`, gates it with `requires()`, and runs its logic
    in `executes(...)`:
 
@@ -29,7 +30,7 @@ commands/placeholders. There are no singletons or static state.
 
        public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
            return Commands.literal(label)
-                   .requires(CommandContext.requiresPermission(TpaPermissions.PING))
+                   .requires(CommandContext.requiresPermission(Permissions.PING))
                    .execuses(context -> {
                        // Own text lives in MessagesConfig; {braces} resolve from the map.
                        ctx.sendMessage(context.getSource(),
@@ -53,7 +54,7 @@ commands/placeholders. There are no singletons or static state.
    services it needs (commonly `CommandContext`).
 
 3. Declare the permission in `paper-plugin.yml` (with a constant in
-   `TpaPermissions`), document it in [Permissions](permissions.md)
+   `Permissions`), document it in [Permissions](permissions.md)
    and add a `HelpEntry` so the command shows up in `/juicytpa help`.
 
 ## Add a Config Option
@@ -94,9 +95,9 @@ PlaceholderAPI via `getPlaceholders()`.
 
 If you do not need PAPI in your plugin:
 
-1. Delete the `core.placeholders` package.
+1. Delete the `placeholder` package.
 2. Remove the usage tracker wiring in `JuicyTPAPlugin`
-   (`setupStorageAndPlaceholders()` and the `CommandsRegistrar` argument).
+   (`setupStorageAndPlaceholders()` and `setupPlaceholders()`).
 3. Remove `PlaceholderAPI` from `paper-plugin.yml` (`dependencies`), or keep
    it if your messages use `%otherplugin_...%` placeholders.
 
@@ -104,12 +105,17 @@ If you do not need PAPI in your plugin:
 
 | Package | Key classes |
 | --- | --- |
-| `core.commands` | `CommandsRegistrar`, `UserCommandsRegistrar`, `AdminCommandsRegistrar`, `CommandContext`, `TpaPermissions` |
-| `core.commands.selectors` | `TargetSelector`, `SelectorSuggestions`, `ValueSuggestions` |
-| `core.commands.user` | `HelpCommand`, `HelpEntry`, `VersionCommand`, `AuthorFormatter` |
-| `core.configs` | `ConfigRegistrar`, `PluginConfig` |
-| `core.messages` | `MessageBootstrap`, `Messenger`, `MessageParser` |
-| `core.sounds` | `SoundPlayer`, `SoundsConfig` |
-| `core.placeholders` | `PlaceholdersBootstrap`, `TpaUsageTracker`, `TpaExpansion` |
-| `core.storage` | `StorageBootstrap`, `SqliteStorage` |
-| `core.update` | `UpdateCheckerBootstrap`, `UpdateCheckService`, `GitHubReleaseHttp`, `UpdateCheckNotifier`, `UpdateCheckJoinListener` |
+| `api` | `JuicyTPA`, request events, `TpaRequest`, `TpaMode` (public, see the Plugin API) |
+| `tpa` | `TpaService`, `TpaReceiverService`, `TpaEventGate`, `TpaListService`, `TpaFeedback`, `TpaApi`, stores |
+| `tpa.command` | `TpaCommandsRegistrar` plus one node class per command |
+| `tpa.selector` | `TargetSelector`, `PlayerSelectorArgument`, `ValueSuggestions` |
+| `command` | `CommandsRegistrar`, `CommandContext`, `Permissions` |
+| `command.admin` / `command.user` | Registrars plus the reload, help and version commands |
+| `core` | `Bootstrap`, `Reloadable`, `Reloader`, `MetricsBootstrap`, `StartupBanner` |
+| `config` | `ConfigRegistrar`, `PluginConfig` |
+| `message` | `MessageBootstrap`, `Messenger`, `MessageParser` |
+| `sound` | `SoundPlayer`, `SoundsConfig` |
+| `placeholder` | `PlaceholdersBootstrap`, `TpaExpansion` |
+| `storage` | `StorageBootstrap`, `SqliteStorage` |
+| `update` | `UpdateCheckerBootstrap`, `UpdateCheckService`, `GitHubReleaseHttp`, `UpdateCheckNotifier`, `UpdateCheckJoinListener` |
+| `hook` | `LuckPermsMeta` |

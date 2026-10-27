@@ -23,6 +23,6 @@ icon: material/key
 
 Permissions are checked on the command nodes with Brigadier `requires()`
 predicates (see `CommandContext.requiresPermission`); the node constants
-live in `TpaPermissions`. Every TPA command targets other players by
+live in `Permissions`. Every TPA command targets other players by
 design, so each command has its own node instead of a shared scope. See
 [Commands](../basics/commands.md).

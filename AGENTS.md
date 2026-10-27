@@ -19,27 +19,31 @@ graceful warning. Read this file first, then `docs/`.
 | `docs/commands.md` | The command surface |
 | `docs/configuration.md` | Every config file and key |
 | `docs/permissions.md` | Permission nodes new commands must register |
-| `docs/api.md` | Where new code plugs in |
+| `docs/advanced/extending.md` | Where new code plugs in |
+| `docs/advanced/api/` | The public API contract (events, actions) |
 | `mkdocs.yml` › `nav` | Where a new docs page plugs in |
 | `build.gradle` | Dependencies and the `paper-plugin.yml` expansion |
 
 ## 2. Repo map
 
 ```text
-src/main/java/com/jruk8/juicytpa/core/
+src/main/java/com/jruk8/juicytpa/
   JuicyTPAPlugin            composition root only: setupCoreModules() wires the registrars
-  Bootstrap/Reloadable      registrar contracts; Reloader re-runs every Reloadable
-  commands/                 Paper Brigadier nodes (Commands.literal/argument) + registrars
-    tpa/                    /tpa, /tpahere, /tpaccept, /tpadeny, /tpacancel, /tpamode
-    user/                   /juicytpa help + version (alias /jtpa)
+  core/                     Bootstrap/Reloadable contracts, Reloader, metrics, banner
+  api/                      public API: JuicyTPA service, request events, TpaRequest, TpaMode
+  tpa/                      request service (TpaService + gate/list/feedback), stores, TpaApi
+    command/                Paper Brigadier nodes (Commands.literal/argument) + registrar
+    selector/               TargetSelector (single-player), PlayerSelectorArgument, ValueSuggestions
+  command/                  shared plumbing (CommandContext, CommandsRegistrar, Permissions)
+    user/                   /juicytpa help + version
     admin/reload/           /juicytpa reload
-    selectors/              TargetSelector (single-player), ValueSuggestions
-  configs/                  Okaeri schema (PluginConfig) + ConfigRegistrar loader
-  messages/                 MiniMessage parsing (MessageParser) + dispatch (Messenger)
-  sounds/                   config-driven playback (SoundPlayer, Adventure API only)
-  placeholders/             jtpa sent/received/mode expansion
+  config/                   Okaeri schema (PluginConfig) + ConfigRegistrar loader
+  message/                  MiniMessage parsing (MessageParser) + dispatch (Messenger)
+  sound/                    config-driven playback (SoundPlayer, Adventure API only)
+  placeholder/              jtpa sent/received/mode expansion
   storage/                  raw JDBC SQLite stats and modes (juicytpa.db)
   update/                   async GitHub update checker (service + HTTP port + notifier)
+  hook/                     LuckPerms metadata reads
 src/main/resources/
   paper-plugin.yml          commands, permissions, softdepends (tokens expanded by Gradle)
 src/test/java/...           JUnit 5 + Mockito, mirroring the main packages
@@ -103,7 +107,7 @@ the mover's entity scheduler, so the flow stays Folia-safe.
 ## 4. Before you finish a task
 
 ```sh
-./gradlew test --tests "com.jruk8.juicytpa.core.commands.tpa.TpaServiceTest"  # focused suite while iterating
+./gradlew test --tests "com.jruk8.juicytpa.tpa.TpaServiceTest"  # focused suite while iterating
 ./gradlew test                                                                 # all tests before widening
 ./gradlew build                                                                # full gate: tests + checkstyle
 ```

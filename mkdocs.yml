@@ -70,7 +70,11 @@ nav:
       - Permissions: advanced/permissions.md
       - LuckPerms: advanced/luckperms.md
       - Placeholders: advanced/placeholders.md
-      - Plugin API: advanced/api.md
+      - Plugin API:
+          - advanced/api/index.md
+          - advanced/api/events.md
+          - advanced/api/actions.md
+      - Extending: advanced/extending.md
 
 extra:
   discord_url: https://discord.com/invite/hkWmCVmWDC

@@ -29,5 +29,5 @@ requests count; blocked ones never exist). Counts are stored in the SQLite
 database per player and globally, so they survive restarts. Unknown
 player names read as `0`.
 
-Adding your own placeholders is covered in the
-[Plugin API](api.md).
+Adding your own placeholders is covered in
+[Extending](extending.md).

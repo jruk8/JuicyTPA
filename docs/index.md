@@ -37,7 +37,7 @@ and an SQLite store for stats and modes.
   [Sounds](configuration/sounds.md)
 - Advanced: [Permissions](advanced/permissions.md),
   [LuckPerms](advanced/luckperms.md), [Placeholders](advanced/placeholders.md),
-  [Plugin API](advanced/api.md)
+  [Plugin API](advanced/api/index.md), [Extending](advanced/extending.md)
 
 ## Build
 
