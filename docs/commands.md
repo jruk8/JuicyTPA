@@ -17,13 +17,15 @@ answer requests.
 | `/tpaccept [player]` | Accept a TP request. | `juicytpa.accept` |
 | `/tpadeny [player]` | Deny a TP request. | `juicytpa.deny` |
 | `/tpacancel [player]` | Cancel an outgoing TP request. | `juicytpa.cancel` |
+| `/tpablock <player>` | Block or unblock a player's requests. | `juicytpa.block` |
+| `/tpall` | Request everyone at once. | `juicytpa.tpall` |
 | `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
 | `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
 Default root aliases: `/tpask` for `/tpa`; `/tpah`, `/tphere`, `/tph`
-for `/tpahere`; `/tpac`, `/tpc` for `/tpaccept`; `/tpad`, `/tpdeny`,
-`/tpd` for `/tpadeny`; `/tpcancel`, `/tpcl` for `/tpacancel`; `/tpam`,
-`/tpmode`, `/tpm` for `/tpamode`.
+for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
+`/tpd` for `/tpadeny`; `/tpac`, `/tpcancel`, `/tpc` for `/tpacancel`;
+`/tpam`, `/tpmode`, `/tpm` for `/tpamode`.
 
 - **Requests** expire after `requestDuration` seconds. The receiver gets
   a chat notice with clickable [Accept]/[Reject] prompts (linked to
@@ -39,6 +41,14 @@ for `/tpahere`; `/tpac`, `/tpc` for `/tpaccept`; `/tpad`, `/tpdeny`,
 - **Concurrency** off (default) means one outgoing request at a time.
   With it on, players may hold several; accepting one then cancels the
   receiver's other pending requests (toggleable).
+- **Blocking** (`/tpablock`) toggles a persistent per-player block: a
+  blocked sender's requests always fail, whatever the receiver's mode.
+  Blocking drops the sender's pending requests to the blocker.
+- **Everyone** (`/tpall`, OP) sends a plain request to every online
+  player. It needs concurrent requests enabled; the sender, duplicates,
+  blocked pairs and block-all receivers are skipped. Holders of
+  `juicytpa.tpall` may also use `@a` in `/tpa` and `/tpahere`; without
+  the permission `@a` is hidden from completion and rejected.
 - **`help`** supports an optional query argument that filters the listed
   commands (`/juicytpa help reload`). Entries are filtered by permission,
   so every sender only sees what they may use.

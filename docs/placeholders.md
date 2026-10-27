@@ -21,6 +21,7 @@ identifier `jtpa`. The expansion is re-registered on
 | `%jtpa_received_global%` | INTEGER | Server-wide received TP requests. |
 | `%jtpa_mode%` | STRING | Your TPA mode display name. |
 | `%jtpa_mode_<player>%` | STRING | Another player's TPA mode display name. |
+| `%jtpa_pending%` | STRING | Most recent player with a request pending you (`---` when none). |
 
 A send is recorded whenever a request is delivered (auto-accepted
 requests count; blocked ones never exist). Counts are stored in the SQLite

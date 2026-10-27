@@ -17,6 +17,7 @@ and an SQLite store for stats and modes.
   `juicytpa.db` and cycled with a bare `/tpamode`.
 - **Concurrency** » one pending request at a time by default, or many
   with an accept-sweeps-the-rest option.
+- **Blocking** » persistent per-player blocks that beat every mode.
 - **Placeholders** » `%jtpa_sent%`, `%jtpa_received%` and `%jtpa_mode%`
   with per-player and global variants.
 - **Update checker** » async GitHub releases check with console and
