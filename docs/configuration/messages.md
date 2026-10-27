@@ -67,12 +67,29 @@ stay English abbreviations in every language.
 
 | Code | Language | Code | Language |
 | --- | --- | --- | --- |
-| `en` | English | `ja` | 日本語 |
-| `fi` | Suomi | `pl` | Polski |
-| `de` | Deutsch | `tr` | Türkçe |
-| `es` | Español | `it` | Italiano |
-| `fr` | Français | `ko` | 한국어 |
-| `zh` | 中文 | `nl` | Nederlands |
-| `ru` | Русский | `uk` | Українська |
-| `pt` | Português | `se` | Svenska |
-| | | `no` | Norsk |
+| `en` | English | `da` | Dansk |
+| `fi` | Suomi | `cs` | Čeština |
+| `de` | Deutsch | `hu` | Magyar |
+| `es` | Español | `vi` | Tiếng Việt |
+| `fr` | Français | `id` | Bahasa Indonesia |
+| `zh_cn` | 简体中文 | `ar` | العربية |
+| `ru` | Русский | `hi` | हिन्दी |
+| `pt_br` | Português | `el` | Ελληνικά |
+| `ja` | 日本語 | `sk` | Slovenčina |
+| `pl` | Polski | `ro` | Română |
+| `tr` | Türkçe | `bg` | Български |
+| `it` | Italiano | `he` | עברית |
+| `ko` | 한국어 | `th` | ไทย |
+| `nl` | Nederlands | `ms` | Bahasa Melayu |
+| `uk` | Українська | `lt` | Lietuvių |
+| `sv` | Svenska | `lv` | Latviešu |
+| `no` | Norsk | `et` | Eesti |
+| `pt_pt` | Português | `hr` | Hrvatski |
+| `zh_tw` | 繁體中文 | `sr` | Српски |
+| `ca` | Català | `bs` | Bosanski |
+| `gl` | Galego | `sl` | Slovenščina |
+| `is` | Íslenska | `mk` | Македонски |
+| `ga` | Gaeilge | `ka` | ქართული |
+| `hy` | Հայերեն | `az` | Azərbaycanca |
+| `kk` | Қазақша | `lol_us` | LOLCAT |
+| `en_pt` | Pirate Speak | `qya_aa` | Quenya |
