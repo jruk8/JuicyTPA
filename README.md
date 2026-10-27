@@ -53,7 +53,7 @@ toggles how you receive them.
 | `/tpablock <player>` | Block or unblock a player's requests. |
 | `/tpall` | Request everyone at once. |
 | `/tpamode [mode]` | Cycle or set your TPA mode. |
-| `/juicytpa <help\\|version\\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). |
+| `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). |
 
 See the full [Commands Page](https://jruk8.github.io/JuicyTPA/basics/commands/) for more info.
 
