@@ -81,10 +81,16 @@ public class MessagesConfig extends OkaeriConfig {
     @SuppressWarnings("FieldMayBeFinal")
     public static class Tpa extends OkaeriConfig {
 
-        @Comment("Request notice sent to the receiver (use {player}, {time}, {accept} and {reject})")
-        private String requestReceived = "\\n{prefix}\\n{hl}{player} {plain}has sent you a {hl}TP request{plain}."
+        @Comment("Request notice sent to the receiver (use {body}, {time}, {accept} and {reject})")
+        private String requestReceived = "\\n{prefix}\\n{body}"
                 + "\\n{plain}Accept within {hl}{time}{plain}."
                 + "\\n{accept} {plain}| {reject}";
+
+        @Comment("Receiver notice body for /tpa requests (use {player})")
+        private String requestAskBody = "{hl}{player} {plain}has sent you a {hl}TP request{plain}.";
+
+        @Comment("Receiver notice body for /tpahere requests (use {player})")
+        private String requestHereBody = "{hl}{player} {plain}wants you to {hl}TP to them{plain}.";
 
         @Comment("Request actionbar shown to the receiver (use {player})")
         private String requestReceivedActionbar = "{brand}{hl}{player} {brand}wants to TP!";

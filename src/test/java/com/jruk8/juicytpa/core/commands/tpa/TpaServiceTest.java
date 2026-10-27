@@ -20,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -62,6 +64,9 @@ class TpaServiceTest {
 
     @Mock
     private Plugin plugin;
+
+    @Captor
+    private ArgumentCaptor<Map<String, String>> bodyCaptor;
 
     private SqliteStorage storage;
     private PluginConfig pluginConfig;
@@ -365,6 +370,26 @@ class TpaServiceTest {
 
         assertEquals(Optional.of("Rival"), service.latestPendingSender(receiverId));
         assertEquals(Optional.empty(), service.latestPendingSender(senderId));
+    }
+
+    @Test
+    @DisplayName("should use the ask body for tpa requests")
+    void shouldUseAskBody() {
+        service.send(source, receiver, false);
+
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getRequestReceived()), bodyCaptor.capture());
+        var expected = messages.getTpa().getRequestAskBody().replace("{player}", "Sender");
+        assertEquals(expected, bodyCaptor.getValue().get("body"));
+    }
+
+    @Test
+    @DisplayName("should use the here body for tpahere requests")
+    void shouldUseHereBody() {
+        service.send(source, receiver, true);
+
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getRequestReceived()), bodyCaptor.capture());
+        var expected = messages.getTpa().getRequestHereBody().replace("{player}", "Sender");
+        assertEquals(expected, bodyCaptor.getValue().get("body"));
     }
 
     @Test

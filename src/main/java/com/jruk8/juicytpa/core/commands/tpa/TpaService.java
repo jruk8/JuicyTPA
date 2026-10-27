@@ -314,7 +314,7 @@ public class TpaService {
         }
         ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
         pending.put(key, new Entry(request, task));
-        sendRequestFeedback(sender, target);
+        sendRequestFeedback(sender, target, here);
     }
 
     private boolean sendable(Player sender, Player target, boolean here) {
@@ -425,7 +425,7 @@ public class TpaService {
         mover.getScheduler().run(plugin, task -> mover.teleport(anchor.getLocation()), null);
     }
 
-    private void sendRequestFeedback(Player sender, Player target) {
+    private void sendRequestFeedback(Player sender, Player target, boolean here) {
         String time = DurationFormat.format(pluginConfig.getTpa().getRequestDuration());
         var senderFeedback = pluginConfig.getTpa().getSenderFeedback();
         if (senderFeedback.isMessage()) {
@@ -438,8 +438,11 @@ public class TpaService {
         ctx.soundPlayer().play(sender, ctx.sounds().getNeutral());
         var receiverFeedback = pluginConfig.getTpa().getReceiverFeedback();
         if (receiverFeedback.isMessage()) {
+            String template = here
+                    ? ctx.messages().getTpa().getRequestHereBody()
+                    : ctx.messages().getTpa().getRequestAskBody();
             chat(target, m -> m.getTpa().getRequestReceived(), Map.of(
-                    "player", sender.getName(),
+                    "body", template.replace("{player}", sender.getName()),
                     "time", time,
                     "accept", RequestPrompts.accept(sender.getName(), ctx.messages().getTpa().getAcceptText()),
                     "reject", RequestPrompts.reject(sender.getName(), ctx.messages().getTpa().getRejectText())));
