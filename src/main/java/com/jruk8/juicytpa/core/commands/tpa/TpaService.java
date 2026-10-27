@@ -369,10 +369,10 @@ public class TpaService {
         }
         sweepOthers(request);
         teleport(request, sender, receiver);
+        Player anchor = request.here() ? sender : receiver;
         chat(receiver, m -> m.getTpa().getAcceptReceiver(), Map.of("player", request.senderName()));
-        ctx.soundPlayer().play(receiver, ctx.sounds().getAccept());
         chat(sender, m -> m.getTpa().getAcceptSender(), Map.of("player", request.receiverName()));
-        ctx.soundPlayer().play(sender, ctx.sounds().getAccept());
+        ctx.soundPlayer().play(anchor, ctx.sounds().getAccept());
     }
 
     private void denyRequest(Player receiver, TpaRequest request) {
@@ -451,7 +451,10 @@ public class TpaService {
     private void teleport(TpaRequest request, Player sender, Player receiver) {
         Player mover = request.here() ? receiver : sender;
         Player anchor = request.here() ? sender : receiver;
-        mover.getScheduler().run(plugin, task -> mover.teleport(anchor.getLocation()), null);
+        mover.getScheduler().run(plugin, task -> {
+            mover.teleport(anchor.getLocation());
+            ctx.soundPlayer().play(mover, ctx.sounds().getAccept());
+        }, null);
     }
 
     private void sendRequestFeedback(Player sender, Player target, boolean here, boolean announce) {

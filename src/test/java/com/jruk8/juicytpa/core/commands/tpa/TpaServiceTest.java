@@ -239,6 +239,20 @@ class TpaServiceTest {
     }
 
     @Test
+    @DisplayName("should play the mover's sound after the teleport lands")
+    void shouldPlayArrivalSoundAfterTeleport() {
+        service.send(source, receiver, false);
+        when(source.getSender()).thenReturn(receiver);
+
+        service.accept(source, Optional.empty());
+
+        var inOrder = inOrder(sender, soundPlayer);
+        inOrder.verify(sender).teleport(receiver.getLocation());
+        inOrder.verify(soundPlayer).play(sender, sounds.getAccept());
+        verify(soundPlayer).play(receiver, sounds.getAccept());
+    }
+
+    @Test
     @DisplayName("should teleport the receiver to the sender for here requests")
     void shouldTeleportReceiverForHereRequests() {
         service.send(source, receiver, true);
