@@ -8,9 +8,8 @@ theme:
   variant: modern
   language: en
   custom_dir: overrides
-  # No logo or favicon yet: brand art lives in jruk8/JResources, which has no
-  # JuicyTPA assets. Add logo/favicon here plus extra.logo_light below
-  # once they exist; overrides/partials/logo.html already renders both marks.
+  logo: assets/juicytpa-icon-darkmode.png
+  favicon: assets/juicytpa-favicon.png
   icon:
     repo: fontawesome/brands/github
   palette:
@@ -65,5 +64,6 @@ nav:
 
 extra:
   discord_url: https://discord.com/invite/hkWmCVmWDC
+  logo_light: assets/juicytpa-icon-lightmode.png
   # No generator backlink in the footer (SEO: no third-party links).
   generator: false
