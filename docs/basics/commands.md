@@ -25,11 +25,15 @@ online; `@s` and `@p` are not supported.
 | `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
 | `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
-Default root aliases: `/tpask` for `/tpa`; `/tpah`, `/tphere`, `/tph`
-for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
-`/tpd` for `/tpadeny`; `/tpac`, `/tpcancel`, `/tpc` for `/tpacancel`;
-`/tpam`, `/tpmode`, `/tpm` for `/tpamode`; `/tpab`, `/tpblock`,
-`/tpb` for `/tpablock`.
+| Command | Default root aliases |
+| --- | --- |
+| `/tpa` | `tpask` |
+| `/tpahere` | `tpah`, `tphere`, `tph` |
+| `/tpaccept` | `tpacc` |
+| `/tpadeny` | `tpad`, `tpdeny`, `tpd` |
+| `/tpacancel` | `tpac`, `tpcancel`, `tpc` |
+| `/tpamode` | `tpam`, `tpmode`, `tpm` |
+| `/tpablock` | `tpab`, `tpblock`, `tpb` |
 
 How requests flow is on the [Requests](requests.md) page; modes,
 blocks and warnings live under [Receiving](receiving.md).
