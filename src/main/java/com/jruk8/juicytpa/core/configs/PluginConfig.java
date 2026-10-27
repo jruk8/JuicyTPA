@@ -149,7 +149,7 @@ public class PluginConfig extends OkaeriConfig {
         private Channel tpamode = new Channel(List.of("tpam", "tpmode", "tpm"));
 
         @Comment("Standalone /tpablock root command and its extra labels.")
-        private Channel tpablock = new Channel(List.of());
+        private Channel tpablock = new Channel(List.of("tpab", "tpblock", "tpb"));
 
         @Comment("Standalone /tpall root command and its extra labels.")
         private Channel tpall = new Channel(List.of());

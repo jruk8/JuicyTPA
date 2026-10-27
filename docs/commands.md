@@ -25,7 +25,8 @@ answer requests.
 Default root aliases: `/tpask` for `/tpa`; `/tpah`, `/tphere`, `/tph`
 for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
 `/tpd` for `/tpadeny`; `/tpac`, `/tpcancel`, `/tpc` for `/tpacancel`;
-`/tpam`, `/tpmode`, `/tpm` for `/tpamode`.
+`/tpam`, `/tpmode`, `/tpm` for `/tpamode`; `/tpab`, `/tpblock`,
+`/tpb` for `/tpablock`.
 
 - **Requests** expire after `requestDuration` seconds. The receiver gets
   a chat notice with clickable [Accept]/[Reject] prompts (linked to

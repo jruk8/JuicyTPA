@@ -73,7 +73,10 @@ commands:
       - tpm
   tpablock:
     enabled: true
-    aliases: []
+    aliases:
+      - tpab
+      - tpblock
+      - tpb
   tpall:
     enabled: true
     aliases: []
