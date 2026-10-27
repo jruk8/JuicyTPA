@@ -9,14 +9,14 @@ import io.papermc.paper.command.brigadier.Commands;
 import com.jruk8.juicytpa.tpa.TpaService;
 
 /**
- * The {@code tpaauto} root: flips the sender between accept-all mode
+ * The {@code tpacceptall} root: flips the sender between accept-all mode
  * and normal mode with one command.
  */
-public class TpaAutoCommand {
+public class TpaAcceptAllCommand {
 
     private final TpaService service;
 
-    public TpaAutoCommand(TpaService service) {
+    public TpaAcceptAllCommand(TpaService service) {
         this.service = service;
     }
 

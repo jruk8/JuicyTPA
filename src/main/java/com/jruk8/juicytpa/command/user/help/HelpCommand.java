@@ -79,7 +79,7 @@ public class HelpCommand {
                         "/tpatrust <player>",
                         "Trusts a player to auto-accept their TP requests.",
                         Permissions.TRUST),
-                new HelpEntry("/tpaauto", "Flips between accept-all and normal mode.", Permissions.MODE),
+                new HelpEntry("/tpacceptall", "Flips between accept-all and normal mode.", Permissions.MODE),
                 new HelpEntry(
                         "/tpablockall",
                         "Flips between block-all and normal mode.",

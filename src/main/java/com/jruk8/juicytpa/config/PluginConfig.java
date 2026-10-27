@@ -146,7 +146,7 @@ public class PluginConfig extends OkaeriConfig {
         private int cancellerMinDenied = 3;
 
         @Comment("Cumulative seconds denied requests sat pending before a receiver counts as a canceller.")
-        private int cancellerMinPendingSeconds = 75;
+        private int cancellerMinPendingSeconds = 20;
 
         @Comment("Seconds a warning stays confirmable: re-send within this window to send anyway.")
         private int confirmWindowSeconds = 15;
@@ -230,8 +230,8 @@ public class PluginConfig extends OkaeriConfig {
         private Channel tpablock =
                 new Channel(List.of("tpab", "tpblock", "tpb", "tpaignore", "tpai", "tpignore", "tpi"));
 
-        @Comment("Standalone /tpaauto root command and its extra labels.")
-        private Channel tpaauto = new Channel(List.of("tpauto"));
+        @Comment("Standalone /tpacceptall root command and its extra labels.")
+        private Channel tpacceptall = new Channel(List.of("tpaauto", "tpauto"));
 
         @Comment("Standalone /tpablockall root command and its extra labels.")
         private Channel tpablockall = new Channel(List.of("tpaba", "tpblockall", "tpba"));

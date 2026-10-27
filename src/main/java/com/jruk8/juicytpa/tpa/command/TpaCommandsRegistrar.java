@@ -31,7 +31,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
 
     private static final Set<String> HUB_COMMANDS = Set.of(
             "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall", "tpalist",
-            "tpatrust", "tpaauto", "tpablockall", "reload", "help", "version");
+            "tpatrust", "tpacceptall", "tpablockall", "reload", "help", "version");
 
     private final LiteralArgumentBuilder<CommandSourceStack> root;
     private final CommandContext ctx;
@@ -75,8 +75,8 @@ public class TpaCommandsRegistrar implements Bootstrap {
                 new TpaListCommand(ctx, service)::node, used);
         hubSubcommand("tpatrust", channel().getTpatrust().getAliases(),
                 new TpaTrustCommand(ctx, service)::node, used);
-        hubSubcommand("tpaauto", channel().getTpaauto().getAliases(),
-                new TpaAutoCommand(service)::node, used);
+        hubSubcommand("tpacceptall", channel().getTpacceptall().getAliases(),
+                new TpaAcceptAllCommand(service)::node, used);
         hubSubcommand("tpablockall", channel().getTpablockall().getAliases(),
                 new TpaBlockAllCommand(service)::node, used);
     }
@@ -111,7 +111,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerAllRoot(registrar, channel().getTpall(), taken);
         registerListRoot(registrar, channel().getTpalist(), taken);
         registerTrustRoot(registrar, channel().getTpatrust(), taken);
-        registerAutoRoot(registrar, channel().getTpaauto(), taken);
+        registerAutoRoot(registrar, channel().getTpacceptall(), taken);
         registerBlockAllRoot(registrar, channel().getTpablockall(), taken);
     }
 
@@ -210,8 +210,8 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaAutoCommand(service).node("tpaauto").build(),
-                "JuicyTPA tpaauto command", channelAliases(channel.getAliases(), taken));
+        registerRoot(registrar, new TpaAcceptAllCommand(service).node("tpacceptall").build(),
+                "JuicyTPA tpacceptall command", channelAliases(channel.getAliases(), taken));
     }
 
     private void registerBlockAllRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
