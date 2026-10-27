@@ -29,16 +29,14 @@ toggles how you receive them.
   your mode survives restarts.
 - **Full configurability** » expiry time, concurrency, chat/actionbar
   feedback per event, aliases off or on, permissions.
-- **Also for serious deployment** » MiniMessage, sounds, PAPI placeholders
-  (`%jtpa_sent%`, `%jtpa_received%`, `%jtpa_mode%` and variants),
-  and an SQLite store for stats and modes.
+- **For modern deployment** » MiniMessage, sounds, PAPI placeholders,
+  LuckPerms meta for cooldown monetization, and an SQLite store for stats and modes.
 
 ### Requirements
 
 - Server Software » [Paper 26.2+](https://papermc.io/downloads/paper) (**Folia🍃** supported)
 - Java Version » **Java 25**
-- Dependencies » **None** (PlaceholderAPI is optional, only for the
-  `%jtpa_...%` placeholders)
+- Dependencies » **None** (optional: PlaceholderAPI and LuckPerms)
 
 ### Commands
 
