@@ -31,7 +31,7 @@ public final class LuckPermsMeta {
         }
         try {
             return Reader.read(player, key);
-        } catch (Exception broken) {
+        } catch (Exception | LinkageError broken) {
             Bukkit.getLogger().warning("LuckPerms meta lookup failed: " + broken.getMessage());
             return null;
         }

@@ -18,6 +18,10 @@ dependencies:
       load: AFTER
       required: false
       join-classpath: true
+    LuckPerms:
+      load: AFTER
+      required: false
+      join-classpath: true
 permissions:
   juicytpa.tpa:
     description: Send /tpa requests.
