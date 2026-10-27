@@ -212,6 +212,15 @@ public class MessagesConfig extends OkaeriConfig {
         @Comment("Sent when the sender tries to block themselves")
         private String blockSelf = "{prefix}{error}You cannot block yourself.";
 
+        @Comment("Sent when the sender trusts a player (use {player})")
+        private String trustAdded = "{prefix}{sc}Now auto-accepting TP requests from {hl}{player}{sc}.";
+
+        @Comment("Sent when the sender untrusts a player (use {player})")
+        private String trustRemoved = "{prefix}{sc}No longer auto-accepting TP requests from {hl}{player}{sc}.";
+
+        @Comment("Sent when the sender tries to trust themselves")
+        private String trustSelf = "{prefix}{error}You cannot trust yourself.";
+
         @Comment("Sent when a bulk request finishes (use {count})")
         private String tpallSent = "{prefix}{sc}Sent TP requests to {hl}{count} players{sc}.";
 
@@ -273,5 +282,8 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Overflow tail in /tpalist lines (use {count})")
         private String listMore = "{plain}, and {hl}{count} more.";
+
+        @Comment("Category word for trusted players in /tpalist")
+        private String listTrusted = "Trusted";
     }
 }

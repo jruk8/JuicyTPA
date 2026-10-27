@@ -47,6 +47,11 @@ public final class TpaPermissions {
     public static final String BLOCK = "juicytpa.block";
 
     /**
+     * Trust specific players with /tpatrust.
+     */
+    public static final String TRUST = "juicytpa.trust";
+
+    /**
      * Send requests to everyone with /tpall, and use @a in /tpa and /tpahere.
      */
     public static final String TPALL = "juicytpa.tpall";

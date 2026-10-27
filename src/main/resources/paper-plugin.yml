@@ -41,6 +41,9 @@ permissions:
   juicytpa.list:
     description: List pending TP requests with /tpalist.
     default: true
+  juicytpa.trust:
+    description: Trust players with /tpatrust.
+    default: true
   juicytpa.mode:
     description: Change your TPA mode with /tpamode.
     default: true

@@ -31,12 +31,15 @@ public class TpaService {
     private final PluginConfig pluginConfig;
     private final TpaModeStore modes;
     private final TpaBlockStore blocks;
+    private final TpaTrustStore trusts;
+    private final TpaReceiverService receiverService;
     private final TpaWarnManager warns;
     private final TpaCooldowns cooldowns;
     private final TpaUsageTracker tracker;
     private final Plugin plugin;
     private final TaskScheduler scheduler;
     private final Function<UUID, Player> playerLookup;
+    private final Function<UUID, String> nameLookup;
     private final Map<RequestKey, Entry> pending = new LinkedHashMap<>();
 
     public TpaService(
@@ -44,23 +47,28 @@ public class TpaService {
             PluginConfig pluginConfig,
             TpaModeStore modes,
             TpaBlockStore blocks,
+            TpaTrustStore trusts,
             TpaWarnManager warns,
             TpaCooldowns cooldowns,
             TpaUsageTracker tracker,
             Plugin plugin,
             TaskScheduler scheduler,
-            Function<UUID, Player> playerLookup
+            Function<UUID, Player> playerLookup,
+            Function<UUID, String> nameLookup
     ) {
         this.ctx = ctx;
         this.pluginConfig = pluginConfig;
         this.modes = modes;
         this.blocks = blocks;
+        this.trusts = trusts;
+        this.receiverService = new TpaReceiverService(ctx, modes, trusts);
         this.warns = warns;
         this.cooldowns = cooldowns;
         this.tracker = tracker;
         this.plugin = plugin;
         this.scheduler = scheduler;
         this.playerLookup = playerLookup;
+        this.nameLookup = nameLookup;
     }
 
     /**
@@ -167,6 +175,17 @@ public class TpaService {
     }
 
     /**
+     * Toggles the trust between the executor and the target.
+     *
+     * @param source the command source
+     * @param target the trusted or untrusted player
+     * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
+     */
+    public int trust(CommandSourceStack source, Player target) {
+        return receiverService.trust(source, target);
+    }
+
+    /**
      * Accepts one incoming request of the executor.
      *
      * @param source the command source
@@ -230,11 +249,13 @@ public class TpaService {
         }
         List<TpaRequest> in = incoming(viewer.getUniqueId());
         List<TpaRequest> out = outgoing(viewer.getUniqueId());
-        if (in.isEmpty() && out.isEmpty()) {
+        List<UUID> trustedIds = trusts.trusted(viewer.getUniqueId());
+        if (in.isEmpty() && out.isEmpty() && trustedIds.isEmpty()) {
             ctx.send(source, m -> m.getTpa().getListEmpty(), Map.of());
             return Command.SINGLE_SUCCESS;
         }
         chat(viewer, m -> m.getTpa().getListHeader(), Map.of());
+        sendTrustedLine(viewer, trustedIds);
         sendListLines(viewer, in, true);
         sendListLines(viewer, out, false);
         ctx.soundPlayer().play(viewer, ctx.sounds().getNeutral());
@@ -249,24 +270,27 @@ public class TpaService {
      * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
      */
     public int mode(CommandSourceStack source, Optional<String> input) {
-        if (!(source.getSender() instanceof Player player)) {
-            ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
-            return 0;
-        }
-        TpaMode mode;
-        if (input.isEmpty()) {
-            mode = modes.mode(player.getUniqueId()).next();
-        } else {
-            Optional<TpaMode> parsed = TpaMode.parse(input.get());
-            if (parsed.isEmpty()) {
-                ctx.error(source, m -> m.getTpa().getModeInvalid(), Map.of("input", input.get()));
-                return 0;
-            }
-            mode = parsed.get();
-        }
-        modes.setMode(player.getUniqueId(), mode);
-        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", mode.display(ctx.messages())));
-        return Command.SINGLE_SUCCESS;
+        return receiverService.mode(source, input);
+    }
+
+    /**
+     * Flips the executor between accept-all mode and normal mode.
+     *
+     * @param source the command source
+     * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
+     */
+    public int autoMode(CommandSourceStack source) {
+        return receiverService.autoMode(source);
+    }
+
+    /**
+     * Flips the executor between block-all mode and normal mode.
+     *
+     * @param source the command source
+     * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
+     */
+    public int blockAllMode(CommandSourceStack source) {
+        return receiverService.blockAllMode(source);
     }
 
     /**
@@ -351,7 +375,9 @@ public class TpaService {
                 warns.now());
         tracker.recordSent(sender.getUniqueId());
         tracker.recordReceived(target.getUniqueId());
-        if (!here && modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL) {
+        if (!here
+                && (modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL
+                        || trusts.isTrusted(target.getUniqueId(), sender.getUniqueId()))) {
             acceptRequest(request);
             return;
         }
@@ -380,6 +406,32 @@ public class TpaService {
     private void sendListLines(Player viewer, List<TpaRequest> requests, boolean inbound) {
         sendListLine(viewer, requests, false, inbound);
         sendListLine(viewer, requests, true, inbound);
+    }
+
+    private void sendTrustedLine(Player viewer, List<UUID> trustedIds) {
+        List<String> names = new ArrayList<>();
+        for (String name : resolveNames(trustedIds)) {
+            names.add(RequestPrompts.listTrust(name));
+        }
+        if (names.isEmpty()) {
+            return;
+        }
+        var tpa = ctx.messages().getTpa();
+        chat(viewer, m -> m.getTpa().getListLine(), Map.of(
+                "category", tpa.getListTrusted(),
+                "players", TpaListFormatter.join(names, tpa.getListComma(), tpa.getListAnd(), tpa.getListMore())));
+    }
+
+    private List<String> resolveNames(List<UUID> ids) {
+        List<String> names = new ArrayList<>();
+        for (UUID id : ids) {
+            String name = this.nameLookup.apply(id);
+            if (name != null) {
+                names.add(name);
+            }
+        }
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        return names;
     }
 
     private void sendListLine(Player viewer, List<TpaRequest> requests, boolean here, boolean inbound) {

@@ -9,6 +9,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -34,6 +36,7 @@ public final class SqliteStorage implements AutoCloseable {
     private static final String TABLE_PLAYER_STATS = "player_stats";
     private static final String TABLE_GLOBAL_STATS = "global_stats";
     private static final String TABLE_TPA_BLOCKS = "tpa_blocks";
+    private static final String TABLE_TPA_TRUSTED = "tpa_trusted";
 
     private static final String CREATE_PLAYER_STATS =
             "CREATE TABLE IF NOT EXISTS " + TABLE_PLAYER_STATS + " ("
@@ -52,6 +55,11 @@ public final class SqliteStorage implements AutoCloseable {
                     + "blocker TEXT NOT NULL,"
                     + "blocked TEXT NOT NULL,"
                     + "PRIMARY KEY (blocker, blocked))";
+    private static final String CREATE_TPA_TRUSTED =
+            "CREATE TABLE IF NOT EXISTS " + TABLE_TPA_TRUSTED + " ("
+                    + "truster TEXT NOT NULL,"
+                    + "trusted TEXT NOT NULL,"
+                    + "PRIMARY KEY (truster, trusted))";
 
     private static final String INSERT_OR_IGNORE_PLAYER =
             "INSERT OR IGNORE INTO " + TABLE_PLAYER_STATS + " (key, player, value) VALUES (?, ?, 0)";
@@ -69,6 +77,14 @@ public final class SqliteStorage implements AutoCloseable {
             "DELETE FROM " + TABLE_TPA_BLOCKS + " WHERE blocker = ? AND blocked = ?";
     private static final String SELECT_BLOCK =
             "SELECT 1 FROM " + TABLE_TPA_BLOCKS + " WHERE blocker = ? AND blocked = ? LIMIT 1";
+    private static final String INSERT_TRUST =
+            "INSERT OR IGNORE INTO " + TABLE_TPA_TRUSTED + " (truster, trusted) VALUES (?, ?)";
+    private static final String DELETE_TRUST =
+            "DELETE FROM " + TABLE_TPA_TRUSTED + " WHERE truster = ? AND trusted = ?";
+    private static final String SELECT_TRUST =
+            "SELECT 1 FROM " + TABLE_TPA_TRUSTED + " WHERE truster = ? AND trusted = ? LIMIT 1";
+    private static final String SELECT_TRUSTED =
+            "SELECT trusted FROM " + TABLE_TPA_TRUSTED + " WHERE truster = ? ORDER BY rowid";
 
     private static final String INSERT_OR_IGNORE_GLOBAL =
             "INSERT OR IGNORE INTO " + TABLE_GLOBAL_STATS + " (key, value) VALUES (?, 0)";
@@ -115,6 +131,7 @@ public final class SqliteStorage implements AutoCloseable {
                 statement.execute(CREATE_PLAYER_STATS);
                 statement.execute(CREATE_GLOBAL_STATS);
                 statement.execute(CREATE_TPA_BLOCKS);
+                statement.execute(CREATE_TPA_TRUSTED);
             }
             return true;
         } catch (SQLException | ClassNotFoundException e) {
@@ -281,6 +298,87 @@ public final class SqliteStorage implements AutoCloseable {
             this.logger.log(Level.WARNING, "Failed to read TPA block", e);
             return false;
         }
+    }
+
+    /**
+     * Stores trust between two players.
+     *
+     * @param truster the player doing the trusting
+     * @param trusted the player being trusted
+     */
+    public synchronized void addTrust(UUID truster, UUID trusted) {
+        if (!isReady()) {
+            return;
+        }
+        try {
+            executeUpdate(INSERT_TRUST, truster.toString(), trusted.toString());
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to store TPA trust", e);
+        }
+    }
+
+    /**
+     * Removes trust between two players.
+     *
+     * @param truster the player doing the trusting
+     * @param trusted the player being trusted
+     */
+    public synchronized void removeTrust(UUID truster, UUID trusted) {
+        if (!isReady()) {
+            return;
+        }
+        try {
+            executeUpdate(DELETE_TRUST, truster.toString(), trusted.toString());
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to remove TPA trust", e);
+        }
+    }
+
+    /**
+     * Checks whether one player trusts another.
+     *
+     * @param truster the player doing the trusting
+     * @param trusted the player being trusted
+     * @return {@code true} when a trust row exists
+     */
+    public synchronized boolean isTrusted(UUID truster, UUID trusted) {
+        if (!isReady()) {
+            return false;
+        }
+        try (PreparedStatement statement = this.connection.prepareStatement(SELECT_TRUST)) {
+            statement.setString(1, truster.toString());
+            statement.setString(2, trusted.toString());
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next();
+            }
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to read TPA trust", e);
+            return false;
+        }
+    }
+
+    /**
+     * Lists every player one player trusts, oldest first.
+     *
+     * @param truster the player doing the trusting
+     * @return the trusted player ids, or empty when none or not ready
+     */
+    public synchronized List<UUID> trusted(UUID truster) {
+        List<UUID> ids = new ArrayList<>();
+        if (!isReady()) {
+            return ids;
+        }
+        try (PreparedStatement statement = this.connection.prepareStatement(SELECT_TRUSTED)) {
+            statement.setString(1, truster.toString());
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    ids.add(UUID.fromString(results.getString(1)));
+                }
+            }
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to list TPA trust", e);
+        }
+        return ids;
     }
 
     /**

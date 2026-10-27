@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
@@ -28,7 +29,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
 
     private static final Set<String> HUB_COMMANDS = Set.of(
             "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall", "tpalist",
-            "reload", "help", "version");
+            "tpatrust", "tpaauto", "tpablockall", "reload", "help", "version");
 
     private final LiteralArgumentBuilder<CommandSourceStack> root;
     private final CommandContext ctx;
@@ -60,30 +61,32 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerSend("tpahere", true, channel().getTpahere().getAliases(), TpaPermissions.TPAHERE, used);
         registerRespond("tpaccept", true, channel().getTpaccept().getAliases(), TpaPermissions.ACCEPT, used);
         registerRespond("tpadeny", false, channel().getTpadeny().getAliases(), TpaPermissions.DENY, used);
-        var cancel = new TpaCancelCommand(ctx, service);
-        root.then(cancel.node("tpacancel"));
-        for (String alias : hubAliases(channel().getTpacancel().getAliases(), used)) {
-            root.then(cancel.node(alias));
-        }
-        var mode = new TpaModeCommand(ctx, service);
-        root.then(mode.node("tpamode"));
-        for (String alias : hubAliases(channel().getTpamode().getAliases(), used)) {
-            root.then(mode.node(alias));
-        }
-        var block = new TpaBlockCommand(ctx, service);
-        root.then(block.node("tpablock"));
-        for (String alias : hubAliases(channel().getTpablock().getAliases(), used)) {
-            root.then(block.node(alias));
-        }
-        var all = new TpaAllCommand(ctx, service);
-        root.then(all.node("tpall"));
-        for (String alias : hubAliases(channel().getTpall().getAliases(), used)) {
-            root.then(all.node(alias));
-        }
-        var list = new TpaListCommand(ctx, service);
-        root.then(list.node("tpalist"));
-        for (String alias : hubAliases(channel().getTpalist().getAliases(), used)) {
-            root.then(list.node(alias));
+        hubSubcommand("tpacancel", channel().getTpacancel().getAliases(),
+                new TpaCancelCommand(ctx, service)::node, used);
+        hubSubcommand("tpamode", channel().getTpamode().getAliases(),
+                new TpaModeCommand(ctx, service)::node, used);
+        hubSubcommand("tpablock", channel().getTpablock().getAliases(),
+                new TpaBlockCommand(ctx, service)::node, used);
+        hubSubcommand("tpall", channel().getTpall().getAliases(),
+                new TpaAllCommand(ctx, service)::node, used);
+        hubSubcommand("tpalist", channel().getTpalist().getAliases(),
+                new TpaListCommand(ctx, service)::node, used);
+        hubSubcommand("tpatrust", channel().getTpatrust().getAliases(),
+                new TpaTrustCommand(ctx, service)::node, used);
+        hubSubcommand("tpaauto", channel().getTpaauto().getAliases(),
+                new TpaAutoCommand(service)::node, used);
+        hubSubcommand("tpablockall", channel().getTpablockall().getAliases(),
+                new TpaBlockAllCommand(service)::node, used);
+    }
+
+    private void hubSubcommand(
+            String label,
+            List<String> aliases,
+            Function<String, LiteralArgumentBuilder<CommandSourceStack>> node,
+            Set<String> used) {
+        root.then(node.apply(label));
+        for (String alias : hubAliases(aliases, used)) {
+            root.then(node.apply(alias));
         }
     }
 
@@ -105,6 +108,9 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerBlockRoot(registrar, channel().getTpablock(), taken);
         registerAllRoot(registrar, channel().getTpall(), taken);
         registerListRoot(registrar, channel().getTpalist(), taken);
+        registerTrustRoot(registrar, channel().getTpatrust(), taken);
+        registerAutoRoot(registrar, channel().getTpaauto(), taken);
+        registerBlockAllRoot(registrar, channel().getTpablockall(), taken);
     }
 
     private void registerSend(String label, boolean here, List<String> aliases, String permission, Set<String> used) {
@@ -188,6 +194,30 @@ public class TpaCommandsRegistrar implements Bootstrap {
         }
         registerRoot(registrar, new TpaListCommand(ctx, service).node("tpalist").build(),
                 "JuicyTPA tpalist command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerTrustRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaTrustCommand(ctx, service).node("tpatrust").build(),
+                "JuicyTPA tpatrust command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerAutoRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaAutoCommand(service).node("tpaauto").build(),
+                "JuicyTPA tpaauto command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerBlockAllRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaBlockAllCommand(service).node("tpablockall").build(),
+                "JuicyTPA tpablockall command", channelAliases(channel.getAliases(), taken));
     }
 
     private void registerRoot(

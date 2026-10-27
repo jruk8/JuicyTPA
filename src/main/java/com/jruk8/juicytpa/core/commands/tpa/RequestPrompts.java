@@ -87,4 +87,16 @@ public final class RequestPrompts {
                 + "<hover:show_text:'{sc}Click to cancel {hl}" + playerName + "{sc}.'>"
                 + playerName + "</hover></click>";
     }
+
+    /**
+     * Builds one clickable /tpalist name running /tpatrust.
+     *
+     * @param playerName the player to untrust
+     * @return the raw MiniMessage list entry
+     */
+    public static String listTrust(String playerName) {
+        return "<click:run_command:'/tpatrust " + playerName + "'>"
+                + "<hover:show_text:'{hl}Click to untrust {hl}" + playerName + "{hl}.'>"
+                + playerName + "</hover></click>";
+    }
 }

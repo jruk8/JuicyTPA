@@ -6,6 +6,7 @@ import com.jruk8.juicytpa.core.commands.tpa.TpaBlockStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaCooldowns;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
+import com.jruk8.juicytpa.core.commands.tpa.TpaTrustStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaWarnManager;
 import com.jruk8.juicytpa.core.commands.tpa.TpaWarnStore;
 import com.jruk8.juicytpa.core.configs.ConfigRegistrar;
@@ -28,6 +29,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
     private StorageBootstrap storageBootstrap;
     private TpaModeStore modeStore;
     private TpaBlockStore blockStore;
+    private TpaTrustStore trustStore;
 
     @Override
     public void onEnable() {
@@ -114,12 +116,14 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 configRegistrar.getPluginConfig(),
                 this.modeStore,
                 this.blockStore,
+                this.trustStore,
                 warns,
                 cooldowns,
                 usageTracker,
                 this,
                 (task, delay) -> Bukkit.getGlobalRegionScheduler().runDelayed(this, scheduled -> task.run(), delay),
-                Bukkit::getPlayer);
+                Bukkit::getPlayer,
+                uuid -> Bukkit.getOfflinePlayer(uuid).getName());
     }
 
     private void setupPlaceholders(
@@ -165,6 +169,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
         var usageTracker = new TpaUsageTracker(this.storageBootstrap::getStorage);
         this.modeStore = new TpaModeStore(this.storageBootstrap::getStorage);
         this.blockStore = new TpaBlockStore(this.storageBootstrap::getStorage);
+        this.trustStore = new TpaTrustStore(this.storageBootstrap::getStorage);
         return usageTracker;
     }
 }
