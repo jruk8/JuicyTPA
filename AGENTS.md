@@ -1,11 +1,11 @@
-# AGENTS.md: guide for AI agents working on JPaperTemplate
+# AGENTS.md: guide for AI agents working on JuicyTPA
 
-JPaperTemplate is a Paper plugin template for **Paper 26.2+**, written in
+JuicyTPA is a Paper TPA plugin for **Paper 26.2+**, written in
 **Java 25** and built with Gradle (`com.github.jruk8.plugin-conventions`,
-which supplies the Paper API, JUnit 5, Mockito, and checkstyle). The
-example plugin is `JTemplate`: Brigadier commands with selectors, a
-MiniMessage message system, sounds, PAPI placeholders, SQLite storage,
-and a GitHub update checker. PlaceholderAPI is a soft
+which supplies the Paper API, JUnit 5, Mockito, and checkstyle). It sends
+`/tpa` and `/tpahere` requests with clickable prompts, per-player modes,
+MiniMessage messages, sounds, PAPI placeholders, SQLite storage, and a
+GitHub update checker. PlaceholderAPI is a soft
 dependency: `compileOnly` and **never bundled**, gated on availability with a
 graceful warning. Read this file first, then `docs/`.
 
@@ -14,9 +14,9 @@ graceful warning. Read this file first, then `docs/`.
 | Read | Why |
 |---|---|
 | `CONTRIBUTING.md` | Environment, style, tests, commits; the human-facing rules agents also follow |
-| `README.md` | What the template ships, in one page |
+| `README.md` | What the plugin ships, in one page |
 | `docs/index.md` + `docs/getting-started.md` | Feature tour and first run |
-| `docs/commands.md` | The command surface new plugins extend |
+| `docs/commands.md` | The command surface |
 | `docs/configuration.md` | Every config file and key |
 | `docs/permissions.md` | Permission nodes new commands must register |
 | `docs/api.md` | Where new code plugs in |
@@ -26,18 +26,19 @@ graceful warning. Read this file first, then `docs/`.
 ## 2. Repo map
 
 ```text
-src/main/java/com/jruk8/jtemplate/core/
-  JTemplatePlugin           composition root only: setupCoreModules() wires the registrars
+src/main/java/com/jruk8/juicytpa/core/
+  JuicyTPAPlugin            composition root only: setupCoreModules() wires the registrars
   Bootstrap/Reloadable      registrar contracts; Reloader re-runs every Reloadable
   commands/                 Paper Brigadier nodes (Commands.literal/argument) + registrars
-    user/                   /jtemplate help + version (alias /jt)
-    admin/reload/           /jtemplate reload
-    selectors/              TargetSelector, SelectorSuggestions, ValueSuggestions
+    tpa/                    /tpa, /tpahere, /tpaccept, /tpadeny, /tpacancel, /tpamode
+    user/                   /juicytpa help + version (alias /jtpa)
+    admin/reload/           /juicytpa reload
+    selectors/              TargetSelector (single-player), ValueSuggestions
   configs/                  Okaeri schema (PluginConfig) + ConfigRegistrar loader
   messages/                 MiniMessage parsing (MessageParser) + dispatch (Messenger)
   sounds/                   config-driven playback (SoundPlayer, Adventure API only)
-  placeholders/             PlaceholderAPI expansion counting command executions
-  storage/                  raw JDBC SQLite key/value counters (jtemplate.db)
+  placeholders/             jtpa sent/received/mode expansion
+  storage/                  raw JDBC SQLite stats and modes (juicytpa.db)
   update/                   async GitHub update checker (service + HTTP port + notifier)
 src/main/resources/
   paper-plugin.yml          commands, permissions, softdepends (tokens expanded by Gradle)
@@ -46,10 +47,15 @@ docs/ + mkdocs.yml          Zensical site; CI deploys it from main
 ```
 
 **Seams are thin, services hold logic.** Commands only parse args and
-delegate; config parsing belongs in the schema/loaders, never in commands.
-Reuse an existing service before introducing a new one, match the sibling
-pattern when the area has one, and avoid new static state: instances are
-created once and injected.
+delegate to `TpaService`; config parsing belongs in the schema/loaders,
+never in commands. Reuse an existing service before introducing a new one,
+match the sibling pattern when the area has one, and avoid new static
+state: instances are created once and injected. Storage holders resolve
+through `Supplier<SqliteStorage>` because reload swaps the instance.
+
+**Requests are one-to-one.** `TpaService` owns every pending request in
+memory; expiry runs on the global-region scheduler and teleports run on
+the mover's entity scheduler, so the flow stays Folia-safe.
 
 ## 3. Golden rules
 
@@ -57,7 +63,7 @@ created once and injected.
    schema classes; data-folder files generate from schema on first run.
    Never hardcode paths.
 2. **Always consider reload.** New configuration must behave sanely under
-   `/jtemplate reload`: reread, revalidate, and rewire without a restart,
+   `/juicytpa reload`: reread, revalidate, and rewire without a restart,
    or say clearly in docs why a restart is needed. Commands cannot be
    re-registered (Paper offers no unregister API), so root aliases apply
    on restart and `reload` says so when it detects a change.
@@ -67,8 +73,9 @@ created once and injected.
    `mkdocs.yml` nav. Keep `README.md` short: it links out, it does not
    enumerate.
 4. **Commands serve console and players.** Support both senders unless
-   impossible, add a permission check plus a `permissions.md` row, and
-   keep tab completion working.
+   impossible (TPA requests need a player; those commands use the
+   `playerOnly` key), add a permission check plus a `permissions.md` row,
+   and keep tab completion working.
 5. **Messages go through the services.** All player and console text runs
    through `Messenger` and the `MessagesConfig` keys; all sounds run
    through `SoundPlayer` and `SoundsConfig`. Messages are strictly
@@ -77,7 +84,8 @@ created once and injected.
    New message keys ship with every sibling key covered,
    in the same change.
 6. **Respect the main thread.** Bukkit API calls run on the main thread;
-   recurring or blocking work (the update check) stays async.
+   recurring or blocking work (the update check, request expiry) stays on
+   the Folia-safe schedulers.
 7. **Tests are the gate.** Every behavior change comes with unit tests in
    the mirrored package: goldens plus malformed-input cases that report
    errors instead of throwing. Never add tests that need a server,
@@ -95,9 +103,9 @@ created once and injected.
 ## 4. Before you finish a task
 
 ```sh
-./gradlew test --tests "com.jruk8.jtemplate.core.commands.selectors.TargetSelectorTest"  # focused suite while iterating
-./gradlew test                                                                        # all tests before widening
-./gradlew build                                                                       # full gate: tests + checkstyle
+./gradlew test --tests "com.jruk8.juicytpa.core.commands.tpa.TpaServiceTest"  # focused suite while iterating
+./gradlew test                                                                 # all tests before widening
+./gradlew build                                                                # full gate: tests + checkstyle
 ```
 
 A commit is never merge-ready until `./gradlew build` is green; a
@@ -119,17 +127,3 @@ check as green.
   releases cut from `v*` tags (`publish.yml`) to GitHub releases and
   Modrinth (see the secret names documented at the top of
   `.github/workflows/publish.yml`).
-
-## Starting a new plugin
-
-1. Find & replace `jtemplate` → *yourname* and `JTemplate` → *YourName*
-   everywhere (packages, command labels, placeholder identifier, database
-   name, docs, update-checker repo/slug/links).
-2. Update `gradle.properties` (`pluginName`, `pluginMain`, `pluginAuthor`,
-   `pluginDescription`, `pluginWebsite`) and `rootProject.name` in
-   `settings.gradle`.
-3. Point `GitHubReleaseHttp` at the new repo, `UpdateCheckService` at the
-   new Modrinth slug, and `versionSuccess` at the new project links.
-4. Set the bStats plugin ID in `MetricsBootstrap`.
-5. Delete the template modules you do not need; see `docs/api.md` for
-   what plugs in where.

@@ -19,18 +19,30 @@ dependencies:
       required: false
       join-classpath: true
 permissions:
-  jtemplate.self:
-    description: Act as yourself in commands that support selectors.
+  juicytpa.tpa:
+    description: Send /tpa requests.
     default: true
-  jtemplate.other:
-    description: Target other players with commands that support selectors (needs the matching command permission too).
-    default: op
-  jtemplate.reload:
-    description: Reload the JTemplate configuration.
-    default: op
-  jtemplate.help:
-    description: View the JTemplate help listing.
+  juicytpa.tpahere:
+    description: Send /tpahere requests.
     default: true
-  jtemplate.version:
-    description: View the JTemplate version.
+  juicytpa.accept:
+    description: Accept incoming TP requests with /tpaccept.
+    default: true
+  juicytpa.deny:
+    description: Deny incoming TP requests with /tpadeny.
+    default: true
+  juicytpa.cancel:
+    description: Cancel outgoing TP requests with /tpacancel.
+    default: true
+  juicytpa.mode:
+    description: Change your TPA mode with /tpamode.
+    default: true
+  juicytpa.reload:
+    description: Reload the JuicyTPA configuration.
+    default: op
+  juicytpa.help:
+    description: View the JuicyTPA help listing.
+    default: true
+  juicytpa.version:
+    description: View the JuicyTPA version.
     default: true

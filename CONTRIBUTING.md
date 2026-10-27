@@ -1,6 +1,6 @@
-# Contributing to JTemplate
+# Contributing to JuicyTPA
 
-Thank you for your interest in contributing to JTemplate! This document
+Thank you for your interest in contributing to JuicyTPA! This document
 covers the environment, coding conventions, testing expectations, commit
 style, and documentation expectations.
 
@@ -14,12 +14,12 @@ style, and documentation expectations.
     finishing any change.
   - `./gradlew test` runs only the tests while iterating; narrow to
     one suite with `./gradlew test --tests
-    "com.jruk8.jtemplate.core.MyTest"`.
+    "com.jruk8.juicytpa.core.MyTest"`.
   - The plugin jar lands in `build/libs/`.
 - **Test server:** there is no committed test server. Spin up a local
   [Paper 26.2+](https://papermc.io/downloads/paper) server, drop the
   built jar into `plugins/`, and restart. PlaceholderAPI is optional
-  and only needed to exercise the `%jtemplate_...%` placeholders.
+  and only needed to exercise the `%jtpa_...%` placeholders.
   Say what you verified live versus in unit tests, and never present
   an unrunnable check as green.
 
@@ -36,7 +36,7 @@ style, and documentation expectations.
 - **Manual wiring:** each class receives only what it needs via its
   constructor, and a module-level registrar (implementing
   `Bootstrap`, optionally `Reloadable`) composes the module.
-  `JTemplatePlugin.setupCoreModules()` is the single composition
+  `JuicyTPAPlugin.setupCoreModules()` is the single composition
   root. Avoid static state and singletons.
 - **Null safety:** use `@NotNull` and `@Nullable` from
   `org.jetbrains.annotations` where nullability is not obvious.
