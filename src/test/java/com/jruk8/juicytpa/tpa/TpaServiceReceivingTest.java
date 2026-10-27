@@ -184,10 +184,10 @@ class TpaServiceReceivingTest {
         inOrder.verify(messenger, times(4))
                 .send(eq(sender), eq(messages.getTpa().getListLine()), bodyCaptor.capture());
         var lines = bodyCaptor.getAllValues();
-        assertEquals("Wants TP to you", lines.get(0).get("category"));
-        assertEquals("Wants TP to them", lines.get(1).get("category"));
-        assertEquals("Your TPH requests", lines.get(2).get("category"));
-        assertEquals("Your TP requests", lines.get(3).get("category"));
+        assertEquals("Received TP requests", lines.get(0).get("category"));
+        assertEquals("Received TPH requests", lines.get(1).get("category"));
+        assertEquals("Sent TP requests", lines.get(2).get("category"));
+        assertEquals("Sent TPH requests", lines.get(3).get("category"));
         assertTrue(lines.get(0).get("players").contains("/tpaccept Rival"));
         assertTrue(lines.get(2).get("players").contains("/tpacancel Receiver"));
         verify(soundPlayer, times(3)).play(sender, sounds.getNeutral());
@@ -266,7 +266,7 @@ class TpaServiceReceivingTest {
         var lines = bodyCaptor.getAllValues();
         assertEquals("Trusted", lines.get(0).get("category"));
         assertTrue(lines.get(0).get("players").contains("/tpatrust Rival"));
-        assertEquals("Your TP here requests", lines.get(1).get("category"));
+        assertEquals("Sent TP requests", lines.get(1).get("category"));
     }
 
     @Test
