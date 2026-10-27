@@ -1,9 +1,11 @@
 package com.jruk8.juicytpa;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
+import com.jruk8.juicytpa.api.JuicyTPA;
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.command.CommandsRegistrar;
 import com.jruk8.juicytpa.config.ConfigRegistrar;
@@ -17,6 +19,7 @@ import com.jruk8.juicytpa.message.Messenger;
 import com.jruk8.juicytpa.placeholder.PlaceholdersBootstrap;
 import com.jruk8.juicytpa.sound.SoundPlayer;
 import com.jruk8.juicytpa.storage.StorageBootstrap;
+import com.jruk8.juicytpa.tpa.TpaApi;
 import com.jruk8.juicytpa.tpa.TpaBlockStore;
 import com.jruk8.juicytpa.tpa.TpaCooldowns;
 import com.jruk8.juicytpa.tpa.TpaModeStore;
@@ -79,6 +82,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 messenger,
                 soundPlayer);
         var tpaService = tpaService(context, configRegistrar, usageTracker);
+        setupApi(tpaService);
         setupPlaceholders(reloader, logger, usageTracker, tpaService, configRegistrar.getMessagesConfig());
         setupCommands(reloader, configRegistrar, context, updateChecker, tpaService);
 
@@ -126,7 +130,13 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 this,
                 (task, delay) -> Bukkit.getGlobalRegionScheduler().runDelayed(this, scheduled -> task.run(), delay),
                 Bukkit::getPlayer,
-                uuid -> Bukkit.getOfflinePlayer(uuid).getName());
+                uuid -> Bukkit.getOfflinePlayer(uuid).getName(),
+                event -> Bukkit.getPluginManager().callEvent(event));
+    }
+
+    private void setupApi(TpaService tpaService) {
+        var api = new TpaApi(tpaService, this.modeStore, this.blockStore, this.trustStore, Bukkit::getPlayer);
+        getServer().getServicesManager().register(JuicyTPA.class, api, this, ServicePriority.Normal);
     }
 
     private void setupPlaceholders(

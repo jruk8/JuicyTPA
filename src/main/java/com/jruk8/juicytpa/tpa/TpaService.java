@@ -9,6 +9,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
@@ -17,9 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import com.jruk8.juicytpa.api.TpaMode;
 import com.jruk8.juicytpa.api.TpaRequest;
+import com.jruk8.juicytpa.api.TpaRequestCancelEvent;
+import com.jruk8.juicytpa.api.TpaRequestDenyEvent;
+import com.jruk8.juicytpa.api.TpaRequestExpireEvent;
 
 /**
  * Owns every pending teleport request: sending, answering, cancelling,
@@ -42,6 +47,10 @@ public class TpaService {
     private final TaskScheduler scheduler;
     private final Function<UUID, Player> playerLookup;
     private final Function<UUID, String> nameLookup;
+    private final Consumer<Event> events;
+    private final TpaEventGate gate;
+    private final TpaListService lists;
+    private final TpaFeedback feedback;
     private final Map<RequestKey, Entry> pending = new LinkedHashMap<>();
 
     public TpaService(
@@ -56,7 +65,8 @@ public class TpaService {
             Plugin plugin,
             TaskScheduler scheduler,
             Function<UUID, Player> playerLookup,
-            Function<UUID, String> nameLookup
+            Function<UUID, String> nameLookup,
+            Consumer<Event> events
     ) {
         this.ctx = ctx;
         this.pluginConfig = pluginConfig;
@@ -71,6 +81,10 @@ public class TpaService {
         this.scheduler = scheduler;
         this.playerLookup = playerLookup;
         this.nameLookup = nameLookup;
+        this.events = events;
+        this.gate = new TpaEventGate(ctx, events);
+        this.lists = new TpaListService(ctx, trusts, nameLookup, this::incoming, this::outgoing);
+        this.feedback = new TpaFeedback(ctx, pluginConfig, playerLookup);
     }
 
     /**
@@ -112,10 +126,12 @@ public class TpaService {
         var warn = warns.warnKind(target.getUniqueId());
         if (warn.isPresent() && !warns.confirm(sender.getUniqueId(), target.getUniqueId(), here)) {
             warns.noteWarned(sender.getUniqueId(), target.getUniqueId(), here);
-            sendWarnFeedback(source, target, here, warn.get());
+            feedback.warnFeedback(source, target, here, warn.get());
             return 0;
         }
-        deliver(sender, target, here, true);
+        if (!deliver(sender, target, here, true)) {
+            return 0;
+        }
         cooldowns.record(sender);
         return Command.SINGLE_SUCCESS;
     }
@@ -139,8 +155,7 @@ public class TpaService {
         }
         int delivered = 0;
         for (Player target : targets) {
-            if (sendable(sender, target, here)) {
-                deliver(sender, target, here, false);
+            if (sendable(sender, target, here) && deliver(sender, target, here, false)) {
                 delivered++;
             }
         }
@@ -232,8 +247,7 @@ public class TpaService {
         if (match.isEmpty()) {
             return 0;
         }
-        remove(match.get());
-        sendCancelFeedback(sender, match.get());
+        cancelRequest(sender, match.get());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -245,23 +259,7 @@ public class TpaService {
      * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
      */
     public int list(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player viewer)) {
-            ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
-            return 0;
-        }
-        List<TpaRequest> in = incoming(viewer.getUniqueId());
-        List<TpaRequest> out = outgoing(viewer.getUniqueId());
-        List<UUID> trustedIds = trusts.trusted(viewer.getUniqueId());
-        if (in.isEmpty() && out.isEmpty() && trustedIds.isEmpty()) {
-            ctx.send(source, m -> m.getTpa().getListEmpty(), Map.of());
-            return Command.SINGLE_SUCCESS;
-        }
-        chat(viewer, m -> m.getTpa().getListHeader(), Map.of());
-        sendTrustedLine(viewer, trustedIds);
-        sendListLines(viewer, in, true);
-        sendListLines(viewer, out, false);
-        ctx.soundPlayer().play(viewer, ctx.sounds().getNeutral());
-        return Command.SINGLE_SUCCESS;
+        return lists.list(source);
     }
 
     /**
@@ -358,9 +356,13 @@ public class TpaService {
             return 0;
         }
         if (accept) {
-            if (playerLookup.apply(match.get().sender()) == null) {
+            Player sender = playerLookup.apply(match.get().sender());
+            if (sender == null) {
                 remove(match.get());
                 ctx.error(source, m -> m.getTpa().getNoPendingFrom(), Map.of("player", match.get().senderName()));
+                return 0;
+            }
+            if (gate.vetoedAccept(match.get(), sender, receiver, receiver)) {
                 return 0;
             }
             acceptRequest(match.get());
@@ -370,25 +372,54 @@ public class TpaService {
         return Command.SINGLE_SUCCESS;
     }
 
-    private void deliver(Player sender, Player target, boolean here, boolean senderFeedback) {
+    /**
+     * @return the event gate, shared with the API implementation
+     */
+    TpaEventGate eventGate() {
+        return gate;
+    }
+
+    private boolean deliver(Player sender, Player target, boolean here, boolean senderFeedback) {
         var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
         var request = new TpaRequest(
                 sender.getUniqueId(), sender.getName(), target.getUniqueId(), target.getName(), here,
                 warns.now());
+        if (gate.vetoedSend(request, sender, target)) {
+            return false;
+        }
         tracker.recordSent(sender.getUniqueId());
         tracker.recordReceived(target.getUniqueId());
         if (!here
                 && (modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL
                         || trusts.isTrusted(target.getUniqueId(), sender.getUniqueId()))) {
+            if (gate.vetoedAccept(request, sender, target, sender)) {
+                return false;
+            }
             acceptRequest(request);
-            return;
+            return true;
         }
         ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
         pending.put(key, new Entry(request, task));
         warns.delivered(request);
-        sendRequestFeedback(sender, target, here, senderFeedback);
+        feedback.requestFeedback(sender, target, here, senderFeedback);
         warns.nudgeForHarass(target.getUniqueId(), sender.getUniqueId())
-                .ifPresent(ignored -> sendHarassNudge(target, sender.getName()));
+                .ifPresent(ignored -> feedback.harassNudge(target, sender.getName()));
+        return true;
+    }
+
+    /**
+     * Removes the request, fires a command-cause cancel event and
+     * tells both parties.
+     *
+     * @param sender the original sender
+     * @param request the request to cancel
+     */
+    void cancelRequest(Player sender, TpaRequest request) {
+        remove(request);
+        Player receiver = playerLookup.apply(request.receiver());
+        events.accept(new TpaRequestCancelEvent(
+                request, sender, receiver, TpaRequestCancelEvent.Cause.CANCEL_COMMAND));
+        feedback.cancelFeedback(sender, request);
     }
 
     private boolean sendable(Player sender, Player target, boolean here) {
@@ -405,69 +436,26 @@ public class TpaService {
                 || pending.containsKey(new RequestKey(sender, receiver, true));
     }
 
-    private void sendListLines(Player viewer, List<TpaRequest> requests, boolean inbound) {
-        sendListLine(viewer, requests, false, inbound);
-        sendListLine(viewer, requests, true, inbound);
-    }
-
-    private void sendTrustedLine(Player viewer, List<UUID> trustedIds) {
-        List<String> names = new ArrayList<>();
-        for (String name : resolveNames(trustedIds)) {
-            names.add(RequestPrompts.listTrust(name));
-        }
-        if (names.isEmpty()) {
-            return;
-        }
-        var tpa = ctx.messages().getTpa();
-        chat(viewer, m -> m.getTpa().getListLine(), Map.of(
-                "category", tpa.getListTrusted(),
-                "players", TpaListFormatter.join(names, tpa.getListComma(), tpa.getListAnd(), tpa.getListMore())));
-    }
-
-    private List<String> resolveNames(List<UUID> ids) {
-        List<String> names = new ArrayList<>();
-        for (UUID id : ids) {
-            String name = this.nameLookup.apply(id);
-            if (name != null) {
-                names.add(name);
-            }
-        }
-        names.sort(String.CASE_INSENSITIVE_ORDER);
-        return names;
-    }
-
-    private void sendListLine(Player viewer, List<TpaRequest> requests, boolean here, boolean inbound) {
-        List<String> names = new ArrayList<>();
-        for (TpaRequest request : requests) {
-            if (request.here() != here) {
-                continue;
-            }
-            String name = inbound ? request.senderName() : request.receiverName();
-            names.add(inbound ? RequestPrompts.listAccept(name) : RequestPrompts.listCancel(name));
-        }
-        if (names.isEmpty()) {
-            return;
-        }
-        var tpa = ctx.messages().getTpa();
-        String direction = inbound ? tpa.getListIncoming() : tpa.getListOutgoing();
-        String type = inbound != here ? tpa.getRequestTypeAsk() : tpa.getRequestTypeHere();
-        chat(viewer, m -> m.getTpa().getListLine(), Map.of(
-                "category", direction + " " + type,
-                "players", TpaListFormatter.join(names, tpa.getListComma(), tpa.getListAnd(), tpa.getListMore())));
-    }
-
     private void dropIncoming(Player blocker, Player target) {
         for (TpaRequest request : incoming(blocker.getUniqueId())) {
             if (!request.sender().equals(target.getUniqueId())) {
                 continue;
             }
             remove(request);
+            events.accept(new TpaRequestCancelEvent(
+                    request, target, blocker, TpaRequestCancelEvent.Cause.BLOCK));
             chat(target, m -> m.getTpa().getAutoCancelled(), Map.of("player", blocker.getName()));
             ctx.soundPlayer().play(target, ctx.sounds().getNeutral());
         }
     }
 
-    private void acceptRequest(TpaRequest request) {
+    /**
+     * Removes the request, sweeps the receiver's others, teleports
+     * and tells both parties.
+     *
+     * @param request the accepted request
+     */
+    void acceptRequest(TpaRequest request) {
         remove(request);
         warns.accepted(request);
         Player sender = playerLookup.apply(request.sender());
@@ -483,9 +471,17 @@ public class TpaService {
         ctx.soundPlayer().play(anchor, ctx.sounds().getAccept());
     }
 
-    private void denyRequest(Player receiver, TpaRequest request) {
+    /**
+     * Removes the request, fires the deny event and tells both parties.
+     *
+     * @param receiver the answering player
+     * @param request the denied request
+     */
+    void denyRequest(Player receiver, TpaRequest request) {
         remove(request);
         warns.denied(request);
+        Player sender = playerLookup.apply(request.sender());
+        events.accept(new TpaRequestDenyEvent(request, sender, receiver));
         var feedback = pluginConfig.getTpa().getRejectFeedback();
         if (feedback.isMessage()) {
             chat(receiver, m -> m.getTpa().getDenyReceiver(), Map.of("player", request.senderName()));
@@ -494,7 +490,6 @@ public class TpaService {
             bar(receiver, m -> m.getTpa().getDenyReceiverActionbar(), Map.of("player", request.senderName()));
         }
         ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
-        Player sender = playerLookup.apply(request.sender());
         if (sender == null) {
             return;
         }
@@ -506,7 +501,7 @@ public class TpaService {
         }
         ctx.soundPlayer().play(sender, ctx.sounds().getReject());
         warns.nudgeForCancel(receiver.getUniqueId())
-                .ifPresent(ignored -> sendBlockAllNudge(receiver, m -> m.getTpa().getNudgeCancel()));
+                .ifPresent(ignored -> this.feedback.blockAllNudge(receiver, m -> m.getTpa().getNudgeCancel()));
     }
 
     private void expire(RequestKey key) {
@@ -517,8 +512,10 @@ public class TpaService {
         TpaRequest request = entry.request();
         warns.removed(request);
         warns.expired(request);
-        var feedback = pluginConfig.getTpa().getTimeoutFeedback();
         Player sender = playerLookup.apply(request.sender());
+        Player receiver = playerLookup.apply(request.receiver());
+        events.accept(new TpaRequestExpireEvent(request, sender, receiver));
+        var feedback = pluginConfig.getTpa().getTimeoutFeedback();
         if (sender != null) {
             if (feedback.isMessage()) {
                 chat(sender, m -> m.getTpa().getTimeoutSender(), Map.of("player", request.receiverName()));
@@ -528,7 +525,6 @@ public class TpaService {
             }
             ctx.soundPlayer().play(sender, ctx.sounds().getTimeout());
         }
-        Player receiver = playerLookup.apply(request.receiver());
         if (receiver != null) {
             if (feedback.isMessage()) {
                 chat(receiver, m -> m.getTpa().getTimeoutReceiver(), Map.of("player", request.senderName()));
@@ -538,7 +534,7 @@ public class TpaService {
             }
             ctx.soundPlayer().play(receiver, ctx.sounds().getTimeout());
             warns.nudgeForExpiry(receiver.getUniqueId())
-                    .ifPresent(ignored -> sendBlockAllNudge(receiver, m -> m.getTpa().getNudgeAfk()));
+                    .ifPresent(ignored -> this.feedback.blockAllNudge(receiver, m -> m.getTpa().getNudgeAfk()));
         }
     }
 
@@ -546,8 +542,12 @@ public class TpaService {
         if (!concurrency().isAllowConcurrent() || !concurrency().isCancelExistingOnAccept()) {
             return;
         }
+        Player receiver = playerLookup.apply(accepted.receiver());
         for (TpaRequest other : incoming(accepted.receiver())) {
             remove(other);
+            events.accept(new TpaRequestCancelEvent(
+                    other, playerLookup.apply(other.sender()), receiver,
+                    TpaRequestCancelEvent.Cause.ACCEPT_SWEEP));
             Player sender = playerLookup.apply(other.sender());
             if (sender != null) {
                 chat(sender, m -> m.getTpa().getAutoCancelled(), Map.of("player", other.receiverName()));
@@ -563,46 +563,6 @@ public class TpaService {
             mover.teleport(anchor.getLocation());
             ctx.soundPlayer().play(mover, ctx.sounds().getAccept());
         }, null);
-    }
-
-    private void sendRequestFeedback(Player sender, Player target, boolean here, boolean announce) {
-        String time = DurationFormat.format(pluginConfig.getTpa().getRequestDuration());
-        if (announce) {
-            var senderFeedback = pluginConfig.getTpa().getSenderFeedback();
-            if (senderFeedback.isMessage()) {
-                chat(sender, m -> m.getTpa().getRequestSent(),
-                        Map.of("player", target.getName(), "time", time));
-            }
-            if (senderFeedback.isActionbar()) {
-                bar(sender, m -> m.getTpa().getRequestSentActionbar(), Map.of("player", target.getName()));
-            }
-            ctx.soundPlayer().play(sender, ctx.sounds().getNeutral());
-        }
-        var receiverFeedback = pluginConfig.getTpa().getReceiverFeedback();
-        if (receiverFeedback.isMessage()) {
-            String template = here
-                    ? ctx.messages().getTpa().getRequestHereBody()
-                    : ctx.messages().getTpa().getRequestAskBody();
-            chat(target, m -> m.getTpa().getRequestReceived(), Map.of(
-                    "body", template.replace("{player}", sender.getName()),
-                    "time", time,
-                    "accept", RequestPrompts.accept(sender.getName(), ctx.messages().getTpa().getAcceptText()),
-                    "reject", RequestPrompts.reject(sender.getName(), ctx.messages().getTpa().getRejectText())));
-        }
-        if (receiverFeedback.isActionbar()) {
-            bar(target, m -> m.getTpa().getRequestReceivedActionbar(), Map.of("player", sender.getName()));
-        }
-        ctx.soundPlayer().play(target, ctx.sounds().getAsk());
-    }
-
-    private void sendCancelFeedback(Player sender, TpaRequest request) {
-        chat(sender, m -> m.getTpa().getCancelSender(), Map.of("player", request.receiverName()));
-        ctx.soundPlayer().play(sender, ctx.sounds().getNeutral());
-        Player receiver = playerLookup.apply(request.receiver());
-        if (receiver != null) {
-            chat(receiver, m -> m.getTpa().getCancelReceiver(), Map.of("player", request.senderName()));
-            ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
-        }
     }
 
     private Optional<TpaRequest> singleIncoming(CommandSourceStack source, Player receiver) {
@@ -631,7 +591,12 @@ public class TpaService {
         return Optional.of(matches.getFirst());
     }
 
-    private Optional<TpaRequest> latestFrom(UUID receiver, UUID sender) {
+    /**
+     * @param receiver the receiving player
+     * @param sender the original sender
+     * @return their latest pending request, or empty
+     */
+    Optional<TpaRequest> latestFrom(UUID receiver, UUID sender) {
         List<TpaRequest> matches = incoming(receiver);
         Optional<TpaRequest> latest = Optional.empty();
         for (TpaRequest request : matches) {
@@ -642,7 +607,12 @@ public class TpaService {
         return latest;
     }
 
-    private Optional<TpaRequest> latestTo(UUID sender, UUID receiver) {
+    /**
+     * @param sender the original sender
+     * @param receiver the receiving player
+     * @return their latest pending request, or empty
+     */
+    Optional<TpaRequest> latestTo(UUID sender, UUID receiver) {
         List<TpaRequest> matches = outgoing(sender);
         Optional<TpaRequest> latest = Optional.empty();
         for (TpaRequest request : matches) {
@@ -666,7 +636,12 @@ public class TpaService {
         return max > 0 && outgoing(sender).size() >= max;
     }
 
-    private void remove(TpaRequest request) {
+    /**
+     * Drops the request and cancels its expiry task.
+     *
+     * @param request the request to drop
+     */
+    void remove(TpaRequest request) {
         var key = new RequestKey(request.sender(), request.receiver(), request.here());
         Entry entry = pending.remove(key);
         if (entry == null) {
@@ -676,30 +651,6 @@ public class TpaService {
         if (entry.task() != null) {
             entry.task().cancel();
         }
-    }
-
-    private void sendWarnFeedback(
-            CommandSourceStack source, Player target, boolean here, TpaWarnManager.WarnKind kind) {
-        Function<MessagesConfig, String> selector = kind == TpaWarnManager.WarnKind.AFK
-                ? m -> m.getTpa().getWarnAfk()
-                : m -> m.getTpa().getWarnCanceller();
-        String type = here
-                ? ctx.messages().getTpa().getRequestTypeHere()
-                : ctx.messages().getTpa().getRequestTypeAsk();
-        ctx.send(source, selector, Map.of("player", target.getName(), "type", type));
-    }
-
-    private void sendBlockAllNudge(Player receiver, Function<MessagesConfig, String> selector) {
-        String button = RequestPrompts.blockAll(ctx.messages().getTpa().getWarnBlockAllButton());
-        chat(receiver, selector, Map.of("button", button));
-        ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
-    }
-
-    private void sendHarassNudge(Player receiver, String senderName) {
-        String text = ctx.messages().getTpa().getWarnBlockPlayerButton().replace("{player}", senderName);
-        chat(receiver, m -> m.getTpa().getNudgeHarass(),
-                Map.of("player", senderName, "button", RequestPrompts.blockPlayer(senderName, text)));
-        ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
     }
 
     private void chat(CommandSender to,

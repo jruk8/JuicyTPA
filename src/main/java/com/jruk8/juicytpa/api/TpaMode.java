@@ -1,7 +1,5 @@
 package com.jruk8.juicytpa.api;
 
-import com.jruk8.juicytpa.message.MessagesConfig;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -20,19 +18,6 @@ public enum TpaMode {
 
     /** Incoming requests teleport at once, as if accepted. */
     ACCEPT_ALL;
-
-    /**
-     * @param names the messages holding the configured mode names
-     * @return the display name used in messages and placeholders
-     */
-    public String display(MessagesConfig names) {
-        var tpa = names.getTpa();
-        return switch (this) {
-            case NORMAL -> tpa.getModeNormal();
-            case BLOCK_ALL -> tpa.getModeBlockAll();
-            case ACCEPT_ALL -> tpa.getModeAcceptAll();
-        };
-    }
 
     /**
      * @return the mode after this one when argless /tpamode cycles

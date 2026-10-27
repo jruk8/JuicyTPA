@@ -1,5 +1,6 @@
 package com.jruk8.juicytpa.message;
 
+import com.jruk8.juicytpa.api.TpaMode;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.annotation.Comment;
 import lombok.Getter;
@@ -285,5 +286,20 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Category word for trusted players in /tpalist")
         private String listTrusted = "Trusted";
+
+        @Comment("Sent when an API listener vetoes sending or accepting a request")
+        private String externalDenied = "{prefix}{error}An external check blocked this teleport request.";
+
+        /**
+         * @param mode the mode to name
+         * @return the configured display name used in messages and placeholders
+         */
+        public String modeName(TpaMode mode) {
+            return switch (mode) {
+                case NORMAL -> getModeNormal();
+                case BLOCK_ALL -> getModeBlockAll();
+                case ACCEPT_ALL -> getModeAcceptAll();
+            };
+        }
     }
 }

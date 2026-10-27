@@ -104,13 +104,13 @@ public final class TpaExpansion extends PlaceholderExpansion {
             return received;
         }
         if (MODE.equals(params)) {
-            return player == null ? null : this.modes.mode(player.getUniqueId()).display(this.messages);
+            return player == null ? null : this.messages.getTpa().modeName(this.modes.mode(player.getUniqueId()));
         }
         if (params.startsWith(MODE + "_")) {
             String name = params.substring(MODE.length() + 1);
             return name.isEmpty()
                     ? null
-                    : this.modes.mode(this.nameResolver.apply(name)).display(this.messages);
+                    : this.messages.getTpa().modeName(this.modes.mode(this.nameResolver.apply(name)));
         }
         if (PENDING.equals(params)) {
             return player == null
