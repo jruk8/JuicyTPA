@@ -5,9 +5,10 @@ icon: material/tune
 # Configuration
 
 The plugin writes `config.yml`, `messages.yml` and `sounds.yml` into its data
-folder (`plugins/JTemplate/`) on first start. Edit a file and run
-`/jtemplate reload` to apply the changes without restarting the server.
-Missing keys are re-added with defaults; unknown keys are removed.
+folder (`plugins/JuicyTPA/`) on first start. Edit a file and run
+`/juicytpa reload` to apply the changes without restarting the server
+(command registration is the exception; see `commands` below). Missing
+keys are re-added with defaults; unknown keys are removed.
 
 ## config.yml
 
@@ -15,14 +16,69 @@ Missing keys are re-added with defaults; unknown keys are removed.
 updateChecker:
   enabled: true
 aliases:
+  - jtpa
+  - jtp
   - jt
 storage:
-  dbFile: jtemplate.db
+  dbFile: juicytpa.db
+tpa:
+  requestDuration: 60
+  concurrency:
+    allowConcurrent: false
+    cancelExistingOnAccept: true
+  receiverFeedback:
+    message: true
+    actionbar: true
+  senderFeedback:
+    message: true
+    actionbar: true
+  rejectFeedback:
+    message: true
+    actionbar: true
+  timeoutFeedback:
+    message: true
+    actionbar: true
+commands:
+  tpa:
+    enabled: true
+    aliases:
+      - tpask
+  tpahere:
+    enabled: true
+    aliases:
+      - tpah
+      - tphere
+      - tph
+  tpaccept:
+    enabled: true
+    aliases:
+      - tpac
+      - tpc
+  tpadeny:
+    enabled: true
+    aliases:
+      - tpad
+      - tpdeny
+      - tpd
+  tpacancel:
+    enabled: true
+    aliases:
+      - tpcancel
+      - tpcl
+  tpamode:
+    enabled: true
+    aliases:
+      - tpam
+      - tpmode
+      - tpm
 colors:
-  plainColor: '<#b8d8e0>'
-  brandColor: '<#84b8db>'
-  highlightColor: '<#ebf1f2>'
-  errorColor: '<#415ad9>'
+  plainColor: '<#b9e0b8>'
+  brandColor: '<#87db84>'
+  highlightColor: '<#ebf2eb>'
+  errorColor: '<#e63e3e>'
+  acceptColor: '<#7be63e>'
+  rejectColor: '<#e63e5a>'
+  sentColor: '<#44e63e>'
 metrics:
   enabled: true
 ```
@@ -31,80 +87,56 @@ metrics:
 
 - `enabled` » checks GitHub releases for new versions on enable and on
   reload. The check runs asynchronously; findings go to the console and
-  in-game to players holding `jtemplate.reload` (on join and via
-  `/jtemplate version`). Update notices link both the GitHub release and
+  in-game to players holding `juicytpa.reload` (on join and via
+  `/juicytpa version`). Update notices link both the GitHub release and
   the Modrinth project page.
 
 ### `aliases`
 
-Extra labels for the `/jtemplate` root command (`/jt` works out of the
-box). Running the root with no arguments shows the help listing. Blanks,
-duplicates and the `jtemplate` label itself are ignored. Applies on
-restart; `/jtemplate reload` reports when a restart is needed.
+Extra labels for the `/juicytpa` hub command (`/jtpa`, `/jtp` and `/jt`
+work out of the box). Running the hub with no arguments shows the help
+listing. Blanks, duplicates and the `juicytpa` label itself are ignored.
+Applies on restart; `/juicytpa reload` reports when a restart is needed.
 
 ### `storage`
 
 - `dbFile` » name of the SQLite database file created in the plugin's data
-  folder. The database holds generic per-player and server-wide counters
-  (tables `player_stats` and `global_stats`).
+  folder. The database holds request counters (tables `player_stats` and
+  `global_stats`) and each player's TPA mode (key `jtpa_mode`).
+
+### `tpa`
+
+- `requestDuration` » how long a request stays pending before it times
+  out, in seconds. Shown to both parties as a compact duration (`48s`,
+  `1m 30s`).
+- `concurrency.allowConcurrent` » let players hold several pending
+  requests at once (default one outgoing at a time).
+- `concurrency.cancelExistingOnAccept` » accepting one request cancels
+  the receiver's other pending requests. Only applies with
+  `allowConcurrent`.
+- `receiverFeedback` / `senderFeedback` / `rejectFeedback` /
+  `timeoutFeedback` » `message` toggles the chat message for that event,
+  `actionbar` toggles the actionbar. Request, deny and timeout events
+  each notify both parties; accepts always notify.
+
+### `commands`
+
+Each channel has an `enabled` toggle registering (or hiding) its
+standalone root command (`tpa`, `tpahere`, `tpaccept`, `tpadeny`,
+`tpacancel`, `tpamode`), plus `aliases` » extra labels for that root.
+The `/juicytpa` subcommands always exist. Aliases colliding with a hub
+label, a subcommand or another alias are ignored. Changes take effect
+after a restart; `/juicytpa reload` reports when a restart is needed.
 
 ### `colors`
 
 The message color palette. Every `messages.yml` entry uses these via
-`{plain}`, `{brand}`, `{hl}` and `{error}`, resolved when the message is
-rendered; editing a color and reloading is enough, the messages
-themselves never hardcode colors.
+`{plain}`, `{brand}`, `{hl}`, `{error}`, `{ac}`, `{rc}` and `{sc}`,
+resolved when the message is rendered; editing a color and reloading is
+enough, the messages themselves never hardcode colors.
 
 ### `metrics`
 
 - `enabled` » sends anonymous usage statistics via bStats (open-source,
   no personal data or IP addresses). Read once at startup: disabling it
   needs a server restart to take effect.
-
-## messages.yml
-
-The plugin messages, always in MiniMessage format. Every message starts
-with `{prefix}` (which includes its trailing space), and colors come
-from the `config.yml` palette. Placeholders use `{braces}`; angle
-brackets are raw MiniMessage, and `\n` breaks the line:
-
-- `prefix` » prefix prepended via the `{prefix}` placeholder.
-- `core.reloadSuccess` / `core.reloadFailure` » reload outcome
-  (use `{time}`).
-- `core.reloadRestartRequired` » shown when root labels changed and need
-  a restart to apply.
-- `core.helpHeader` / `core.helpEntryFormat` » help command layout
-  (use `{version}` for the header; `{syntax}` and `{description}` per entry).
-- `core.versionSuccess` » version command output (use `{version}` and
-  `{authors}`; linked author names arrive pre-formatted).
-- `core.updateAvailable` » update notice (use `{latest}`, `{current}`,
-  `{url}` and `{modrinth-url}`).
-- `core.noPermission` » the sender lacks a permission (use `{permission}`).
-- `core.noTargets` » a target selector matched no players.
-- `core.consoleNeedsTarget` » console ran a command without a target.
-
-Messages can embed PlaceholderAPI placeholders (`%player_name%`) when
-PlaceholderAPI is installed.
-
-## sounds.yml
-
-Sound effects for command feedback. Each entry supports `enabled`, a
-namespaced `sound` key, `pitch` and `volume`
-([sound explorer](https://jruk8.github.io/JSoundExplorer/)):
-
-- `neutral` » neutral feedback for ordinary commands, heard by the executor
-  and every affected player.
-- `reset` » feedback for state resets, heard by the executor and every
-  affected player.
-- `reload` » played when the configuration is reloaded.
-- `help` » played when the help menu is shown.
-- `error` » played on failed commands (invalid input, missing permission,
-  failed reload).
-
-## Storage (SQLite)
-
-The database file (default `jtemplate.db`) lives in the plugin's data folder
-and is opened on enable, reloaded on `/jtemplate reload`, and closed on plugin
-disable. The JDBC driver comes from the Minecraft server itself, so the plugin
-jar stays small; if your server distribution does not bundle SQLite, the
-plugin logs a warning and runs without state persistence.

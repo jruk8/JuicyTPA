@@ -1,7 +1,7 @@
-site_name: JPaperTemplate
-site_description: A clean, buildable starting point for Paper plugins using Java 25 and Gradle.
-site_url: https://jruk8.github.io/JPaperTemplate/
-repo_url: https://github.com/jruk8/JPaperTemplate
+site_name: JuicyTPA
+site_description: A modern 26.x plugin for /tpa and /tpahere.
+site_url: https://jruk8.github.io/JuicyTPA/
+repo_url: https://github.com/jruk8/JuicyTPA
 repo_name: GitHub
 
 theme:
@@ -9,7 +9,7 @@ theme:
   language: en
   custom_dir: overrides
   # No logo or favicon yet: brand art lives in jruk8/JResources, which has no
-  # JPaperTemplate assets. Add logo/favicon here plus extra.logo_light below
+  # JuicyTPA assets. Add logo/favicon here plus extra.logo_light below
   # once they exist; overrides/partials/logo.html already renders both marks.
   icon:
     repo: fontawesome/brands/github

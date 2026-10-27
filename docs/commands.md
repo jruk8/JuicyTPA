@@ -4,18 +4,43 @@ icon: material/console
 
 # Commands
 
-All commands are available under `/jtemplate` and its aliases (default
-`/jt`, see `aliases` in [configuration.md](configuration.md)). Running
-the root with no arguments shows the help listing.
+Every TPA command is a standalone root (plus a `/juicytpa` subcommand)
+by default; disable a root in `commands` to keep only the hub form (see
+[configuration.md](configuration.md)). Requests are strictly one-to-one:
+a selector must resolve to exactly one player, and console cannot send or
+answer requests.
 
 | Command | Description | Permission |
 | --- | --- | --- |
-| `/jtemplate help [query]` | Shows the in-game command list. | `jtemplate.help` |
-| `/jtemplate version` | Shows the plugin version and authors. | `jtemplate.version` |
-| `/jtemplate reload` | Reloads all configuration files. | `jtemplate.reload` |
+| `/tpa <player>` | Ask to teleport to a player. | `juicytpa.tpa` |
+| `/tpahere <player>` | Ask a player to teleport to you. | `juicytpa.tpahere` |
+| `/tpaccept [player]` | Accept a TP request. | `juicytpa.accept` |
+| `/tpadeny [player]` | Deny a TP request. | `juicytpa.deny` |
+| `/tpacancel [player]` | Cancel an outgoing TP request. | `juicytpa.cancel` |
+| `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
+| `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
+Default root aliases: `/tpask` for `/tpa`; `/tpah`, `/tphere`, `/tph`
+for `/tpahere`; `/tpac`, `/tpc` for `/tpaccept`; `/tpad`, `/tpdeny`,
+`/tpd` for `/tpadeny`; `/tpcancel`, `/tpcl` for `/tpacancel`; `/tpam`,
+`/tpmode`, `/tpm` for `/tpamode`.
+
+- **Requests** expire after `requestDuration` seconds. The receiver gets
+  a chat notice with clickable [Accept]/[Reject] prompts (linked to
+  `/tpaccept` and `/tpadeny` for that sender) plus an actionbar; the
+  sender gets a confirmation plus an actionbar. Each side's chat and
+  actionbar can be toggled separately.
+- **Answering** bare (`/tpaccept`, `/tpadeny`) answers the single pending
+  request; with several pending (concurrency on), name the player.
+  `/tpacancel` mirrors this for outgoing requests.
+- **Modes** (`/tpamode`, bare cycles): Normal receives requests as
+  usual; Block all refuses them at once (the sender is told); Accept all
+  teleports at once. Modes persist across restarts.
+- **Concurrency** off (default) means one outgoing request at a time.
+  With it on, players may hold several; accepting one then cancels the
+  receiver's other pending requests (toggleable).
 - **`help`** supports an optional query argument that filters the listed
-  commands (`/jtemplate help reload`). Entries are filtered by permission,
+  commands (`/juicytpa help reload`). Entries are filtered by permission,
   so every sender only sees what they may use.
 - **`version`** prints the plugin's version and author list with links,
   and repeats a pending update notice to admins.
@@ -37,7 +62,7 @@ See [permissions.md](permissions.md) for defaults.
    `root.then(new MyCommand(...).node())`, injecting only the services it
    needs (commonly `CommandContext`).
 3. Declare the permission in `paper-plugin.yml` (with a constant in
-   `TemplatePermissions`), document it in [permissions.md](permissions.md)
-   and add a `HelpEntry` so the command shows up in `/jtemplate help`.
+   `TpaPermissions`), document it in [permissions.md](permissions.md)
+   and add a `HelpEntry` so the command shows up in `/juicytpa help`.
 
 See [api.md](api.md) for the full walkthrough.

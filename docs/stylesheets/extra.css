@@ -1,12 +1,12 @@
-/* JTemplate brand colors. Header uses the darker shade, tabs keep the signature hex. */
+/* JuicyTPA green palette. Hue follows #44e63e while each shade keeps its original saturation and brightness. */
 :root {
-  --md-primary-fg-color: #c05d4d;
-  --md-primary-fg-color--light: #e89583;
-  --md-primary-fg-color--dark: #de7766;
+  --md-primary-fg-color: #51c04d;
+  --md-primary-fg-color--light: #87e883;
+  --md-primary-fg-color--dark: #6ade66;
   --md-primary-bg-color: #fff;
   --md-primary-bg-color--light: hsla(0, 0%, 100%, .7);
-  --md-accent-fg-color: #de7766;
-  --md-accent-fg-color--transparent: rgba(222, 119, 102, .1);
+  --md-accent-fg-color: #6ade66;
+  --md-accent-fg-color--transparent: rgba(106, 222, 102, .1);
   --md-accent-bg-color: #fff;
   --md-accent-bg-color--light: hsla(0, 0%, 100%, .7);
 }

@@ -6,14 +6,18 @@ icon: material/key
 
 | Permission | Description | Default |
 | --- | --- | --- |
-| `jtemplate.self` | Act as yourself in commands that support selectors. | Everyone |
-| `jtemplate.other` | Target other players with commands that support selectors (needs the matching command permission too). | OP |
-| `jtemplate.reload` | Use `/jtemplate reload`. | OP |
-| `jtemplate.help` | Use `/jtemplate help` (entries are permission-filtered). | Everyone |
-| `jtemplate.version` | Use `/jtemplate version`. | Everyone |
+| `juicytpa.tpa` | Send `/tpa` requests. | Everyone |
+| `juicytpa.tpahere` | Send `/tpahere` requests. | Everyone |
+| `juicytpa.accept` | Accept requests with `/tpaccept`. | Everyone |
+| `juicytpa.deny` | Deny requests with `/tpadeny`. | Everyone |
+| `juicytpa.cancel` | Cancel requests with `/tpacancel`. | Everyone |
+| `juicytpa.mode` | Change your mode with `/tpamode`. | Everyone |
+| `juicytpa.reload` | Use `/juicytpa reload`. | OP |
+| `juicytpa.help` | Use `/juicytpa help`. | Everyone |
+| `juicytpa.version` | Use `/juicytpa version`. | Everyone |
 
 Permissions are checked on the command nodes with Brigadier `requires()`
 predicates (see `CommandContext.requiresPermission`); the node constants
-live in `TemplatePermissions`. Commands that target other players check
-`jtemplate.other` through `TargetSelector`. See
+live in `TpaPermissions`. Every TPA command targets other players by
+design, so each command has its own node instead of a shared scope. See
 [commands.md](commands.md).

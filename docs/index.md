@@ -3,26 +3,25 @@ icon: material/home
 ---
 
 ![Banner](assets/banner-1280x640.png)
-# JTemplate
+# JuicyTPA
 
-A clean, buildable starting point for Paper plugins: commands (Paper
-native Brigadier), okaeri-configs, MiniMessage messaging, sounds,
-PlaceholderAPI placeholders and SQLite storage -- all wired without a DI
-framework.
+A modern 26.x plugin for `/tpa` and `/tpahere`: teleport requests with
+clickable accept/deny prompts, per-player modes, Folia-safe teleports
+and an SQLite store for stats and modes.
 
 ## Key Features
 
-- **Small modules** -- one package per concern, each self-contained and easy
-  to delete or extend.
-- **Manual wiring** - a registrar per module (`Bootstrap`) composes services;
-  `JTemplatePlugin` is the single composition root.
-- **Placeholders** - a template PlaceholderAPI expansion counting command
-  executions (`%jtemplate_uses%`, plus a per-player variant).
-- **SQLite storage** -- generic per-player / global counters in
-  `jtemplate.db`, driven by the server's bundled JDBC driver.
-- **Update checker** -- async GitHub releases check with console and
+- **Requests** » `/tpa` to go to them, `/tpahere` to summon them, with
+  chat prompts plus actionbar nudges.
+- **Modes** » Normal, Block all and Accept all per player, persisted in
+  `juicytpa.db` and cycled with a bare `/tpamode`.
+- **Concurrency** » one pending request at a time by default, or many
+  with an accept-sweeps-the-rest option.
+- **Placeholders** » `%jtpa_sent%`, `%jtpa_received%` and `%jtpa_mode%`
+  with per-player and global variants.
+- **Update checker** » async GitHub releases check with console and
   in-game notices.
-- **Reloadable** -- `/jtemplate reload` re-reads every config and re-opens
+- **Reloadable** » `/juicytpa reload` re-reads every config and re-opens
   the storage and placeholders.
 
 ## Documentation
@@ -32,7 +31,7 @@ framework.
 - [Permissions](permissions.md)
 - [Configuration](configuration.md)
 - [Placeholders](placeholders.md)
-- [Extending the template](api.md)
+- [Plugin API](api.md)
 
 ## Build
 
@@ -42,5 +41,4 @@ Java 25 is required.
 ./gradlew build
 ```
 
-The plugin jar is written to `build/libs/`. See the root
-[README](../README.md) for the "start a new plugin" workflow.
+The plugin jar is written to `build/libs/`.
