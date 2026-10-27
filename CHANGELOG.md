@@ -1,4 +1,64 @@
 # Changelog
+## [1.2.0] - 2026-10-27
+
+### Bug Fixes
+
+- Tplist semantics
+
+- Close config streams okaeri leaks on load
+
+> Okaeri 5.0.13 load() never closes its FileInputStream, so every
+> loaded file stays locked on Windows: JUnit @TempDir cleanup fails
+> (7 bundle tests) and live lang files cannot be replaced. Feed
+> load(InputStream) a stream we own and close; load(true) expands
+> to its load() + save() equivalent.
+
+
+### Documentation
+
+- Document /tpalanguage, language permission and lang files
+
+- Update language table to 52 codes
+
+
+### Features
+
+- Split accept sounds into mover teleport and anchor click
+
+> The teleporter hears entity.player.teleport at the destination; the party that stays put keeps the button click. Append a trailing newline to the request notice.
+
+- Per-player multi-language message bundles with /tpalanguage
+
+> Every recipient now reads the bundle matching their own language: pinned code first, else the live client locale, else English. Adds TpaLanguages, MessageBundles, PlayerLanguage and TpaLangStore, moves hover tooltips, help descriptions, link buttons and author joining words into messages.yml, and registers /tpalanguage (/tpalang) with pin, auto-clear and show modes.
+
+- Ship 17 language files with full message coverage
+
+- Expand to 52 codes with pt/zh regional splits
+
+> Rename se to sv (keep se as legacy input alias), split pt into
+> pt_br + pt_pt and zh into zh_cn + zh_tw, extend normalize with
+> full-tag wins and regional fallbacks.
+
+- Add da cs hu vi id translations
+
+- Add 25 more translations incl lol_us en_pt qya_aa
+
+
+### Miscellaneous
+
+- Update for v1.1.0 [skip ci]
+
+
+### Testing
+
+- Align list category assertions with the new defaults
+
+- Migrate fixtures to bundles and cover shipped languages
+
+> Mocked MessageBundles in service, expansion and messenger fixtures, pass explicit joining words and hover templates, and add LangResourcesTest loading every lang file with MiniMessage validation.
+
+- Cover new codes aliases and joke locales
+
 ## [1.1.0] - 2026-10-27
 
 ### Bug Fixes
