@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -106,8 +107,8 @@ class TpaServiceTest {
         lenient().when(player.getName()).thenReturn(name);
         lenient().when(player.getLocation()).thenReturn(mock(Location.class));
         EntityScheduler entityScheduler = mock(EntityScheduler.class);
-        lenient().when(entityScheduler.run(eq(plugin), any(Consumer.class), any())).thenAnswer(invocation -> {
-            invocation.getArgument(1, Consumer.class).accept(mock(ScheduledTask.class));
+        lenient().when(entityScheduler.run(eq(plugin), any(), any())).thenAnswer(invocation -> {
+            invocation.<Consumer<ScheduledTask>>getArgument(1).accept(mock(ScheduledTask.class));
             return mock(ScheduledTask.class);
         });
         lenient().when(player.getScheduler()).thenReturn(entityScheduler);
@@ -122,8 +123,8 @@ class TpaServiceTest {
         assertEquals(1, service.incoming(receiverId).size());
         assertEquals(1, service.outgoing(senderId).size());
         assertEquals(1, scheduled.size());
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getRequestSent()), any(Map.class));
-        verify(messenger).send(eq(receiver), eq(messages.getTpa().getRequestReceived()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getRequestSent()), anyMap());
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getRequestReceived()), anyMap());
         verify(soundPlayer).play(receiver, sounds.getAsk());
     }
 
@@ -132,7 +133,7 @@ class TpaServiceTest {
     void shouldRejectSelfRequests() {
         assertEquals(0, service.send(source, sender, false));
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getSelfRequest()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getSelfRequest()), anyMap());
         assertTrue(service.outgoing(senderId).isEmpty());
     }
 
@@ -145,7 +146,7 @@ class TpaServiceTest {
         assertEquals(1, service.send(source, receiver, false));
         assertEquals(0, service.send(source, other, false));
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getAlreadyPending()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getAlreadyPending()), anyMap());
     }
 
     @Test
@@ -155,7 +156,7 @@ class TpaServiceTest {
 
         assertEquals(0, service.send(source, receiver, false));
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getReceiverBlocked()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getReceiverBlocked()), anyMap());
         assertTrue(service.incoming(receiverId).isEmpty());
     }
 
@@ -168,7 +169,7 @@ class TpaServiceTest {
 
         assertTrue(service.incoming(receiverId).isEmpty());
         verify(sender).teleport(receiver.getLocation());
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getAcceptSender()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getAcceptSender()), anyMap());
         verify(soundPlayer).play(sender, sounds.getAccept());
     }
 
@@ -182,7 +183,7 @@ class TpaServiceTest {
 
         assertTrue(service.incoming(receiverId).isEmpty());
         verify(sender).teleport(receiver.getLocation());
-        verify(messenger).send(eq(receiver), eq(messages.getTpa().getAcceptReceiver()), any(Map.class));
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getAcceptReceiver()), anyMap());
     }
 
     @Test
@@ -208,7 +209,7 @@ class TpaServiceTest {
         assertTrue(service.incoming(receiverId).isEmpty());
         verify(sender, never()).teleport(any(Location.class));
         verify(receiver, never()).teleport(any(Location.class));
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getDenySender()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getDenySender()), anyMap());
         verify(soundPlayer).play(sender, sounds.getReject());
     }
 
@@ -220,8 +221,8 @@ class TpaServiceTest {
         assertEquals(1, service.cancel(source, Optional.empty()));
 
         assertTrue(service.outgoing(senderId).isEmpty());
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getCancelSender()), any(Map.class));
-        verify(messenger).send(eq(receiver), eq(messages.getTpa().getCancelReceiver()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getCancelSender()), anyMap());
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getCancelReceiver()), anyMap());
     }
 
     @Test
@@ -231,8 +232,8 @@ class TpaServiceTest {
         scheduled.forEach(Runnable::run);
 
         assertTrue(service.incoming(receiverId).isEmpty());
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getTimeoutSender()), any(Map.class));
-        verify(messenger).send(eq(receiver), eq(messages.getTpa().getTimeoutReceiver()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getTimeoutSender()), anyMap());
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getTimeoutReceiver()), anyMap());
         verify(soundPlayer).play(receiver, sounds.getTimeout());
     }
 
@@ -245,7 +246,7 @@ class TpaServiceTest {
 
         assertEquals(TpaMode.ACCEPT_ALL, new TpaModeStore(() -> storage).mode(senderId));
         verify(messenger, times(2))
-                .send(eq(sender), eq(messages.getTpa().getModeSet()), any(Map.class));
+                .send(eq(sender), eq(messages.getTpa().getModeSet()), anyMap());
     }
 
     @Test
@@ -275,7 +276,7 @@ class TpaServiceTest {
         assertEquals(1, service.accept(source, Optional.of(sender)));
 
         assertTrue(service.incoming(receiverId).isEmpty());
-        verify(messenger).send(eq(rival), eq(messages.getTpa().getAutoCancelled()), any(Map.class));
+        verify(messenger).send(eq(rival), eq(messages.getTpa().getAutoCancelled()), anyMap());
     }
 
     @Test
@@ -285,7 +286,7 @@ class TpaServiceTest {
 
         assertEquals(0, service.send(source, receiver, false));
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getRequestBlocked()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getRequestBlocked()), anyMap());
         assertTrue(service.incoming(receiverId).isEmpty());
     }
 
@@ -298,12 +299,12 @@ class TpaServiceTest {
         assertEquals(1, service.block(source, sender));
         assertTrue(new TpaBlockStore(() -> storage).isBlocked(receiverId, senderId));
         assertTrue(service.incoming(receiverId).isEmpty());
-        verify(messenger).send(eq(receiver), eq(messages.getTpa().getBlockAdded()), any(Map.class));
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getAutoCancelled()), any(Map.class));
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getBlockAdded()), anyMap());
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getAutoCancelled()), anyMap());
 
         assertEquals(1, service.block(source, sender));
         assertFalse(new TpaBlockStore(() -> storage).isBlocked(receiverId, senderId));
-        verify(messenger).send(eq(receiver), eq(messages.getTpa().getBlockRemoved()), any(Map.class));
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getBlockRemoved()), anyMap());
     }
 
     @Test
@@ -311,7 +312,7 @@ class TpaServiceTest {
     void shouldRejectSelfBlock() {
         assertEquals(0, service.block(source, sender));
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getBlockSelf()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getBlockSelf()), anyMap());
     }
 
     @Test
@@ -325,7 +326,7 @@ class TpaServiceTest {
 
         assertEquals(1, service.incoming(receiverId).size());
         assertEquals(1, service.incoming(other.getUniqueId()).size());
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getTpallSent()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getTpallSent()), anyMap());
     }
 
     @Test
@@ -348,7 +349,7 @@ class TpaServiceTest {
     void shouldGateBulkOnConcurrency() {
         assertEquals(0, service.sendBulk(source, List.of(receiver), false));
 
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getNeedsConcurrency()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getNeedsConcurrency()), anyMap());
         assertTrue(service.incoming(receiverId).isEmpty());
     }
 
@@ -373,6 +374,6 @@ class TpaServiceTest {
 
         assertEquals(0, service.send(source, receiver, false));
 
-        verify(messenger).send(any(CommandSender.class), eq(messages.getTpa().getPlayerOnly()), any(Map.class));
+        verify(messenger).send(any(CommandSender.class), eq(messages.getTpa().getPlayerOnly()), anyMap());
     }
 }

@@ -14,17 +14,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -56,6 +56,9 @@ class TargetSelectorTest {
     @Mock
     private PlayerSelectorArgumentResolver selector;
 
+    @Captor
+    private ArgumentCaptor<Function<MessagesConfig, String>> messageCaptor;
+
     private Player player(UUID id) {
         Player player = mock(Player.class);
         lenient().when(player.getUniqueId()).thenReturn(id);
@@ -83,9 +86,8 @@ class TargetSelectorTest {
         var target = TargetSelector.single(source, selector, ctx);
 
         assertTrue(target.isEmpty());
-        var captor = ArgumentCaptor.forClass(Function.class);
-        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
-        assertEquals("none", selectedMessage(captor.getValue()));
+        verify(ctx).error(eq(source), messageCaptor.capture(), anyMap());
+        assertEquals("none", selectedMessage(messageCaptor.getValue()));
     }
 
     @Test
@@ -97,9 +99,8 @@ class TargetSelectorTest {
         var target = TargetSelector.single(source, selector, ctx);
 
         assertTrue(target.isEmpty());
-        var captor = ArgumentCaptor.forClass(Function.class);
-        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
-        assertEquals("none", selectedMessage(captor.getValue()));
+        verify(ctx).error(eq(source), messageCaptor.capture(), anyMap());
+        assertEquals("none", selectedMessage(messageCaptor.getValue()));
     }
 
     @Test
@@ -112,9 +113,8 @@ class TargetSelectorTest {
         var target = TargetSelector.single(source, selector, ctx);
 
         assertTrue(target.isEmpty());
-        var captor = ArgumentCaptor.forClass(Function.class);
-        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
-        assertEquals("single", selectedMessage(captor.getValue()));
+        verify(ctx).error(eq(source), messageCaptor.capture(), anyMap());
+        assertEquals("single", selectedMessage(messageCaptor.getValue()));
     }
 
     @Test
@@ -140,9 +140,8 @@ class TargetSelectorTest {
         var resolved = TargetSelector.group(source, selector, false, ctx);
 
         assertTrue(resolved.isEmpty());
-        var captor = ArgumentCaptor.forClass(Function.class);
-        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
-        assertEquals("single", selectedMessage(captor.getValue()));
+        verify(ctx).error(eq(source), messageCaptor.capture(), anyMap());
+        assertEquals("single", selectedMessage(messageCaptor.getValue()));
     }
 
     @Test
@@ -155,9 +154,8 @@ class TargetSelectorTest {
         var resolved = TargetSelector.single(source, captured, ctx);
 
         assertTrue(resolved.isEmpty());
-        var captor = ArgumentCaptor.forClass(Function.class);
-        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
-        assertEquals("unsupported", selectedMessage(captor.getValue()));
+        verify(ctx).error(eq(source), messageCaptor.capture(), anyMap());
+        assertEquals("unsupported", selectedMessage(messageCaptor.getValue()));
         verify(captured, never()).resolve(source);
     }
 
@@ -171,9 +169,8 @@ class TargetSelectorTest {
         var resolved = TargetSelector.single(source, captured, ctx);
 
         assertTrue(resolved.isEmpty());
-        var captor = ArgumentCaptor.forClass(Function.class);
-        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
-        assertEquals("unsupported", selectedMessage(captor.getValue()));
+        verify(ctx).error(eq(source), messageCaptor.capture(), anyMap());
+        assertEquals("unsupported", selectedMessage(messageCaptor.getValue()));
     }
 
     @Test

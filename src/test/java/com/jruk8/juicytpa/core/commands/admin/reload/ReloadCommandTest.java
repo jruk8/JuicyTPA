@@ -8,16 +8,17 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -35,6 +36,9 @@ class ReloadCommandTest {
     @Mock
     private CommandSourceStack source;
 
+    @Captor
+    private ArgumentCaptor<Function<MessagesConfig, String>> selectorCaptor;
+
     private ReloadCommand command(PluginConfig config) {
         return new ReloadCommand(reloader, ctx, config);
     }
@@ -46,9 +50,9 @@ class ReloadCommandTest {
 
         command(new PluginConfig()).onReload(source);
 
-        verify(ctx).sendReload(eq(source), any(Function.class), any(Map.class));
-        verify(ctx, never()).error(eq(source), any(Function.class), any(Map.class));
-        verify(ctx, never()).sendMessage(eq(source), any(Function.class), any(Map.class));
+        verify(ctx).sendReload(eq(source), any(), anyMap());
+        verify(ctx, never()).error(eq(source), any(), anyMap());
+        verify(ctx, never()).sendMessage(eq(source), any(), anyMap());
     }
 
     @Test
@@ -58,8 +62,8 @@ class ReloadCommandTest {
 
         command(new PluginConfig()).onReload(source);
 
-        verify(ctx).error(eq(source), any(Function.class), any(Map.class));
-        verify(ctx, never()).sendReload(eq(source), any(Function.class), any(Map.class));
+        verify(ctx).error(eq(source), any(), anyMap());
+        verify(ctx, never()).sendReload(eq(source), any(), anyMap());
     }
 
     @Test
@@ -73,11 +77,9 @@ class ReloadCommandTest {
 
         command(config).onReload(source);
 
-        var selector = forClass(Function.class);
-        verify(ctx).sendMessage(eq(source), selector.capture(), any(Map.class));
-        @SuppressWarnings("unchecked")
-        Function<MessagesConfig, String> fn = (Function<MessagesConfig, String>) selector.getValue();
+        verify(ctx).sendMessage(eq(source), selectorCaptor.capture(), anyMap());
         var messages = new MessagesConfig();
-        assertEquals(messages.getCore().getReloadRestartRequired(), fn.apply(messages));
+        var expected = messages.getCore().getReloadRestartRequired();
+        assertEquals(expected, selectorCaptor.getValue().apply(messages));
     }
 }

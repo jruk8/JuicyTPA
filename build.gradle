@@ -19,6 +19,12 @@ dependencies {
     testImplementation 'me.clip:placeholderapi:2.11.6'
 }
 
+// Keep `build` output clean: MockBukkit's bootstrap agent trips a CDS
+// sharing warning and sqlite-jdbc trips a native-access warning on JDK 25.
+tasks.withType(Test) {
+    jvmArgs('-Xshare:off', '--enable-native-access=ALL-UNNAMED')
+}
+
 // plugin-conventions only expands plugin.yml, but JTemplate declares its
 // metadata (including permissions) in paper-plugin.yml, so expand the same
 // gradle.properties there.
