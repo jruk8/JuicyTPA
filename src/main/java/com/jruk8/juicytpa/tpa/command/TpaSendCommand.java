@@ -4,10 +4,13 @@ import com.jruk8.juicytpa.tpa.selector.PlayerSelectorArgument;
 import com.jruk8.juicytpa.tpa.selector.TargetSelector;
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.command.Permissions;
+import com.jruk8.juicytpa.command.user.help.HelpCommand;
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -27,12 +30,15 @@ public class TpaSendCommand {
     private final TpaService service;
     private final String permission;
     private final boolean here;
+    private final HelpCommand help;
 
-    public TpaSendCommand(CommandContext ctx, TpaService service, String permission, boolean here) {
+    public TpaSendCommand(
+            CommandContext ctx, TpaService service, String permission, boolean here, HelpCommand help) {
         this.ctx = ctx;
         this.service = service;
         this.permission = permission;
         this.here = here;
+        this.help = help;
     }
 
     /**
@@ -51,19 +57,38 @@ public class TpaSendCommand {
                 })
                 .then(Commands.argument("targets", PlayerSelectorArgument.players())
                         .suggests((context, builder) -> {
+                            // Best effort first: clients may re-sort, but ours goes out first.
+                            if (context.getSource().getSender().hasPermission(Permissions.HELP)
+                                    && "help".startsWith(builder.getRemainingLowerCase())) {
+                                builder.suggest("help");
+                            }
                             for (String candidate : TpaSuggestions.suggestTargets(
                                     context.getSource(), builder.getRemainingLowerCase())) {
                                 builder.suggest(candidate);
                             }
                             return builder.buildFuture();
                         })
-                        .executes(context -> {
-                            PlayerSelectorArgumentResolver selector = context.getArgument(
-                                    "targets", PlayerSelectorArgumentResolver.class);
-                            boolean multi = context.getSource().getSender().hasPermission(Permissions.TPALL);
-                            var targets = TargetSelector.group(context.getSource(), selector, multi, ctx);
-                            return targets.map(players -> send(context.getSource(), players)).orElse(0);
-                        }));
+                        .executes(context -> execute(
+                                context.getSource(),
+                                context.getArgument("targets", PlayerSelectorArgumentResolver.class))));
+    }
+
+    /**
+     * Runs a parsed send: the help listing on the help selector, else
+     * a request to the resolved targets. Package-visible for testing;
+     * production calls it through the node's executes handler.
+     *
+     * @param source the command source
+     * @param selector the parsed target selector
+     * @return the Brigadier result code
+     */
+    int execute(CommandSourceStack source, PlayerSelectorArgumentResolver selector) {
+        if (isHelpRequest(selector)) {
+            return showHelp(source);
+        }
+        boolean multi = source.getSender().hasPermission(Permissions.TPALL);
+        var targets = TargetSelector.group(source, selector, multi, ctx);
+        return targets.map(players -> send(source, players)).orElse(0);
     }
 
     private int send(CommandSourceStack source, List<Player> targets) {
@@ -71,5 +96,29 @@ public class TpaSendCommand {
             return service.sendBulk(source, targets, here);
         }
         return service.send(source, targets.getFirst(), here);
+    }
+
+    private static boolean isHelpRequest(PlayerSelectorArgumentResolver selector) {
+        return selector instanceof PlayerSelectorArgument.Captured captured
+                && captured.rawInput().trim().equalsIgnoreCase("help")
+                && noPlayerNamedHelp();
+    }
+
+    private static boolean noPlayerNamedHelp() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getName().equalsIgnoreCase("help")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private int showHelp(CommandSourceStack source) {
+        if (!source.getSender().hasPermission(Permissions.HELP)) {
+            ctx.error(source, m -> m.getCore().getNoPermission(), Map.of("permission", Permissions.HELP));
+            return 0;
+        }
+        help.showHelp(source, null);
+        return Command.SINGLE_SUCCESS;
     }
 }
