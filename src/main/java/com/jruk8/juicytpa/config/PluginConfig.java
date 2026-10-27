@@ -34,6 +34,13 @@ public class PluginConfig extends OkaeriConfig {
     private List<String> aliases = List.of("jtpa", "jtp", "jt");
 
     @Comment({
+            "Default language for players without a /tpalanguage pin: auto follows",
+            "each player's client locale, any other key forces that language.",
+            "Keys: https://jruk8.github.io/JuicyTPA/configuration/messages/#languages"
+    })
+    private String defaultLanguage = "auto";
+
+    @Comment({
             "SQLite storage settings.",
             "The database file is created inside the plugin's data folder."
     })

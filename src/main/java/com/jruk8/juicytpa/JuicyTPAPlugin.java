@@ -103,7 +103,8 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 configRegistrar.getMessagesConfig(),
                 playerLanguage::get,
                 new File(getDataFolder(), "lang"),
-                logger);
+                logger,
+                configRegistrar.getPluginConfig()::getDefaultLanguage);
         reloader.register(bundles);
         return bundles;
     }

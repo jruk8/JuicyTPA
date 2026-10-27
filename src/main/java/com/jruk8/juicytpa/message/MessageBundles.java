@@ -15,9 +15,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +36,9 @@ public final class MessageBundles implements Reloadable {
     private final Function<UUID, String> pinLookup;
     private final File langDir;
     private final Logger logger;
+    private final Supplier<String> defaultLanguage;
     private final Map<String, MessagesConfig> cache = new ConcurrentHashMap<>();
+    private final Set<String> warnedBadDefaults = ConcurrentHashMap.newKeySet();
 
     /**
      * English-only bundles for tests: every sender reads the given config.
@@ -42,25 +46,29 @@ public final class MessageBundles implements Reloadable {
      * @param english the config every sender reads
      */
     public MessageBundles(MessagesConfig english) {
-        this(english, uuid -> null, null, Logger.getLogger(MessageBundles.class.getName()));
+        this(english, uuid -> null, null, Logger.getLogger(MessageBundles.class.getName()), () -> "auto");
     }
 
     /**
      * @param english the English config ({@code messages.yml}), always the fallback
-     * @param pinLookup the pinned code per player, or null to follow the client locale
+     * @param pinLookup the pinned code per player, or null to follow the default
      * @param langDir the data-folder {@code lang} directory holding the translations
      * @param logger the plugin logger
+     * @param defaultLanguage the configured default: {@code auto} follows the
+     * client locale, any other key forces that language on unpinned players
      */
     public MessageBundles(
             MessagesConfig english,
             Function<UUID, String> pinLookup,
             File langDir,
-            Logger logger
+            Logger logger,
+            Supplier<String> defaultLanguage
     ) {
         this.english = english;
         this.pinLookup = pinLookup;
         this.langDir = langDir;
         this.logger = logger;
+        this.defaultLanguage = defaultLanguage;
     }
 
     /**
@@ -72,8 +80,9 @@ public final class MessageBundles implements Reloadable {
 
     /**
      * Resolves the bundle one sender reads: their pinned language,
-     * else their live client locale, else English. Non-players and
-     * anything unknown read English.
+     * else the configured default ({@code auto} follows their live
+     * client locale), else English. Non-players and anything unknown
+     * read English.
      *
      * @param sender the recipient
      * @return the recipient's bundle, never null
@@ -86,8 +95,28 @@ public final class MessageBundles implements Reloadable {
         if (pin != null) {
             return configForCode(pin);
         }
+        return configForCode(resolveDefault(player));
+    }
+
+    private String resolveDefault(Player player) {
+        String configured = defaultLanguage.get();
+        if (configured == null || configured.isBlank() || "auto".equalsIgnoreCase(configured.strip())) {
+            return clientCode(player);
+        }
+        var match = TpaLanguages.matches(configured);
+        if (match.isPresent()) {
+            return match.get();
+        }
+        if (warnedBadDefaults.add(configured)) {
+            logger.log(Level.WARNING,
+                    "Unknown default-language '" + configured + "'; falling back to auto");
+        }
+        return clientCode(player);
+    }
+
+    private static String clientCode(Player player) {
         Locale locale = player.locale();
-        return configForCode(locale == null ? TpaLanguages.ENGLISH : TpaLanguages.normalize(locale.toLanguageTag()));
+        return locale == null ? TpaLanguages.ENGLISH : TpaLanguages.normalize(locale.toLanguageTag());
     }
 
     /**
@@ -104,6 +133,7 @@ public final class MessageBundles implements Reloadable {
     @Override
     public void reload() {
         cache.clear();
+        warnedBadDefaults.clear();
     }
 
     private MessagesConfig load(String code) {
