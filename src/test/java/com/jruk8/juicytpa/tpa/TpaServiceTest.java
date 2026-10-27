@@ -230,7 +230,7 @@ class TpaServiceTest {
         assertTrue(service.incoming(receiverId).isEmpty());
         verify(sender).teleport(receiver.getLocation());
         verify(messenger).send(eq(sender), eq(messages.getTpa().getAcceptSender()), anyMap());
-        verify(soundPlayer).play(sender, sounds.getAccept());
+        verify(soundPlayer).play(sender, sounds.getTeleport());
     }
 
     @Test
@@ -256,7 +256,7 @@ class TpaServiceTest {
 
         var inOrder = inOrder(sender, soundPlayer);
         inOrder.verify(sender).teleport(receiver.getLocation());
-        inOrder.verify(soundPlayer).play(sender, sounds.getAccept());
+        inOrder.verify(soundPlayer).play(sender, sounds.getTeleport());
         verify(soundPlayer).play(receiver, sounds.getAccept());
     }
 
@@ -270,6 +270,8 @@ class TpaServiceTest {
 
         verify(receiver).teleport(sender.getLocation());
         verify(sender, never()).teleport(any(Location.class));
+        verify(soundPlayer).play(receiver, sounds.getTeleport());
+        verify(soundPlayer).play(sender, sounds.getAccept());
     }
 
     @Test

@@ -561,7 +561,7 @@ public class TpaService {
         Player anchor = request.here() ? sender : receiver;
         mover.getScheduler().run(plugin, task -> {
             mover.teleport(anchor.getLocation());
-            ctx.soundPlayer().play(mover, ctx.sounds().getAccept());
+            ctx.soundPlayer().play(mover, ctx.sounds().getTeleport());
         }, null);
     }
 

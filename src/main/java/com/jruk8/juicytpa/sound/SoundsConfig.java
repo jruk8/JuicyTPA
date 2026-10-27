@@ -32,8 +32,11 @@ public class SoundsConfig extends OkaeriConfig {
     @Comment("Sound played to the receiver when a TP request arrives.")
     private Sound ask = new Sound(true, "entity.cat.beg_for_food", 1.2f, 1.0f);
 
-    @Comment("Sound played to both parties when a TP request is accepted.")
+    @Comment("Sound played to the party that stays put when a TP request is accepted.")
     private Sound accept = new Sound(true, "block.cherry_wood_pressure_plate.click_on", 1.2f, 1.0f);
+
+    @Comment("Sound played to the teleporter at the destination after a successful teleport.")
+    private Sound teleport = new Sound(true, "entity.player.teleport", 1.2f, 1.0f);
 
     @Comment("Sound played to the sender when a TP request is denied.")
     private Sound reject = new Sound(true, "entity.cat.purreow", 0.7f, 1.0f);

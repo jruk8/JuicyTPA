@@ -15,7 +15,8 @@ Sound names are namespaced Minecraft keys (e.g.
 | `neutral` | Ordinary command feedback. |
 | `celebration` | Reloads, help and version output. |
 | `ask` | A TP request arrives (receiver). |
-| `accept` | A TP request is accepted (both parties; the mover hears it at the destination). |
+| `accept` | A TP request is accepted (the party that stays put). |
+| `teleport` | A teleport lands (the mover, at the destination). |
 | `reject` | A TP request is denied (sender). |
 | `timeout` | A TP request times out (both parties). |
 | `angry` | A command fails. |

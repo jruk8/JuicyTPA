@@ -86,7 +86,7 @@ public class MessagesConfig extends OkaeriConfig {
         @Comment("Request notice sent to the receiver (use {body}, {time}, {accept} and {reject})")
         private String requestReceived = "\\n{prefix}\\n{brand}» {body}"
                 + "\\n{brand}» {plain}Accept within {hl}{time}{plain}."
-                + "\\n{accept} {plain}| {reject}";
+                + "\\n{accept} {plain}| {reject}\\n";
 
         @Comment("Receiver notice body for /tpa requests (use {player})")
         private String requestAskBody = "{hl}{player} {plain}has sent you a {hl}TP request{plain}.";
