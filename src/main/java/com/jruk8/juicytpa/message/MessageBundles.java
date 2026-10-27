@@ -3,6 +3,7 @@ package com.jruk8.juicytpa.message;
 import com.jruk8.juicytpa.core.Reloadable;
 
 import eu.okaeri.configs.ConfigManager;
+import eu.okaeri.configs.exception.OkaeriException;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import org.bukkit.command.CommandSender;
@@ -112,7 +113,13 @@ public final class MessageBundles implements Reloadable {
             return ConfigManager.create(MessagesConfig.class, it -> {
                 it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit());
                 it.withBindFile(file);
-                it.load();
+                // Okaeri's load() never closes its stream, locking the
+                // file on Windows; feed it a stream we close instead.
+                try (InputStream in = Files.newInputStream(file.toPath())) {
+                    it.load(in);
+                } catch (IOException e) {
+                    throw new OkaeriException("failed #load using file " + file, e);
+                }
             });
         } catch (Exception e) {
             logger.log(Level.WARNING, "Falling back to English; could not load lang/" + code + ".yml", e);

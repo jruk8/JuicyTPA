@@ -7,12 +7,16 @@ import com.jruk8.juicytpa.sound.SoundsConfig;
 
 import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.exception.OkaeriException;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.List;
 
 public class ConfigRegistrar implements Bootstrap, Reloadable {
@@ -59,6 +63,14 @@ public class ConfigRegistrar implements Bootstrap, Reloadable {
 
     private static void saveAndLoad(OkaeriConfig config) {
         config.saveDefaults();
-        config.load(true);
+        // load(true) is load() + save(); load() never closes its
+        // stream, locking the file on Windows, so feed it a stream
+        // we close instead.
+        try (InputStream in = Files.newInputStream(config.getBindFile())) {
+            config.load(in);
+        } catch (IOException e) {
+            throw new OkaeriException("failed #load using file " + config.getBindFile(), e);
+        }
+        config.save();
     }
 }
