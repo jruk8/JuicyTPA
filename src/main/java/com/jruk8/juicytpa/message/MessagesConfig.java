@@ -270,16 +270,16 @@ public class MessagesConfig extends OkaeriConfig {
         private String listLine = "{brand}• {plain}{category} {brand}» {hl}{players}";
 
         @Comment("Category for incoming /tpa requests in /tpalist")
-        private String listIncomingAsk = "Wants TP to you";
+        private String listIncomingAsk = "Received TP requests";
 
         @Comment("Category for incoming /tpahere requests in /tpalist")
-        private String listIncomingHere = "Wants TP to them";
+        private String listIncomingHere = "Received TPH requests";
 
         @Comment("Category for outgoing /tpahere requests in /tpalist")
-        private String listOutgoingAsk = "Your TP requests";
+        private String listOutgoingAsk = "Sent TPH requests";
 
         @Comment("Category for outgoing /tpa requests in /tpalist")
-        private String listOutgoingHere = "Your TP here requests";
+        private String listOutgoingHere = "Sent TP requests";
 
         @Comment("Name separator in /tpalist lines")
         private String listComma = "{hl},";
