@@ -76,10 +76,11 @@ class TpaSuggestionsTest {
         var pluginConfig = new PluginConfig();
         var warns = new TpaWarnManager(
                 new TpaWarnStore(() -> storage), pluginConfig, System::currentTimeMillis);
+        var cooldowns = new TpaCooldowns(pluginConfig, System::currentTimeMillis, (player, key) -> null);
         service = new TpaService(
                 ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
-                warns, new TpaUsageTracker(() -> storage), plugin, (task, delay) -> mock(ScheduledTask.class),
-                online::get);
+                warns, cooldowns, new TpaUsageTracker(() -> storage), plugin,
+                (task, delay) -> mock(ScheduledTask.class), online::get);
     }
 
     @AfterEach

@@ -79,6 +79,7 @@ class TpaServiceTest {
     private Player receiver;
     private final List<Runnable> scheduled = new ArrayList<>();
     private final Map<UUID, Player> online = new HashMap<>();
+    private final Map<UUID, String> metas = new HashMap<>();
     private final AtomicLong clock = new AtomicLong();
 
     @BeforeEach
@@ -86,14 +87,17 @@ class TpaServiceTest {
         storage = new SqliteStorage("jdbc:sqlite::memory:", Logger.getLogger("tpa-service-test"));
         assertTrue(storage.init());
         clock.set(1_000_000L);
+        metas.clear();
         pluginConfig = new PluginConfig();
+        pluginConfig.getTpa().getCooldown().setEnabled(false);
         messages = new MessagesConfig();
         sounds = new SoundsConfig();
         var ctx = new CommandContext(messages, sounds, messenger, soundPlayer);
         var warns = new TpaWarnManager(new TpaWarnStore(() -> storage), pluginConfig, clock::get);
+        var cooldowns = new TpaCooldowns(pluginConfig, clock::get, (player, key) -> metas.get(player.getUniqueId()));
         service = new TpaService(
                 ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
-                warns, new TpaUsageTracker(() -> storage), plugin, this::schedule, online::get);
+                warns, cooldowns, new TpaUsageTracker(() -> storage), plugin, this::schedule, online::get);
         sender = player(senderId, "Sender");
         receiver = player(receiverId, "Receiver");
         online.put(senderId, sender);
@@ -375,6 +379,7 @@ class TpaServiceTest {
         assertEquals(1, service.incoming(receiverId).size());
         assertEquals(1, service.incoming(other.getUniqueId()).size());
         verify(messenger).send(eq(sender), eq(messages.getTpa().getTpallSent()), anyMap());
+        verify(messenger, never()).send(eq(sender), eq(messages.getTpa().getRequestSent()), anyMap());
     }
 
     @Test
@@ -566,6 +571,58 @@ class TpaServiceTest {
         inOrder.verify(messenger, times(3))
                 .send(eq(receiver), eq(messages.getTpa().getRequestReceived()), anyMap());
         inOrder.verify(messenger).send(eq(receiver), eq(messages.getTpa().getNudgeHarass()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should enforce the send cooldown")
+    void shouldEnforceCooldown() {
+        pluginConfig.getTpa().getCooldown().setEnabled(true);
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(0, service.send(source, other, false));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getSendCooldown()), anyMap());
+
+        clock.addAndGet(15_000L);
+        assertEquals(1, service.send(source, other, false));
+    }
+
+    @Test
+    @DisplayName("should read the cooldown from LuckPerms meta")
+    void shouldReadCooldownMeta() {
+        pluginConfig.getTpa().getCooldown().setEnabled(true);
+        metas.put(senderId, "1");
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+
+        assertEquals(1, service.send(source, receiver, false));
+        clock.addAndGet(1_000L);
+        assertEquals(1, service.send(source, other, false));
+    }
+
+    @Test
+    @DisplayName("should skip the cooldown for non-positive meta")
+    void shouldSkipCooldownForNonPositiveMeta() {
+        pluginConfig.getTpa().getCooldown().setEnabled(true);
+        metas.put(senderId, "0");
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(1, service.send(source, other, false));
+    }
+
+    @Test
+    @DisplayName("should fall back to the default on unparseable meta")
+    void shouldFallBackOnBadMeta() {
+        pluginConfig.getTpa().getCooldown().setEnabled(true);
+        metas.put(senderId, "soon");
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(0, service.send(source, other, false));
     }
 
     @Test

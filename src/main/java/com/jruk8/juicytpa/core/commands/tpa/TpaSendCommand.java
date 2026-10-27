@@ -11,6 +11,7 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSele
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A request root ({@code tpa}, {@code tpahere}): sends a teleport request
@@ -41,6 +42,11 @@ public class TpaSendCommand {
     public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
         return Commands.literal(label)
                 .requires(CommandContext.requiresPermission(permission))
+                .executes(context -> {
+                    ctx.error(context.getSource(), m -> m.getTpa().getUsage(),
+                            Map.of("syntax", "/" + label + " <player>"));
+                    return 0;
+                })
                 .then(Commands.argument("targets", PlayerSelectorArgument.players())
                         .suggests((context, builder) -> {
                             for (String candidate : TpaSuggestions.suggestTargets(

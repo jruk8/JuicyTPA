@@ -33,7 +33,12 @@ for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
   a chat notice with clickable [Accept]/[Reject] prompts (linked to
   `/tpaccept` and `/tpadeny` for that sender) plus an actionbar; the
   sender gets a confirmation plus an actionbar. Each side's chat and
-  actionbar can be toggled separately.
+  actionbar can be toggled separately. Bare `/tpa`, `/tpahere` and
+  `/tpablock` show a usage hint instead of running.
+- **Cooldowns** (on, 15s default) limit how often a player may send
+  `/tpa` and `/tpahere`; `/tpall` is exempt. The per-player value
+  comes from the `juicytpa-cooldown` LuckPerms meta key when LuckPerms
+  is installed, else the configured default.
 - **Answering** bare (`/tpaccept`, `/tpadeny`) answers the single pending
   request; with several pending (concurrency on), name the player.
   `/tpacancel` mirrors this for outgoing requests.

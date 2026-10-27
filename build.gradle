@@ -15,8 +15,11 @@ configurations {
 
 // PlaceholderAPI ships compileOnly via plugin-conventions; tests need it too
 // to instantiate the expansion (same version as the main classpath).
+// LuckPerms is compileOnly like the sibling JManhunt plugin: the meta
+// hook only touches its API when the plugin is installed.
 dependencies {
     testImplementation 'me.clip:placeholderapi:2.11.6'
+    compileOnly 'net.luckperms:api:5.5'
 }
 
 // Keep `build` output clean: MockBukkit's bootstrap agent trips a CDS

@@ -32,6 +32,7 @@ public class TpaService {
     private final TpaModeStore modes;
     private final TpaBlockStore blocks;
     private final TpaWarnManager warns;
+    private final TpaCooldowns cooldowns;
     private final TpaUsageTracker tracker;
     private final Plugin plugin;
     private final TaskScheduler scheduler;
@@ -44,6 +45,7 @@ public class TpaService {
             TpaModeStore modes,
             TpaBlockStore blocks,
             TpaWarnManager warns,
+            TpaCooldowns cooldowns,
             TpaUsageTracker tracker,
             Plugin plugin,
             TaskScheduler scheduler,
@@ -54,6 +56,7 @@ public class TpaService {
         this.modes = modes;
         this.blocks = blocks;
         this.warns = warns;
+        this.cooldowns = cooldowns;
         this.tracker = tracker;
         this.plugin = plugin;
         this.scheduler = scheduler;
@@ -82,6 +85,12 @@ public class TpaService {
             ctx.error(source, m -> m.getTpa().getAlreadyPending(), Map.of());
             return 0;
         }
+        long cooldownLeft = cooldowns.remaining(sender);
+        if (cooldownLeft > 0) {
+            String time = DurationFormat.format((cooldownLeft + 999L) / 1000L);
+            ctx.error(source, m -> m.getTpa().getSendCooldown(), Map.of("time", time));
+            return 0;
+        }
         if (blocks.isBlocked(target.getUniqueId(), sender.getUniqueId())) {
             ctx.error(source, m -> m.getTpa().getRequestBlocked(), Map.of("player", target.getName()));
             return 0;
@@ -96,7 +105,8 @@ public class TpaService {
             sendWarnFeedback(source, target, here, warn.get());
             return 0;
         }
-        deliver(sender, target, here);
+        deliver(sender, target, here, true);
+        cooldowns.record(sender);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -104,7 +114,8 @@ public class TpaService {
      * Sends one request to every listed target, skipping the sender,
      * duplicates and blocked pairs. Block-all mode only skips ask
      * requests. Bulk sends bypass concurrency entirely: the toggle, the
-     * cap and warning confirmations never apply.
+     * cap and warning confirmations never apply, and the sender only
+     * gets the final summary instead of per-target confirmations.
      *
      * @param source the command source
      * @param targets the receiving players
@@ -119,7 +130,7 @@ public class TpaService {
         int delivered = 0;
         for (Player target : targets) {
             if (sendable(sender, target, here)) {
-                deliver(sender, target, here);
+                deliver(sender, target, here, false);
                 delivered++;
             }
         }
@@ -308,7 +319,7 @@ public class TpaService {
         return Command.SINGLE_SUCCESS;
     }
 
-    private void deliver(Player sender, Player target, boolean here) {
+    private void deliver(Player sender, Player target, boolean here, boolean senderFeedback) {
         var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
         var request = new TpaRequest(
                 sender.getUniqueId(), sender.getName(), target.getUniqueId(), target.getName(), here,
@@ -322,7 +333,7 @@ public class TpaService {
         ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
         pending.put(key, new Entry(request, task));
         warns.delivered(request);
-        sendRequestFeedback(sender, target, here);
+        sendRequestFeedback(sender, target, here, senderFeedback);
         warns.nudgeForHarass(target.getUniqueId(), sender.getUniqueId())
                 .ifPresent(ignored -> sendHarassNudge(target, sender.getName()));
     }
@@ -443,17 +454,19 @@ public class TpaService {
         mover.getScheduler().run(plugin, task -> mover.teleport(anchor.getLocation()), null);
     }
 
-    private void sendRequestFeedback(Player sender, Player target, boolean here) {
+    private void sendRequestFeedback(Player sender, Player target, boolean here, boolean announce) {
         String time = DurationFormat.format(pluginConfig.getTpa().getRequestDuration());
-        var senderFeedback = pluginConfig.getTpa().getSenderFeedback();
-        if (senderFeedback.isMessage()) {
-            chat(sender, m -> m.getTpa().getRequestSent(),
-                    Map.of("player", target.getName(), "time", time));
+        if (announce) {
+            var senderFeedback = pluginConfig.getTpa().getSenderFeedback();
+            if (senderFeedback.isMessage()) {
+                chat(sender, m -> m.getTpa().getRequestSent(),
+                        Map.of("player", target.getName(), "time", time));
+            }
+            if (senderFeedback.isActionbar()) {
+                bar(sender, m -> m.getTpa().getRequestSentActionbar(), Map.of("player", target.getName()));
+            }
+            ctx.soundPlayer().play(sender, ctx.sounds().getNeutral());
         }
-        if (senderFeedback.isActionbar()) {
-            bar(sender, m -> m.getTpa().getRequestSentActionbar(), Map.of("player", target.getName()));
-        }
-        ctx.soundPlayer().play(sender, ctx.sounds().getNeutral());
         var receiverFeedback = pluginConfig.getTpa().getReceiverFeedback();
         if (receiverFeedback.isMessage()) {
             String template = here

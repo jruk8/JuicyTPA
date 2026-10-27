@@ -9,6 +9,8 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 
+import java.util.Map;
+
 /**
  * The {@code tpablock} root: toggles the block between the sender and
  * exactly one player.
@@ -32,6 +34,11 @@ public class TpaBlockCommand {
     public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
         return Commands.literal(label)
                 .requires(CommandContext.requiresPermission(TpaPermissions.BLOCK))
+                .executes(context -> {
+                    ctx.error(context.getSource(), m -> m.getTpa().getUsage(),
+                            Map.of("syntax", "/" + label + " <player>"));
+                    return 0;
+                })
                 .then(Commands.argument("targets", PlayerSelectorArgument.players())
                         .suggests((context, builder) -> {
                             for (String candidate : TpaSuggestions.suggestNames(

@@ -50,6 +50,10 @@ tpa:
     nudgeMinExpiryStreak: 3
     harassMinRequests: 3
     harassWindowSeconds: 600
+  cooldown:
+    enabled: true
+    defaultSeconds: 15
+    metaKey: juicytpa-cooldown
 commands:
   tpa:
     enabled: true
@@ -158,6 +162,11 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
   nudge offers one-click Block All; after `harassMinRequests` requests
   from one sender within `harassWindowSeconds` it offers Block player.
   `/tpall` skips warning confirmations.
+- `cooldown` » `enabled` gates a cooldown between `/tpa` and `/tpahere`
+  sends (bulk sends are exempt). Each player waits their LuckPerms
+  `metaKey` value in seconds, or `defaultSeconds` without (or with
+  unparseable) meta; zero or below means no cooldown. LuckPerms is
+  optional: without it everyone uses the default.
 
 ### `commands`
 

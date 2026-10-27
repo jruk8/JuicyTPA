@@ -94,7 +94,7 @@ public class MessagesConfig extends OkaeriConfig {
         private String requestHereBody = "{hl}{player} {plain}wants you to {hl}TP to them{plain}.";
 
         @Comment("Request actionbar shown to the receiver (use {player})")
-        private String requestReceivedActionbar = "{brand}{hl}{player} {brand}wants to TP!";
+        private String requestReceivedActionbar = "{ac}{hl}{player} {ac}wants to TP!";
 
         @Comment("Clickable accept button text in the request notice, shown in {ac}")
         private String acceptText = "[✔ Accept]";
@@ -193,6 +193,12 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Sent when console runs a player-only TPA command")
         private String playerOnly = "{prefix}{error}Only players can use this command.";
+
+        @Comment("Sent when a command runs without its required target (use {syntax})")
+        private String usage = "{prefix}{error}Usage: {hl}{syntax}{error}.";
+
+        @Comment("Sent when the sender is still on cooldown (use {time})")
+        private String sendCooldown = "{prefix}{error}Wait {hl}{time}{error} before sending another TP request.";
 
         @Comment("Sent when the receiver blocked the sender (use {player})")
         private String requestBlocked = "{prefix}{hl}{player} {error}has blocked you.";

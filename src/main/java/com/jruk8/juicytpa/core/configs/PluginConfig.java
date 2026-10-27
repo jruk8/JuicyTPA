@@ -102,6 +102,9 @@ public class PluginConfig extends OkaeriConfig {
                 "receiver nudges and harassment detection."
         })
         private Warnings warnings = new Warnings();
+
+        @Comment("Cooldown between outgoing /tpa and /tpahere requests.")
+        private Cooldown cooldown = new Cooldown();
     }
 
     @Getter
@@ -162,6 +165,24 @@ public class PluginConfig extends OkaeriConfig {
 
         @Comment("Sliding window in seconds for counting one sender's requests.")
         private int harassWindowSeconds = 600;
+    }
+
+    @Getter
+    @Setter
+    @SuppressWarnings("FieldMayBeFinal")
+    public static class Cooldown extends OkaeriConfig {
+
+        @Comment("Enforce a cooldown between /tpa and /tpahere sends.")
+        private boolean enabled = true;
+
+        @Comment({
+                "Default cooldown in seconds when the player has no LuckPerms",
+                "meta. Zero or below disables the cooldown."
+        })
+        private int defaultSeconds = 15;
+
+        @Comment("LuckPerms meta key holding a per-player cooldown in seconds.")
+        private String metaKey = "juicytpa-cooldown";
     }
 
     @Getter
