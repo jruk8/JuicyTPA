@@ -4,6 +4,7 @@ import com.jruk8.juicytpa.core.Bootstrap;
 import com.jruk8.juicytpa.core.Reloadable;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -23,16 +24,23 @@ public final class PlaceholdersBootstrap implements Bootstrap, Reloadable {
     private final TpaModeStore modes;
     private final TpaService service;
     private final JavaPlugin plugin;
+    private final MessagesConfig messages;
     private final Logger logger;
 
     private TpaExpansion expansion;
 
     public PlaceholdersBootstrap(
-            TpaUsageTracker tracker, TpaModeStore modes, TpaService service, JavaPlugin plugin, Logger logger) {
+            TpaUsageTracker tracker,
+            TpaModeStore modes,
+            TpaService service,
+            JavaPlugin plugin,
+            MessagesConfig messages,
+            Logger logger) {
         this.tracker = tracker;
         this.modes = modes;
         this.service = service;
         this.plugin = plugin;
+        this.messages = messages;
         this.logger = logger;
     }
 
@@ -47,6 +55,7 @@ public final class PlaceholdersBootstrap implements Bootstrap, Reloadable {
                 this.modes,
                 this.service,
                 this.plugin,
+                this.messages,
                 name -> Bukkit.getOfflinePlayer(name).getUniqueId());
         if (this.expansion.register()) {
             this.logger.info("Registered placeholders with identifier '" + TpaExpansion.IDENTIFIER + "'.");

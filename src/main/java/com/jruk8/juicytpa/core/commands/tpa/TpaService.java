@@ -223,7 +223,7 @@ public class TpaService {
             mode = parsed.get();
         }
         modes.setMode(player.getUniqueId(), mode);
-        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", mode.display()));
+        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", mode.display(ctx.messages())));
         return Command.SINGLE_SUCCESS;
     }
 

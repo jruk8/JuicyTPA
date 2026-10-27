@@ -7,6 +7,7 @@ import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
 import com.jruk8.juicytpa.core.configs.ConfigRegistrar;
 import com.jruk8.juicytpa.core.messages.MessageBootstrap;
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import com.jruk8.juicytpa.core.messages.Messenger;
 import com.jruk8.juicytpa.core.placeholders.PlaceholdersBootstrap;
 import com.jruk8.juicytpa.core.placeholders.TpaUsageTracker;
@@ -69,7 +70,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 messenger,
                 soundPlayer);
         var tpaService = tpaService(context, configRegistrar, usageTracker);
-        setupPlaceholders(reloader, logger, usageTracker, tpaService);
+        setupPlaceholders(reloader, logger, usageTracker, tpaService, configRegistrar.getMessagesConfig());
         setupCommands(reloader, configRegistrar, context, updateChecker, tpaService);
 
         // Initialize bStats unless anonymous statistics are disabled
@@ -110,10 +111,14 @@ public final class JuicyTPAPlugin extends JavaPlugin {
     }
 
     private void setupPlaceholders(
-            Reloader reloader, Logger logger, TpaUsageTracker usageTracker, TpaService tpaService) {
+            Reloader reloader,
+            Logger logger,
+            TpaUsageTracker usageTracker,
+            TpaService tpaService,
+            MessagesConfig messages) {
         // PlaceholderAPI placeholders (needs the request service for jtpa_pending)
         var placeholdersBootstrap = new PlaceholdersBootstrap(
-                usageTracker, this.modeStore, tpaService, this, logger);
+                usageTracker, this.modeStore, tpaService, this, messages, logger);
         placeholdersBootstrap.register();
         reloader.register(placeholdersBootstrap);
     }

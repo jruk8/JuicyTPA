@@ -2,6 +2,7 @@ package com.jruk8.juicytpa.core.placeholders;
 
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,6 +35,7 @@ public final class TpaExpansion extends PlaceholderExpansion {
     private final TpaModeStore modes;
     private final TpaService service;
     private final JavaPlugin plugin;
+    private final MessagesConfig messages;
     private final Function<String, UUID> nameResolver;
 
     public TpaExpansion(
@@ -41,12 +43,14 @@ public final class TpaExpansion extends PlaceholderExpansion {
             TpaModeStore modes,
             TpaService service,
             JavaPlugin plugin,
+            MessagesConfig messages,
             Function<String, UUID> nameResolver
     ) {
         this.tracker = tracker;
         this.modes = modes;
         this.service = service;
         this.plugin = plugin;
+        this.messages = messages;
         this.nameResolver = nameResolver;
     }
 
@@ -98,11 +102,13 @@ public final class TpaExpansion extends PlaceholderExpansion {
             return received;
         }
         if (MODE.equals(params)) {
-            return player == null ? null : this.modes.mode(player.getUniqueId()).display();
+            return player == null ? null : this.modes.mode(player.getUniqueId()).display(this.messages);
         }
         if (params.startsWith(MODE + "_")) {
             String name = params.substring(MODE.length() + 1);
-            return name.isEmpty() ? null : this.modes.mode(this.nameResolver.apply(name)).display();
+            return name.isEmpty()
+                    ? null
+                    : this.modes.mode(this.nameResolver.apply(name)).display(this.messages);
         }
         if (PENDING.equals(params)) {
             return player == null

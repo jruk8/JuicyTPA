@@ -3,6 +3,7 @@ package com.jruk8.juicytpa.core.placeholders;
 import com.jruk8.juicytpa.core.commands.tpa.TpaMode;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,7 +42,8 @@ class TpaExpansionTest {
     private JavaPlugin plugin;
 
     private TpaExpansion expansion() {
-        return new TpaExpansion(tracker, modes, service, plugin, Map.of("Alex", otherId)::get);
+        return new TpaExpansion(
+                tracker, modes, service, plugin, new MessagesConfig(), Map.of("Alex", otherId)::get);
     }
 
     private OfflinePlayer player(UUID id) {
@@ -123,8 +125,8 @@ class TpaExpansionTest {
         when(modes.mode(selfId)).thenReturn(TpaMode.BLOCK_ALL);
         when(modes.mode(otherId)).thenReturn(TpaMode.ACCEPT_ALL);
 
-        assertEquals("Block all", expansion().onRequest(player(selfId), "mode"));
-        assertEquals("Accept all", expansion().onRequest(mock(OfflinePlayer.class), "mode_Alex"));
+        assertEquals("Block All", expansion().onRequest(player(selfId), "mode"));
+        assertEquals("Accept All", expansion().onRequest(mock(OfflinePlayer.class), "mode_Alex"));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.jruk8.juicytpa.core.commands.tpa;
 
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -11,25 +13,25 @@ import java.util.Optional;
 public enum TpaMode {
 
     /** Requests arrive normally and wait for /tpaccept or /tpadeny. */
-    NORMAL("Normal"),
+    NORMAL,
 
     /** Incoming requests are refused at once; the sender is told. */
-    BLOCK_ALL("Block all"),
+    BLOCK_ALL,
 
     /** Incoming requests teleport at once, as if accepted. */
-    ACCEPT_ALL("Accept all");
-
-    private final String display;
-
-    TpaMode(String display) {
-        this.display = display;
-    }
+    ACCEPT_ALL;
 
     /**
+     * @param names the messages holding the configured mode names
      * @return the display name used in messages and placeholders
      */
-    public String display() {
-        return display;
+    public String display(MessagesConfig names) {
+        var tpa = names.getTpa();
+        return switch (this) {
+            case NORMAL -> tpa.getModeNormal();
+            case BLOCK_ALL -> tpa.getModeBlockAll();
+            case ACCEPT_ALL -> tpa.getModeAcceptAll();
+        };
     }
 
     /**

@@ -150,6 +150,15 @@ public class MessagesConfig extends OkaeriConfig {
         @Comment("Sent when the mode name is invalid (use {input})")
         private String modeInvalid = "{prefix}{error}Unknown TPA mode {hl}{input}{error}.";
 
+        @Comment("Display name of the normal TPA mode, used in messages and placeholders")
+        private String modeNormal = "Normal";
+
+        @Comment("Display name of the block-all TPA mode, used in messages and placeholders")
+        private String modeBlockAll = "Block All";
+
+        @Comment("Display name of the accept-all TPA mode, used in messages and placeholders")
+        private String modeAcceptAll = "Accept All";
+
         @Comment("Sent when the sender targets themselves")
         private String selfRequest = "{prefix}{error}You cannot send a TP request to yourself.";
 
