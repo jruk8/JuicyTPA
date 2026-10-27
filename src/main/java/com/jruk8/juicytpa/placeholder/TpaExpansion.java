@@ -1,5 +1,6 @@
 package com.jruk8.juicytpa.placeholder;
 
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.MessagesConfig;
 import com.jruk8.juicytpa.tpa.TpaModeStore;
 import com.jruk8.juicytpa.tpa.TpaService;
@@ -37,7 +38,7 @@ public final class TpaExpansion extends PlaceholderExpansion {
     private final TpaModeStore modes;
     private final TpaService service;
     private final JavaPlugin plugin;
-    private final MessagesConfig messages;
+    private final MessageBundles bundles;
     private final Function<String, UUID> nameResolver;
 
     public TpaExpansion(
@@ -45,14 +46,14 @@ public final class TpaExpansion extends PlaceholderExpansion {
             TpaModeStore modes,
             TpaService service,
             JavaPlugin plugin,
-            MessagesConfig messages,
+            MessageBundles bundles,
             Function<String, UUID> nameResolver
     ) {
         this.tracker = tracker;
         this.modes = modes;
         this.service = service;
         this.plugin = plugin;
-        this.messages = messages;
+        this.bundles = bundles;
         this.nameResolver = nameResolver;
     }
 
@@ -104,13 +105,11 @@ public final class TpaExpansion extends PlaceholderExpansion {
             return received;
         }
         if (MODE.equals(params)) {
-            return player == null ? null : this.messages.getTpa().modeName(this.modes.mode(player.getUniqueId()));
+            return player == null ? null : modeName(player, player.getUniqueId());
         }
         if (params.startsWith(MODE + "_")) {
             String name = params.substring(MODE.length() + 1);
-            return name.isEmpty()
-                    ? null
-                    : this.messages.getTpa().modeName(this.modes.mode(this.nameResolver.apply(name)));
+            return name.isEmpty() ? null : modeName(player, this.nameResolver.apply(name));
         }
         if (PENDING.equals(params)) {
             return player == null
@@ -118,6 +117,13 @@ public final class TpaExpansion extends PlaceholderExpansion {
                     : this.service.latestPendingSender(player.getUniqueId()).orElse(NO_PENDING);
         }
         return null;
+    }
+
+    private String modeName(OfflinePlayer viewer, UUID owner) {
+        MessagesConfig messages = viewer != null && viewer.getPlayer() != null
+                ? bundles.configFor(viewer.getPlayer())
+                : bundles.english();
+        return messages.getTpa().modeName(this.modes.mode(owner));
     }
 
     private String counterFor(

@@ -73,14 +73,14 @@ public final class TpaListService {
     }
 
     private void sendTrustedLine(Player viewer, List<UUID> trustedIds) {
+        var tpa = ctx.messagesFor(viewer).getTpa();
         List<String> names = new ArrayList<>();
         for (String name : resolveNames(trustedIds)) {
-            names.add(RequestPrompts.listTrust(name));
+            names.add(RequestPrompts.listTrust(name, tpa.getListTrustHover()));
         }
         if (names.isEmpty()) {
             return;
         }
-        var tpa = ctx.messages().getTpa();
         chat(viewer, m -> m.getTpa().getListLine(), Map.of(
                 "category", tpa.getListTrusted(),
                 "players", TpaListFormatter.join(names, tpa.getListComma(), tpa.getListAnd(), tpa.getListMore())));
@@ -99,18 +99,19 @@ public final class TpaListService {
     }
 
     private void sendListLine(Player viewer, List<TpaRequest> requests, boolean here, boolean inbound) {
+        var tpa = ctx.messagesFor(viewer).getTpa();
         List<String> names = new ArrayList<>();
         for (TpaRequest request : requests) {
             if (request.here() != here) {
                 continue;
             }
             String name = inbound ? request.senderName() : request.receiverName();
-            names.add(inbound ? RequestPrompts.listAccept(name) : RequestPrompts.listCancel(name));
+            String hover = inbound ? tpa.getAcceptHover() : tpa.getListCancelHover();
+            names.add(inbound ? RequestPrompts.listAccept(name, hover) : RequestPrompts.listCancel(name, hover));
         }
         if (names.isEmpty()) {
             return;
         }
-        var tpa = ctx.messages().getTpa();
         String category;
         if (inbound) {
             category = here ? tpa.getListIncomingHere() : tpa.getListIncomingAsk();
@@ -125,6 +126,6 @@ public final class TpaListService {
     private void chat(CommandSender to,
                       Function<MessagesConfig, String> selector,
                       Map<String, String> tags) {
-        ctx.messenger().send(to, selector.apply(ctx.messages()), tags);
+        ctx.messenger().send(to, selector.apply(ctx.messagesFor(to)), tags);
     }
 }

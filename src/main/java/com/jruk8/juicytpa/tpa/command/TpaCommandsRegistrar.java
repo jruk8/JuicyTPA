@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import com.jruk8.juicytpa.tpa.PlayerLanguage;
 import com.jruk8.juicytpa.tpa.TpaService;
 
 /**
@@ -31,11 +32,12 @@ public class TpaCommandsRegistrar implements Bootstrap {
 
     private static final Set<String> HUB_COMMANDS = Set.of(
             "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall", "tpalist",
-            "tpatrust", "tpacceptall", "tpablockall", "reload", "help", "version");
+            "tpatrust", "tpacceptall", "tpablockall", "tpalanguage", "reload", "help", "version");
 
     private final LiteralArgumentBuilder<CommandSourceStack> root;
     private final CommandContext ctx;
     private final TpaService service;
+    private final PlayerLanguage languages;
     private final PluginConfig pluginConfig;
     private final Plugin plugin;
     private final Logger logger;
@@ -44,6 +46,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
             LiteralArgumentBuilder<CommandSourceStack> root,
             CommandContext commandContext,
             TpaService service,
+            PlayerLanguage languages,
             PluginConfig pluginConfig,
             Plugin plugin,
             Logger logger
@@ -51,6 +54,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         this.root = root;
         this.ctx = commandContext;
         this.service = service;
+        this.languages = languages;
         this.pluginConfig = pluginConfig;
         this.plugin = plugin;
         this.logger = logger;
@@ -79,6 +83,8 @@ public class TpaCommandsRegistrar implements Bootstrap {
                 new TpaAcceptAllCommand(service)::node, used);
         hubSubcommand("tpablockall", channel().getTpablockall().getAliases(),
                 new TpaBlockAllCommand(service)::node, used);
+        hubSubcommand("tpalanguage", channel().getTpalanguage().getAliases(),
+                new TpaLanguageCommand(ctx, languages)::node, used);
     }
 
     private void hubSubcommand(
@@ -113,6 +119,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerTrustRoot(registrar, channel().getTpatrust(), taken);
         registerAutoRoot(registrar, channel().getTpacceptall(), taken);
         registerBlockAllRoot(registrar, channel().getTpablockall(), taken);
+        registerLanguageRoot(registrar, channel().getTpalanguage(), taken);
     }
 
     private void registerSend(String label, boolean here, List<String> aliases, String permission, Set<String> used) {
@@ -220,6 +227,14 @@ public class TpaCommandsRegistrar implements Bootstrap {
         }
         registerRoot(registrar, new TpaBlockAllCommand(service).node("tpablockall").build(),
                 "JuicyTPA tpablockall command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerLanguageRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaLanguageCommand(ctx, languages).node("tpalanguage").build(),
+                "JuicyTPA tpalanguage command", channelAliases(channel.getAliases(), taken));
     }
 
     private void registerRoot(

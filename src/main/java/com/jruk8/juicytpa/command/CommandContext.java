@@ -1,5 +1,6 @@
 package com.jruk8.juicytpa.command;
 
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.MessagesConfig;
 import com.jruk8.juicytpa.message.Messenger;
 import com.jruk8.juicytpa.sound.SoundPlayer;
@@ -26,8 +27,19 @@ public record CommandContext(
         MessagesConfig messages,
         SoundsConfig sounds,
         Messenger messenger,
-        SoundPlayer soundPlayer
+        SoundPlayer soundPlayer,
+        MessageBundles bundles
 ) {
+
+    /**
+     * Resolves the message bundle matching the recipient's language.
+     *
+     * @param recipient the message recipient, resolved by locale or pin
+     * @return the recipient's bundle, English when unresolved
+     */
+    public MessagesConfig messagesFor(CommandSender recipient) {
+        return bundles.configFor(recipient);
+    }
 
     /**
      * Builds a Brigadier {@code requires} predicate that passes only when the sender holds every listed permission.
@@ -74,7 +86,10 @@ public record CommandContext(
             Function<MessagesConfig, String> messageSelector,
             Map<String, String> placeholders
     ) {
-        messenger.send(sender.getSender(), messageSelector.apply(messages), placeholders);
+        messenger.send(
+                sender.getSender(),
+                messageSelector.apply(messagesFor(sender.getSender())),
+                placeholders);
         soundPlayer.play(sender.getSender(), sounds.getNeutral());
     }
 
@@ -89,7 +104,7 @@ public record CommandContext(
             Function<MessagesConfig, String> messageSelector,
             Map<String, String> placeholders
     ) {
-        messenger.send(target, messageSelector.apply(messages), placeholders);
+        messenger.send(target, messageSelector.apply(messagesFor(target)), placeholders);
         soundPlayer.play(target, sounds.getNeutral());
     }
 
@@ -104,7 +119,10 @@ public record CommandContext(
             Function<MessagesConfig, String> messageSelector,
             Map<String, String> placeholders
     ) {
-        messenger.send(sender.getSender(), messageSelector.apply(messages), placeholders);
+        messenger.send(
+                sender.getSender(),
+                messageSelector.apply(messagesFor(sender.getSender())),
+                placeholders);
         soundPlayer.play(sender.getSender(), sounds.getCelebration());
     }
 
@@ -119,7 +137,10 @@ public record CommandContext(
             Function<MessagesConfig, String> messageSelector,
             Map<String, String> placeholders
     ) {
-        messenger.send(sender.getSender(), messageSelector.apply(messages), placeholders);
+        messenger.send(
+                sender.getSender(),
+                messageSelector.apply(messagesFor(sender.getSender())),
+                placeholders);
         soundPlayer.play(sender.getSender(), sounds.getCelebration());
     }
 
@@ -142,7 +163,10 @@ public record CommandContext(
             Function<MessagesConfig, String> messageSelector,
             Map<String, String> placeholders
     ) {
-        messenger.send(sender.getSender(), messageSelector.apply(messages), placeholders);
+        messenger.send(
+                sender.getSender(),
+                messageSelector.apply(messagesFor(sender.getSender())),
+                placeholders);
         soundPlayer.play(sender.getSender(), sounds.getAngry());
     }
 
@@ -157,7 +181,10 @@ public record CommandContext(
             Function<MessagesConfig, String> messageSelector,
             Map<String, String> placeholders
     ) {
-        messenger.send(sender.getSender(), messageSelector.apply(messages), placeholders);
+        messenger.send(
+                sender.getSender(),
+                messageSelector.apply(messagesFor(sender.getSender())),
+                placeholders);
     }
 
 }

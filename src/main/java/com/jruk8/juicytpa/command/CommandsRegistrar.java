@@ -6,6 +6,7 @@ import com.jruk8.juicytpa.command.user.help.HelpCommand;
 import com.jruk8.juicytpa.config.PluginConfig;
 import com.jruk8.juicytpa.core.Bootstrap;
 import com.jruk8.juicytpa.core.Reloader;
+import com.jruk8.juicytpa.tpa.PlayerLanguage;
 import com.jruk8.juicytpa.tpa.TpaService;
 import com.jruk8.juicytpa.tpa.command.TpaCommandsRegistrar;
 import com.jruk8.juicytpa.update.UpdateCheckService;
@@ -35,6 +36,7 @@ public class CommandsRegistrar implements Bootstrap {
     private final PluginConfig pluginConfig;
     private final UpdateCheckService updateChecks;
     private final TpaService tpaService;
+    private final PlayerLanguage playerLanguage;
     private final Plugin plugin;
 
     public CommandsRegistrar(LifecycleEventManager<Plugin> lifecycle,
@@ -44,6 +46,7 @@ public class CommandsRegistrar implements Bootstrap {
                              PluginConfig pluginConfig,
                              UpdateCheckService updateChecks,
                              TpaService tpaService,
+                             PlayerLanguage playerLanguage,
                              Plugin plugin) {
         this.lifecycle = lifecycle;
         this.reloader = reloader;
@@ -52,6 +55,7 @@ public class CommandsRegistrar implements Bootstrap {
         this.pluginConfig = pluginConfig;
         this.updateChecks = updateChecks;
         this.tpaService = tpaService;
+        this.playerLanguage = playerLanguage;
         this.plugin = plugin;
     }
 
@@ -73,7 +77,7 @@ public class CommandsRegistrar implements Bootstrap {
             new UserCommandsRegistrar(root, commandContext, pluginMeta, updateChecks, help).register();
             new AdminCommandsRegistrar(root, commandContext, reloader, pluginConfig).register();
             var tpa = new TpaCommandsRegistrar(
-                    root, commandContext, tpaService, pluginConfig, plugin, plugin.getLogger());
+                    root, commandContext, tpaService, playerLanguage, pluginConfig, plugin, plugin.getLogger());
             tpa.register();
             event.registrar().register(root.build(), "JuicyTPA commands", hubAliases);
             tpa.registerStandalone(event.registrar(), hubAliases);

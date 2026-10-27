@@ -56,7 +56,8 @@ public final class TpaReceiverService {
             mode = parsed.get();
         }
         modes.setMode(player.getUniqueId(), mode);
-        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", ctx.messages().getTpa().modeName(mode)));
+        var modeName = ctx.messagesFor(source.getSender()).getTpa().modeName(mode);
+        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", modeName));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -73,7 +74,8 @@ public final class TpaReceiverService {
         }
         TpaMode mode = modes.mode(player.getUniqueId()) == TpaMode.ACCEPT_ALL ? TpaMode.NORMAL : TpaMode.ACCEPT_ALL;
         modes.setMode(player.getUniqueId(), mode);
-        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", ctx.messages().getTpa().modeName(mode)));
+        var modeName = ctx.messagesFor(source.getSender()).getTpa().modeName(mode);
+        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", modeName));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -90,7 +92,8 @@ public final class TpaReceiverService {
         }
         TpaMode mode = modes.mode(player.getUniqueId()) == TpaMode.BLOCK_ALL ? TpaMode.NORMAL : TpaMode.BLOCK_ALL;
         modes.setMode(player.getUniqueId(), mode);
-        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", ctx.messages().getTpa().modeName(mode)));
+        var modeName = ctx.messagesFor(source.getSender()).getTpa().modeName(mode);
+        ctx.send(source, m -> m.getTpa().getModeSet(), Map.of("mode", modeName));
         return Command.SINGLE_SUCCESS;
     }
 

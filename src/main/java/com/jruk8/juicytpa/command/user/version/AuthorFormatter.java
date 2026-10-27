@@ -7,6 +7,7 @@ import java.util.Map;
  * Business logic class for formatting author lists.
  * Follows clean architecture principles - pure formatting logic with no dependencies on framework types.
  * Known authors link to their pages; unknown names render as-is.
+ * Joining words come from the reader's bundle, so every language punctuates its own way.
  */
 public class AuthorFormatter {
 
@@ -24,26 +25,29 @@ public class AuthorFormatter {
     }
 
     /**
-     * Formats two authors with "and" in gray between them.
+     * Formats two authors with the configured "and" between them.
      *
      * @param firstAuthor  the first author
      * @param secondAuthor the second author
+     * @param and the "and" word from messages.yml
      * @return formatted string like "MyAuthor <gray>and</gray> MyOther"
      */
-    public String formatTwoAuthors(String firstAuthor, String secondAuthor) {
-        return linked(firstAuthor) + " <gray>and</gray> " + linked(secondAuthor);
+    public String formatTwoAuthors(String firstAuthor, String secondAuthor, String and) {
+        return linked(firstAuthor) + " " + and + " " + linked(secondAuthor);
     }
 
     /**
-     * Formats three or more authors with commas and "and" in gray.
-     * Format: "MyAuthor<gray>,</gray> MyOther<gray>, and</gray> MyOtherOther"
+     * Formats three or more authors with the configured comma and "and".
+     * Format: "MyAuthor<gray>,</gray> MyOther<gray>,</gray> <gray>and</gray> MyOtherOther"
      *
      * @param authors list of author names (must have at least 3 elements)
-     * @return formatted string with gray commas and "and"
+     * @param comma the comma separator from messages.yml
+     * @param and the "and" word from messages.yml
+     * @return formatted string with commas and "and"
      */
-    public String formatThreePlusAuthors(List<String> authors) {
+    public String formatThreePlusAuthors(List<String> authors, String comma, String and) {
         if (authors.size() < 3) {
-            return formatTwoAuthors(authors.get(0), authors.get(1));
+            return formatTwoAuthors(authors.get(0), authors.get(1), and);
         }
 
         StringBuilder result = new StringBuilder();
@@ -54,11 +58,11 @@ public class AuthorFormatter {
             if (i == 0) {
                 result.append(author);
             } else if (i == authors.size() - 1) {
-                // Last author with "and" in gray
-                result.append("<gray>, and</gray> ").append(author);
+                // Last author with comma and "and"
+                result.append(comma).append(" ").append(and).append(" ").append(author);
             } else {
-                // Middle authors with comma in gray
-                result.append("<gray>,</gray> ").append(author);
+                // Middle authors with comma
+                result.append(comma).append(" ").append(author);
             }
         }
 
@@ -77,9 +81,11 @@ public class AuthorFormatter {
      * Formats authors list based on the number of authors.
      *
      * @param authors list of author names
+     * @param comma the comma separator from messages.yml
+     * @param and the "and" word from messages.yml
      * @return properly formatted author string
      */
-    public String formatAuthors(List<String> authors) {
+    public String formatAuthors(List<String> authors, String comma, String and) {
         if (authors.isEmpty()) {
             return "";
         }
@@ -88,8 +94,8 @@ public class AuthorFormatter {
         if (count == 1) {
             return linked(authors.getFirst());
         } else if (count == 2) {
-            return formatTwoAuthors(authors.get(0), authors.get(1));
+            return formatTwoAuthors(authors.get(0), authors.get(1), and);
         }
-        return formatThreePlusAuthors(authors);
+        return formatThreePlusAuthors(authors, comma, and);
     }
 }

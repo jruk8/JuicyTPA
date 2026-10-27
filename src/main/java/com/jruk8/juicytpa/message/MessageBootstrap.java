@@ -10,14 +10,16 @@ public class MessageBootstrap implements Bootstrap {
     @Getter
     private Messenger messenger;
     private final ConfigRegistrar config;
+    private final MessageBundles bundles;
 
-    public MessageBootstrap(ConfigRegistrar config) {
+    public MessageBootstrap(ConfigRegistrar config, MessageBundles bundles) {
         this.config = config;
+        this.bundles = bundles;
     }
 
     @Override
     public void register() {
         var parser = new MessageParser(config.getPluginConfig(), config.getMessagesConfig());
-        this.messenger = new Messenger(parser);
+        this.messenger = new Messenger(parser, bundles);
     }
 }

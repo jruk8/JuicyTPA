@@ -71,6 +71,11 @@ public final class Permissions {
      */
     public static final String VERSION = "juicytpa.version";
 
+    /**
+     * Show or set your own language.
+     */
+    public static final String LANGUAGE = "juicytpa.language";
+
     private Permissions() {
     }
 }

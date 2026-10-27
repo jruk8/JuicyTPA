@@ -88,9 +88,6 @@ public final class MessageParser {
                 .replace("{sc}", colors.getSentColor())
                 .replace("{lh}", colors.getLhColor())
                 .replace("{wn}", colors.getWarnColor());
-        for (Map.Entry<String, String> link : PluginLinks.placeholders().entrySet()) {
-            text = text.replace(link.getKey(), link.getValue());
-        }
         return text;
     }
 

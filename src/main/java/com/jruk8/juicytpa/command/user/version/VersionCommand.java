@@ -52,7 +52,8 @@ public class VersionCommand {
     public void onVersion(CommandSourceStack sender) {
         String version = pluginMeta.getVersion();
         List<String> rawAuthors = pluginMeta.getAuthors();
-        String authors = authorFormatter.formatAuthors(rawAuthors);
+        var core = ctx.messagesFor(sender.getSender()).getCore();
+        String authors = authorFormatter.formatAuthors(rawAuthors, core.getVersionComma(), core.getVersionAnd());
 
         ctx.sendVersion(
                 sender,

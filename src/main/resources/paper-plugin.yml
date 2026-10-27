@@ -62,3 +62,6 @@ permissions:
   juicytpa.version:
     description: View the JuicyTPA version.
     default: true
+  juicytpa.language:
+    description: Show or set your own language with /tpalanguage.
+    default: true

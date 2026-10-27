@@ -2,6 +2,7 @@ package com.jruk8.juicytpa.command.user.help;
 
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.command.Permissions;
+import com.jruk8.juicytpa.message.MessagesConfig;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -56,7 +57,7 @@ public class HelpCommand {
     public void showHelp(CommandSourceStack sender, String query) {
         ctx.playHelp(sender);
         ctx.sendMessage(sender, m -> m.getCore().getHelpHeader(), Map.of("version", version));
-        HelpEntry.matching(entries(), query).stream()
+        HelpEntry.matching(entries(ctx.messagesFor(sender.getSender()).getHelp()), query).stream()
                 .filter(entry -> entry.visibleTo(sender.getSender()))
                 .forEach(entry -> ctx.sendMessage(
                         sender,
@@ -65,28 +66,23 @@ public class HelpCommand {
                 ));
     }
 
-    private List<HelpEntry> entries() {
+    private List<HelpEntry> entries(MessagesConfig.Help help) {
         return List.of(
-                new HelpEntry("/jtpa help [query]", "Shows this help menu."),
-                new HelpEntry("/jtpa version", "Shows the plugin version.", Permissions.VERSION),
-                new HelpEntry("/tpa <player>", "Asks to teleport to a player.", Permissions.TPA),
-                new HelpEntry("/tpahere <player>", "Asks a player to teleport to you.", Permissions.TPAHERE),
-                new HelpEntry("/tpaccept [player]", "Accepts a TP request.", Permissions.ACCEPT),
-                new HelpEntry("/tpadeny [player]", "Denies a TP request.", Permissions.DENY),
-                new HelpEntry("/tpacancel [player]", "Cancels an outgoing TP request.", Permissions.CANCEL),
-                new HelpEntry("/tpalist", "Lists your pending TP requests.", Permissions.LIST),
-                new HelpEntry(
-                        "/tpatrust <player>",
-                        "Trusts a player to auto-accept their TP requests.",
-                        Permissions.TRUST),
-                new HelpEntry("/tpacceptall", "Flips between accept-all and normal mode.", Permissions.MODE),
-                new HelpEntry(
-                        "/tpablockall",
-                        "Flips between block-all and normal mode.",
-                        Permissions.MODE),
-                new HelpEntry("/tpablock <player>", "Blocks or unblocks a player's requests.", Permissions.BLOCK),
-                new HelpEntry("/tpall", "Requests everyone at once.", Permissions.TPALL),
-                new HelpEntry("/tpamode [mode]", "Cycles or sets your TPA mode.", Permissions.MODE),
-                new HelpEntry("/jtpa reload", "Reloads the plugin configuration.", Permissions.RELOAD));
+                new HelpEntry("/jtpa help [query]", help.getHelp()),
+                new HelpEntry("/jtpa version", help.getVersion(), Permissions.VERSION),
+                new HelpEntry("/tpa <player>", help.getTpa(), Permissions.TPA),
+                new HelpEntry("/tpahere <player>", help.getTpahere(), Permissions.TPAHERE),
+                new HelpEntry("/tpaccept [player]", help.getTpaccept(), Permissions.ACCEPT),
+                new HelpEntry("/tpadeny [player]", help.getTpadeny(), Permissions.DENY),
+                new HelpEntry("/tpacancel [player]", help.getTpacancel(), Permissions.CANCEL),
+                new HelpEntry("/tpalist", help.getTpalist(), Permissions.LIST),
+                new HelpEntry("/tpatrust <player>", help.getTpatrust(), Permissions.TRUST),
+                new HelpEntry("/tpacceptall", help.getTpacceptall(), Permissions.MODE),
+                new HelpEntry("/tpablockall", help.getTpablockall(), Permissions.MODE),
+                new HelpEntry("/tpablock <player>", help.getTpablock(), Permissions.BLOCK),
+                new HelpEntry("/tpall", help.getTpall(), Permissions.TPALL),
+                new HelpEntry("/tpamode [mode]", help.getTpamode(), Permissions.MODE),
+                new HelpEntry("/tpalanguage [language]", help.getTpalanguage(), Permissions.LANGUAGE),
+                new HelpEntry("/jtpa reload", help.getReload(), Permissions.RELOAD));
     }
 }

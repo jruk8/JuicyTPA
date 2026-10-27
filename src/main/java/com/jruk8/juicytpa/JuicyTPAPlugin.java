@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.logging.Logger;
 import com.jruk8.juicytpa.api.JuicyTPA;
 import com.jruk8.juicytpa.command.CommandContext;
@@ -14,14 +15,16 @@ import com.jruk8.juicytpa.core.Reloader;
 import com.jruk8.juicytpa.core.StartupBanner;
 import com.jruk8.juicytpa.hook.LuckPermsMeta;
 import com.jruk8.juicytpa.message.MessageBootstrap;
-import com.jruk8.juicytpa.message.MessagesConfig;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.Messenger;
 import com.jruk8.juicytpa.placeholder.PlaceholdersBootstrap;
 import com.jruk8.juicytpa.sound.SoundPlayer;
 import com.jruk8.juicytpa.storage.StorageBootstrap;
+import com.jruk8.juicytpa.tpa.PlayerLanguage;
 import com.jruk8.juicytpa.tpa.TpaApi;
 import com.jruk8.juicytpa.tpa.TpaBlockStore;
 import com.jruk8.juicytpa.tpa.TpaCooldowns;
+import com.jruk8.juicytpa.tpa.TpaLangStore;
 import com.jruk8.juicytpa.tpa.TpaModeStore;
 import com.jruk8.juicytpa.tpa.TpaService;
 import com.jruk8.juicytpa.tpa.TpaTrustStore;
@@ -61,33 +64,54 @@ public final class JuicyTPAPlugin extends JavaPlugin {
         configRegistrar.register();
         reloader.register(configRegistrar);
 
-        // Initialize messenger
-        var messageRegistrar = new MessageBootstrap(configRegistrar);
-        messageRegistrar.register();
-        var messenger = messageRegistrar.getMessenger();
+        // Initialize storage first: languages and commands both need it
+        TpaUsageTracker usageTracker = setupStorageAndPlaceholders(logger, reloader, configRegistrar);
+
+        // Initialize per-language message bundles and the messenger
+        var playerLanguage = new PlayerLanguage(new TpaLangStore(this.storageBootstrap::getStorage));
+        var bundles = messageBundles(reloader, configRegistrar, playerLanguage, logger);
+        var messenger = messageRegistrar(configRegistrar, bundles).getMessenger();
 
         // Initialize sound player
         var soundPlayer = new SoundPlayer(logger);
 
         // Initialize update checker
-        var updateChecker = setupUpdateChecker(reloader, configRegistrar, messenger, logger);
-
-        // Initialize storage and placeholders first: commands record usage stats
-        TpaUsageTracker usageTracker = setupStorageAndPlaceholders(logger, reloader, configRegistrar);
+        var updateChecker = setupUpdateChecker(reloader, configRegistrar, messenger, bundles, logger);
 
         // Initialize commands
         var context = new CommandContext(
                 configRegistrar.getMessagesConfig(),
                 configRegistrar.getSoundsConfig(),
                 messenger,
-                soundPlayer);
+                soundPlayer,
+                bundles);
         var tpaService = tpaService(context, configRegistrar, usageTracker);
         setupApi(tpaService);
-        setupPlaceholders(reloader, logger, usageTracker, tpaService, configRegistrar.getMessagesConfig());
-        setupCommands(reloader, configRegistrar, context, updateChecker, tpaService);
+        setupPlaceholders(reloader, logger, usageTracker, tpaService, bundles);
+        setupCommands(reloader, configRegistrar, context, updateChecker, tpaService, playerLanguage);
 
         // Initialize bStats unless anonymous statistics are disabled
         setupMetrics(configRegistrar);
+    }
+
+    private MessageBundles messageBundles(
+            Reloader reloader,
+            ConfigRegistrar configRegistrar,
+            PlayerLanguage playerLanguage,
+            Logger logger) {
+        var bundles = new MessageBundles(
+                configRegistrar.getMessagesConfig(),
+                playerLanguage::get,
+                new File(getDataFolder(), "lang"),
+                logger);
+        reloader.register(bundles);
+        return bundles;
+    }
+
+    private MessageBootstrap messageRegistrar(ConfigRegistrar configRegistrar, MessageBundles bundles) {
+        var messageRegistrar = new MessageBootstrap(configRegistrar, bundles);
+        messageRegistrar.register();
+        return messageRegistrar;
     }
 
     private void setupMetrics(ConfigRegistrar configRegistrar) {
@@ -97,14 +121,13 @@ public final class JuicyTPAPlugin extends JavaPlugin {
     }
 
     private UpdateCheckerBootstrap setupUpdateChecker(
-            Reloader reloader, ConfigRegistrar configRegistrar, Messenger messenger, Logger logger) {
+            Reloader reloader,
+            ConfigRegistrar configRegistrar,
+            Messenger messenger,
+            MessageBundles bundles,
+            Logger logger) {
         var updateChecker = new UpdateCheckerBootstrap(
-                this,
-                configRegistrar.getPluginConfig(),
-                messenger,
-                configRegistrar.getMessagesConfig(),
-                logger,
-                this::printBanner);
+                this, configRegistrar.getPluginConfig(), messenger, bundles, logger, this::printBanner);
         updateChecker.register();
         reloader.register(updateChecker);
         return updateChecker;
@@ -144,10 +167,10 @@ public final class JuicyTPAPlugin extends JavaPlugin {
             Logger logger,
             TpaUsageTracker usageTracker,
             TpaService tpaService,
-            MessagesConfig messages) {
+            MessageBundles bundles) {
         // PlaceholderAPI placeholders (needs the request service for jtpa_pending)
         var placeholdersBootstrap = new PlaceholdersBootstrap(
-                usageTracker, this.modeStore, tpaService, this, messages, logger);
+                usageTracker, this.modeStore, tpaService, this, bundles, logger);
         placeholdersBootstrap.register();
         reloader.register(placeholdersBootstrap);
     }
@@ -165,11 +188,12 @@ public final class JuicyTPAPlugin extends JavaPlugin {
             ConfigRegistrar configRegistrar,
             CommandContext context,
             UpdateCheckerBootstrap updateChecker,
-            TpaService tpaService
+            TpaService tpaService,
+            PlayerLanguage playerLanguage
     ) {
         var commandRegistrar = new CommandsRegistrar(
                 getLifecycleManager(), reloader, context, getPluginMeta(),
-                configRegistrar.getPluginConfig(), updateChecker.getService(), tpaService, this);
+                configRegistrar.getPluginConfig(), updateChecker.getService(), tpaService, playerLanguage, this);
         commandRegistrar.register();
     }
 

@@ -656,13 +656,13 @@ public class TpaService {
     private void chat(CommandSender to,
                       Function<MessagesConfig, String> selector,
                       Map<String, String> tags) {
-        ctx.messenger().send(to, selector.apply(ctx.messages()), tags);
+        ctx.messenger().send(to, selector.apply(ctx.messagesFor(to)), tags);
     }
 
     private void bar(CommandSender to,
                      Function<MessagesConfig, String> selector,
                      Map<String, String> tags) {
-        ctx.messenger().sendActionBar(to, selector.apply(ctx.messages()), tags);
+        ctx.messenger().sendActionBar(to, selector.apply(ctx.messagesFor(to)), tags);
     }
 
     private PluginConfig.Concurrency concurrency() {

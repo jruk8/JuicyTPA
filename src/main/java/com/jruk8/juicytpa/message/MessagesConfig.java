@@ -17,7 +17,7 @@ import lombok.Setter;
  * Commands insert runtime values through {bracket} placeholders: {version},
  * {authors}, {time}, {syntax}, {description}, {latest}, {current}, {url},
  * {modrinth-url}, {permission}, {player}, {mode}, {input}, {count}, {type},
- * {modrinth}, {github}, {discord} and {donate},
+ * {name}, {codes}, {modrinth}, {github}, {discord} and {donate},
  * {accept}, {reject}, {body} and {button}. Angle brackets are reserved for
  * raw MiniMessage, and \n breaks the line.
  */
@@ -66,6 +66,45 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Sent when console runs a command without a target selector")
         private String consoleNeedsTarget = "{prefix}{error}Console must specify a target.";
+
+        @Comment("Modrinth link button (use {url})")
+        private String linkModrinth = "<click:open_url:'{url}'>"
+                + "<hover:show_text:'<#5ae663>Open on Modrinth'><#5ae663>Modrinth</hover></click>";
+
+        @Comment("GitHub link button (use {url})")
+        private String linkGithub = "<click:open_url:'{url}'>"
+                + "<hover:show_text:'<#5a88e6>Open on GitHub'><#5a88e6>GitHub</hover></click>";
+
+        @Comment("Discord link button (use {url})")
+        private String linkDiscord = "<click:open_url:'{url}'>"
+                + "<hover:show_text:'<#6258f2>Join the Discord'><#6258f2>Discord</hover></click>";
+
+        @Comment("Donate link button (use {url})")
+        private String linkDonate = "<click:open_url:'{url}'>"
+                + "<hover:show_text:'<#ff5e5b>Support on Ko-fi'><#ff5e5b>Donate</hover></click>";
+
+        @Comment("Separator between version authors")
+        private String versionComma = "<gray>,</gray>";
+
+        @Comment("'and' word between version authors")
+        private String versionAnd = "<gray>and</gray>";
+
+        @Comment("Language shown when pinned (use {name})")
+        private String languageShow = "{prefix}{plain}Language: {hl}{name}{plain}.";
+
+        @Comment("Language shown when following the client (use {name})")
+        private String languageShowAuto = "{prefix}{plain}Language follows your client: {hl}{name}{plain}.";
+
+        @Comment("Sent when the language is pinned (use {name})")
+        private String languageSet = "{prefix}{sc}Language set to {hl}{name}{sc}. "
+                + "It will no longer follow your client.";
+
+        @Comment("Sent when the pin is cleared (use {name})")
+        private String languageAuto = "{prefix}{sc}Language follows your client again: {hl}{name}{sc}.";
+
+        @Comment("Sent for an unknown language (use {input} and {codes})")
+        private String languageUnknown = "{prefix}{error}Unknown language {hl}{input}{error}. "
+                + "Use {hl}{codes}{error} or {hl}auto{error}.";
     }
 
     @Comment("Prefix prepended to every message, trailing space included")
@@ -77,6 +116,9 @@ public class MessagesConfig extends OkaeriConfig {
 
     @Comment("Teleport request messages")
     private Tpa tpa = new Tpa();
+
+    @Comment("Help menu command descriptions")
+    private Help help = new Help();
 
     @Getter
     @Setter
@@ -198,6 +240,24 @@ public class MessagesConfig extends OkaeriConfig {
         @Comment("Sent when a command runs without its required target (use {syntax})")
         private String usage = "{prefix}{error}Usage: {hl}{syntax}{error}.";
 
+        @Comment("Hover tooltip of the accept button (use {player})")
+        private String acceptHover = "{ac}Click to accept {hl}{player}{ac}.";
+
+        @Comment("Hover tooltip of the reject button (use {player})")
+        private String rejectHover = "{rc}Click to reject {hl}{player}{rc}.";
+
+        @Comment("Hover tooltip of the block-all nudge button")
+        private String blockAllHover = "{lh}Click to block all requests.";
+
+        @Comment("Hover tooltip of the block-player nudge button (use {player})")
+        private String blockPlayerHover = "{lh}Click to block {hl}{player}{lh}.";
+
+        @Comment("Hover tooltip of /tpalist names running /tpacancel (use {player})")
+        private String listCancelHover = "{sc}Click to cancel {hl}{player}{sc}.";
+
+        @Comment("Hover tooltip of /tpalist names running /tpatrust (use {player})")
+        private String listTrustHover = "{hl}Click to untrust {hl}{player}{hl}.";
+
         @Comment("Sent when the sender is still on cooldown (use {time})")
         private String sendCooldown = "{prefix}{error}Wait {hl}{time}{error} before sending another TP request.";
 
@@ -307,5 +367,59 @@ public class MessagesConfig extends OkaeriConfig {
                 case ACCEPT_ALL -> getModeAcceptAll();
             };
         }
+    }
+
+    @Getter
+    @Setter
+    @SuppressWarnings("FieldMayBeFinal")
+    public static class Help extends OkaeriConfig {
+
+        @Comment("Help description of the help command")
+        private String help = "Shows this help menu.";
+
+        @Comment("Help description of the version command")
+        private String version = "Shows the plugin version.";
+
+        @Comment("Help description of the tpa command")
+        private String tpa = "Asks to teleport to a player.";
+
+        @Comment("Help description of the tpahere command")
+        private String tpahere = "Asks a player to teleport to you.";
+
+        @Comment("Help description of the tpaccept command")
+        private String tpaccept = "Accepts a TP request.";
+
+        @Comment("Help description of the tpadeny command")
+        private String tpadeny = "Denies a TP request.";
+
+        @Comment("Help description of the tpacancel command")
+        private String tpacancel = "Cancels an outgoing TP request.";
+
+        @Comment("Help description of the tpalist command")
+        private String tpalist = "Lists your pending TP requests.";
+
+        @Comment("Help description of the tpatrust command")
+        private String tpatrust = "Trusts a player to auto-accept their TP requests.";
+
+        @Comment("Help description of the tpacceptall command")
+        private String tpacceptall = "Flips between accept-all and normal mode.";
+
+        @Comment("Help description of the tpablockall command")
+        private String tpablockall = "Flips between block-all and normal mode.";
+
+        @Comment("Help description of the tpablock command")
+        private String tpablock = "Blocks or unblocks a player's requests.";
+
+        @Comment("Help description of the tpall command")
+        private String tpall = "Requests everyone at once.";
+
+        @Comment("Help description of the tpamode command")
+        private String tpamode = "Cycles or sets your TPA mode.";
+
+        @Comment("Help description of the tpalanguage command")
+        private String tpalanguage = "Shows or sets your language.";
+
+        @Comment("Help description of the reload command")
+        private String reload = "Reloads the plugin configuration.";
     }
 }

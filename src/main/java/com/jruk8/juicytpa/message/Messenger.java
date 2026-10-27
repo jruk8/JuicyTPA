@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,14 +16,17 @@ import java.util.Map;
 public final class Messenger {
 
     private final MessageParser messageParser;
+    private final MessageBundles bundles;
 
     /**
      * Constructs a new {@code Messenger} with the given parser.
      *
      * @param messageParser the parser used to process raw strings into components
+     * @param bundles the per-language bundles link buttons resolve from
      */
-    public Messenger(MessageParser messageParser) {
+    public Messenger(MessageParser messageParser, MessageBundles bundles) {
         this.messageParser = messageParser;
+        this.bundles = bundles;
     }
 
     /**
@@ -39,7 +43,7 @@ public final class Messenger {
             return;
         }
 
-        Component text = messageParser.parse(rawMessage, stringPlaceholders);
+        Component text = messageParser.parse(rawMessage, withLinks(sender, stringPlaceholders));
         sender.sendMessage(text);
     }
 
@@ -68,7 +72,15 @@ public final class Messenger {
             return;
         }
 
-        Component text = messageParser.parse(rawMessage, stringPlaceholders);
+        Component text = messageParser.parse(rawMessage, withLinks(sender, stringPlaceholders));
         player.sendActionBar(text);
+    }
+
+    private Map<String, String> withLinks(CommandSender sender, Map<String, String> tags) {
+        Map<String, String> merged = new HashMap<>(PluginLinks.buttons(bundles.configFor(sender)));
+        if (tags != null) {
+            merged.putAll(tags);
+        }
+        return merged;
     }
 }

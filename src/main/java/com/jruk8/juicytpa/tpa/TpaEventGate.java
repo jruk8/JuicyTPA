@@ -67,6 +67,6 @@ public final class TpaEventGate {
             notify.sendMessage(denyMessage);
             return;
         }
-        ctx.messenger().send(notify, ctx.messages().getTpa().getExternalDenied(), Map.of());
+        ctx.messenger().send(notify, ctx.messagesFor(notify).getTpa().getExternalDenied(), Map.of());
     }
 }

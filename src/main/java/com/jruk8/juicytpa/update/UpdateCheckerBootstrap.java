@@ -3,7 +3,7 @@ package com.jruk8.juicytpa.update;
 import com.jruk8.juicytpa.config.PluginConfig;
 import com.jruk8.juicytpa.core.Bootstrap;
 import com.jruk8.juicytpa.core.Reloadable;
-import com.jruk8.juicytpa.message.MessagesConfig;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.Messenger;
 
 import lombok.Getter;
@@ -34,14 +34,14 @@ public class UpdateCheckerBootstrap implements Bootstrap, Reloadable {
             JavaPlugin plugin,
             PluginConfig pluginConfig,
             Messenger messenger,
-            MessagesConfig messagesConfig,
+            MessageBundles bundles,
             Logger logger,
             Consumer<Boolean> firstCheckCallback
     ) {
         this.plugin = plugin;
         this.pluginConfig = pluginConfig;
         this.currentVersion = plugin.getPluginMeta().getVersion();
-        this.notifier = new UpdateCheckNotifier(messenger, messagesConfig);
+        this.notifier = new UpdateCheckNotifier(messenger, bundles);
         this.service = new UpdateCheckService(new GitHubReleaseHttp(currentVersion), logger);
         this.firstCheckCallback = firstCheckCallback;
     }

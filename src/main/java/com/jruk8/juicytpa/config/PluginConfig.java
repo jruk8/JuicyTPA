@@ -238,6 +238,9 @@ public class PluginConfig extends OkaeriConfig {
 
         @Comment("Standalone /tpall root command and its extra labels.")
         private Channel tpall = new Channel(List.of());
+
+        @Comment("Standalone /tpalanguage root command and its extra labels.")
+        private Channel tpalanguage = new Channel(List.of("tpalang"));
     }
 
     @Getter

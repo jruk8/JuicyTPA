@@ -1,7 +1,7 @@
 package com.jruk8.juicytpa.update;
 
 import com.jruk8.juicytpa.command.Permissions;
-import com.jruk8.juicytpa.message.MessagesConfig;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.Messenger;
 
 import org.bukkit.Bukkit;
@@ -15,11 +15,11 @@ import java.util.Map;
 public final class UpdateCheckNotifier {
 
     private final Messenger messenger;
-    private final MessagesConfig messages;
+    private final MessageBundles bundles;
 
-    public UpdateCheckNotifier(Messenger messenger, MessagesConfig messages) {
+    public UpdateCheckNotifier(Messenger messenger, MessageBundles bundles) {
         this.messenger = messenger;
-        this.messages = messages;
+        this.bundles = bundles;
     }
 
     /**
@@ -48,6 +48,6 @@ public final class UpdateCheckNotifier {
                 "current", update.current(),
                 "url", update.url(),
                 "modrinth-url", update.modrinthUrl());
-        messenger.send(player, messages.getCore().getUpdateAvailable(), tags);
+        messenger.send(player, bundles.configFor(player).getCore().getUpdateAvailable(), tags);
     }
 }

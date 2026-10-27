@@ -53,14 +53,13 @@ public final class TpaFeedback {
         }
         var receiverFeedback = pluginConfig.getTpa().getReceiverFeedback();
         if (receiverFeedback.isMessage()) {
-            String template = here
-                    ? ctx.messages().getTpa().getRequestHereBody()
-                    : ctx.messages().getTpa().getRequestAskBody();
+            var tpa = ctx.messagesFor(target).getTpa();
+            String template = here ? tpa.getRequestHereBody() : tpa.getRequestAskBody();
             chat(target, m -> m.getTpa().getRequestReceived(), Map.of(
                     "body", template.replace("{player}", sender.getName()),
                     "time", time,
-                    "accept", RequestPrompts.accept(sender.getName(), ctx.messages().getTpa().getAcceptText()),
-                    "reject", RequestPrompts.reject(sender.getName(), ctx.messages().getTpa().getRejectText())));
+                    "accept", RequestPrompts.accept(sender.getName(), tpa.getAcceptText(), tpa.getAcceptHover()),
+                    "reject", RequestPrompts.reject(sender.getName(), tpa.getRejectText(), tpa.getRejectHover())));
         }
         if (receiverFeedback.isActionbar()) {
             bar(target, m -> m.getTpa().getRequestReceivedActionbar(), Map.of("player", sender.getName()));
@@ -98,9 +97,8 @@ public final class TpaFeedback {
         Function<MessagesConfig, String> selector = kind == TpaWarnManager.WarnKind.AFK
                 ? m -> m.getTpa().getWarnAfk()
                 : m -> m.getTpa().getWarnCanceller();
-        String type = here
-                ? ctx.messages().getTpa().getRequestTypeHere()
-                : ctx.messages().getTpa().getRequestTypeAsk();
+        var tpa = ctx.messagesFor(source.getSender()).getTpa();
+        String type = here ? tpa.getRequestTypeHere() : tpa.getRequestTypeAsk();
         ctx.send(source, selector, Map.of("player", target.getName(), "type", type));
     }
 
@@ -112,7 +110,8 @@ public final class TpaFeedback {
      * @param selector the nudge message
      */
     public void blockAllNudge(Player receiver, Function<MessagesConfig, String> selector) {
-        String button = RequestPrompts.blockAll(ctx.messages().getTpa().getWarnBlockAllButton());
+        var tpa = ctx.messagesFor(receiver).getTpa();
+        String button = RequestPrompts.blockAll(tpa.getWarnBlockAllButton(), tpa.getBlockAllHover());
         chat(receiver, selector, Map.of("button", button));
         ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
     }
@@ -125,21 +124,25 @@ public final class TpaFeedback {
      * @param senderName the repeated sender's name
      */
     public void harassNudge(Player receiver, String senderName) {
-        String text = ctx.messages().getTpa().getWarnBlockPlayerButton().replace("{player}", senderName);
-        chat(receiver, m -> m.getTpa().getNudgeHarass(),
-                Map.of("player", senderName, "button", RequestPrompts.blockPlayer(senderName, text)));
+        var tpa = ctx.messagesFor(receiver).getTpa();
+        String text = tpa.getWarnBlockPlayerButton().replace("{player}", senderName);
+        chat(receiver, m -> m.getTpa().getNudgeHarass(), Map.of(
+                "player",
+                senderName,
+                "button",
+                RequestPrompts.blockPlayer(senderName, text, tpa.getBlockPlayerHover())));
         ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
     }
 
     private void chat(CommandSender to,
                       Function<MessagesConfig, String> selector,
                       Map<String, String> tags) {
-        ctx.messenger().send(to, selector.apply(ctx.messages()), tags);
+        ctx.messenger().send(to, selector.apply(ctx.messagesFor(to)), tags);
     }
 
     private void bar(CommandSender to,
                      Function<MessagesConfig, String> selector,
                      Map<String, String> tags) {
-        ctx.messenger().sendActionBar(to, selector.apply(ctx.messages()), tags);
+        ctx.messenger().sendActionBar(to, selector.apply(ctx.messagesFor(to)), tags);
     }
 }
