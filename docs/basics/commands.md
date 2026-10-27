@@ -28,6 +28,9 @@ online; `@s` and `@p` are not supported.
 | `/tpacceptall` | Flip between normal and accept-all. | `juicytpa.mode` |
 | `/tpablockall` | Flip between normal and block-all. | `juicytpa.mode` |
 | `/tpalanguage [language]` | Show or set your language (`auto` follows the client again). | `juicytpa.language` |
+| `/tpahelp` | Show the help listing. | `juicytpa.help` |
+| `/tpaversion` | Show the plugin version (alias `/tpav`). | `juicytpa.version` |
+| `/tpareload` | Reload all configuration files. | `juicytpa.reload` |
 | `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
 | Command | Default root aliases |
@@ -49,6 +52,12 @@ Every root and alias also registers as `/jtpa:<label>`
 (`/jtpa:tpa`, `/jtpa:tpask`), including the hub itself
 (`/jtpa:juicytpa`), so there is always an unambiguous strict ref when
 another plugin claims a label.
+
+`/tpa help` and `/tpahere help` show the help listing instead of
+sending a request; the listing needs `juicytpa.help` on top of the
+send permission. If a player literally named `help` is online, they
+win and the request goes to them as usual. The `help` keyword
+completes first in the target suggestions.
 
 How requests flow is on the [Requests](requests.md) page; modes,
 blocks and warnings live under [Receiving](receiving.md).

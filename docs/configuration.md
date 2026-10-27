@@ -173,7 +173,10 @@ label, a subcommand or another alias are ignored. Changes take effect
 after a restart; `/juicytpa reload` reports when a restart is needed.
 Every root and alias also registers under the `jtpa:` namespace
 (`/jtpa:tpa`, `/jtpa:tpask`), so there is always an unambiguous strict
-ref even when another plugin claims a label.
+ref even when another plugin claims a label. The `tpahelp`,
+`tpaversion` (alias `tpav`) and `tpareload` shortcut roots are always
+registered and need no channel; no channel alias may steal their
+labels.
 
 ### `colors`
 
