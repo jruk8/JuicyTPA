@@ -92,6 +92,28 @@ public final class TpaWarnStore {
     }
 
     /**
+     * Clears the AFK statistics: the player showed intent by answering.
+     *
+     * @param player the player that answered
+     */
+    public void resetUnanswered(UUID player) {
+        var store = this.storage.get();
+        store.setPlayerValue(UNANSWERED_KEY, player, 0);
+        store.setPlayerValue(PENDING_SECONDS_KEY, player, 0);
+    }
+
+    /**
+     * Clears the canceller statistics: an accept breaks the chain.
+     *
+     * @param player the player that accepted
+     */
+    public void resetDenied(UUID player) {
+        var store = this.storage.get();
+        store.setPlayerValue(DENIED_KEY, player, 0);
+        store.setPlayerValue(DENIED_SECONDS_KEY, player, 0);
+    }
+
+    /**
      * @param player the player
      * @return the denied request count, or 0 when none is stored
      */

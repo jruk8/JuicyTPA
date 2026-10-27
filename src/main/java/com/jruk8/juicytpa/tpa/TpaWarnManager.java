@@ -111,21 +111,30 @@ public final class TpaWarnManager {
     }
 
     /**
-     * Records a deny and grows the receiver's cancel streak.
+     * Records a deny and grows the receiver's cancel streak. Answering
+     * shows intent, so the AFK statistics and this sender's harassment
+     * hits clear: only the canceller chain grows.
      *
      * @param request the denied request
      */
     public void denied(TpaRequest request) {
         this.stats.recordDenied(request.receiver(), elapsedSeconds(request.createdAt(), now()));
+        this.stats.resetUnanswered(request.receiver());
+        this.harassHits.remove(new HarassKey(request.receiver(), request.sender()));
         this.cancelStreaks.merge(request.receiver(), 1, Integer::sum);
     }
 
     /**
-     * Resets both answer streaks: any accept breaks the chain.
+     * Resets both answer streaks and clears the receiver's warning
+     * statistics plus this sender's harassment hits: any accept
+     * breaks every chain.
      *
      * @param request the accepted request
      */
     public void accepted(TpaRequest request) {
+        this.stats.resetUnanswered(request.receiver());
+        this.stats.resetDenied(request.receiver());
+        this.harassHits.remove(new HarassKey(request.receiver(), request.sender()));
         this.cancelStreaks.remove(request.receiver());
         this.expiryStreaks.remove(request.receiver());
     }
