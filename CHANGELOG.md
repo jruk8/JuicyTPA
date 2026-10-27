@@ -1,4 +1,73 @@
 # Changelog
+## [1.1.0] - 2026-10-27
+
+### Bug Fixes
+
+- Clear warning state when the receiver answers
+
+> Accept clears every warning counter and the sender's harassment hits; deny clears the AFK counters and harassment hits while growing the canceller chain.
+
+
+### Documentation
+
+- Alias table without slash prefixes
+
+- Update README.md
+
+- Document trust, flip commands and new aliases
+
+- Overhaul API docs into advanced/api with extending guide
+
+> New advanced/api folder (index with Vault and eligibility examples, events catalog, actions reference) as the API source of truth. Move the internals guide to extending.md with the new package layout; update nav, AGENTS.md, CONTRIBUTING and stale class references.
+
+- Document tpacceptall, warn clearing and new threshold
+
+
+### Features
+
+- Tpalist with clickable requests, forbid opposite-direction dupes
+
+- Add /tpatrust, /tpaauto and /tpablockall flip commands
+
+> Trust auto-accepts plain /tpa asks only; block beats trust. Flip commands toggle accept-all and block-all modes. Extract TpaReceiverService from TpaService. Add tpatoggle/tptoggle aliases for /tpamode.
+
+- Add public API with request events and service entry point
+
+> New api package: JuicyTPA interface (queries plus accept/deny/cancel), TpaRequest/TpaMode model and five request events. Send and accept events are cancellable with custom deny messages; cancel events carry a cause. TpaApi implements the interface and is registered with the Bukkit services manager. TpaService fires events on every flow and shrinks via TpaEventGate, TpaListService and TpaFeedback extractions. Adds the externalDenied message and moves mode display names to MessagesConfig.
+
+- Rename tpaauto to tpacceptall, retune canceller window
+
+> tpacceptall is the new main label with tpaauto and tpauto as aliases. Lower cancellerMinPendingSeconds from 75 to 20.
+
+- Use plain-language tpalist categories
+
+> Four configurable category keys replace the direction plus type composition; fix the double space in the list header.
+
+
+### Miscellaneous
+
+- Update for v1.0.0 [skip ci]
+
+
+### Refactor
+
+- Flatten packages into per-domain top-level layout
+
+> Drop the catch-all core package: plugin root at com.jruk8.juicytpa, kernel stays in core, domains split into tpa (+command, +selector), command, config, message, sound, storage, placeholder, update and hook. TpaRequest and TpaMode move to api; TpaUsageTracker joins tpa; TpaPermissions becomes command.Permissions. No behavior change.
+
+
+### Testing
+
+- Cover trust, flip commands and receiving flows
+
+> Split receiving/mode/trust/list tests into TpaServiceReceivingTest. Add TpaTrustStoreTest.
+
+- Cover request events and API actions
+
+> TpaServiceEventsTest for vetoes, deny messages, causes and ordering; TpaApiTest for queries and actions. Move TpaModeTest to the api package.
+
+- Cover warn clearing and new categories
+
 ## [1.0.0] - 2026-10-27
 
 ### Bug Fixes
