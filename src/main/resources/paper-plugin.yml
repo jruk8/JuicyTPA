@@ -37,6 +37,12 @@ permissions:
   juicytpa.mode:
     description: Change your TPA mode with /tpamode.
     default: true
+  juicytpa.block:
+    description: Block requests from specific players with /tpablock.
+    default: true
+  juicytpa.tpall:
+    description: Send requests to everyone with /tpall, and use @a in /tpa and /tpahere.
+    default: op
   juicytpa.reload:
     description: Reload the JuicyTPA configuration.
     default: op

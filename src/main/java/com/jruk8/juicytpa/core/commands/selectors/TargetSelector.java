@@ -59,6 +59,26 @@ public final class TargetSelector {
             PlayerSelectorArgumentResolver selector,
             CommandContext ctx
     ) {
+        return group(source, selector, false, ctx).map(targets -> targets.getFirst());
+    }
+
+    /**
+     * Resolves an explicit selector to one or several players.
+     *
+     * @param source the command source
+     * @param selector the parsed selector argument
+     * @param allowMulti whether several players resolve instead of erroring
+     * @param ctx the shared command services
+     * @return the resolved players, or empty when resolution fails,
+     *         resolves to nobody, or resolves to several players while
+     *         multi is off (an error is already sent in all cases)
+     */
+    public static Optional<List<Player>> group(
+            CommandSourceStack source,
+            PlayerSelectorArgumentResolver selector,
+            boolean allowMulti,
+            CommandContext ctx
+    ) {
         List<Player> targets;
         try {
             targets = selector.resolve(source);
@@ -70,10 +90,10 @@ public final class TargetSelector {
             ctx.error(source, m -> m.getCore().getNoTargets(), Map.of());
             return Optional.empty();
         }
-        if (targets.size() > 1) {
+        if (targets.size() > 1 && !allowMulti) {
             ctx.error(source, m -> m.getTpa().getNotSingle(), Map.of());
             return Optional.empty();
         }
-        return Optional.of(targets.getFirst());
+        return Optional.of(targets);
     }
 }

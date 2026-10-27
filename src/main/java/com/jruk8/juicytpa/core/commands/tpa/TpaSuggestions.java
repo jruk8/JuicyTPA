@@ -1,5 +1,6 @@
 package com.jruk8.juicytpa.core.commands.tpa;
 
+import com.jruk8.juicytpa.core.commands.TpaPermissions;
 import com.jruk8.juicytpa.core.commands.selectors.ValueSuggestions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
@@ -22,7 +23,8 @@ public final class TpaSuggestions {
 
     /**
      * Candidates for /tpa and /tpahere: vanilla selectors, then every
-     * online player but the sender.
+     * online player but the sender. {@code @a} only shows for senders
+     * holding the tpall permission.
      *
      * @param source the command source completing the argument
      * @param prefix the already-typed input used for filtering (may be null)
@@ -31,7 +33,29 @@ public final class TpaSuggestions {
     public static List<String> suggestTargets(CommandSourceStack source, String prefix) {
         CommandSender sender = source.getSender();
         String name = sender instanceof Player player ? player.getName() : "";
-        List<String> candidates = new ArrayList<>(List.of("@p", "@a", "@r", "@s"));
+        List<String> candidates = new ArrayList<>(List.of("@p", "@r", "@s"));
+        if (sender.hasPermission(TpaPermissions.TPALL)) {
+            candidates.add(1, "@a");
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!player.getName().equals(name)) {
+                candidates.add(player.getName());
+            }
+        }
+        return ValueSuggestions.suggest(candidates, prefix);
+    }
+
+    /**
+     * Candidates for /tpablock: every online player but the sender.
+     *
+     * @param source the command source completing the argument
+     * @param prefix the already-typed input used for filtering (may be null)
+     * @return the filtered candidates
+     */
+    public static List<String> suggestNames(CommandSourceStack source, String prefix) {
+        CommandSender sender = source.getSender();
+        String name = sender instanceof Player player ? player.getName() : "";
+        List<String> candidates = new ArrayList<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!player.getName().equals(name)) {
                 candidates.add(player.getName());

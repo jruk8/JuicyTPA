@@ -137,16 +137,22 @@ public class PluginConfig extends OkaeriConfig {
         private Channel tpahere = new Channel(List.of("tpah", "tphere", "tph"));
 
         @Comment("Standalone /tpaccept root command and its extra labels.")
-        private Channel tpaccept = new Channel(List.of("tpac", "tpc"));
+        private Channel tpaccept = new Channel(List.of("tpacc"));
 
         @Comment("Standalone /tpadeny root command and its extra labels.")
         private Channel tpadeny = new Channel(List.of("tpad", "tpdeny", "tpd"));
 
         @Comment("Standalone /tpacancel root command and its extra labels.")
-        private Channel tpacancel = new Channel(List.of("tpcancel", "tpcl"));
+        private Channel tpacancel = new Channel(List.of("tpac", "tpcancel", "tpc"));
 
         @Comment("Standalone /tpamode root command and its extra labels.")
         private Channel tpamode = new Channel(List.of("tpam", "tpmode", "tpm"));
+
+        @Comment("Standalone /tpablock root command and its extra labels.")
+        private Channel tpablock = new Channel(List.of());
+
+        @Comment("Standalone /tpall root command and its extra labels.")
+        private Channel tpall = new Channel(List.of());
     }
 
     @Getter

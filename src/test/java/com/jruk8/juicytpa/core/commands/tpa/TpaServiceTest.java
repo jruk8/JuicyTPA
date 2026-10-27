@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -80,8 +81,8 @@ class TpaServiceTest {
         sounds = new SoundsConfig();
         var ctx = new CommandContext(messages, sounds, messenger, soundPlayer);
         service = new TpaService(
-                ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaUsageTracker(() -> storage),
-                plugin, this::schedule, online::get);
+                ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
+                new TpaUsageTracker(() -> storage), plugin, this::schedule, online::get);
         sender = player(senderId, "Sender");
         receiver = player(receiverId, "Receiver");
         online.put(senderId, sender);
@@ -275,6 +276,94 @@ class TpaServiceTest {
 
         assertTrue(service.incoming(receiverId).isEmpty());
         verify(messenger).send(eq(rival), eq(messages.getTpa().getAutoCancelled()), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("should refuse senders the receiver blocked")
+    void shouldRefuseBlockedSenders() {
+        new TpaBlockStore(() -> storage).setBlocked(receiverId, senderId, true);
+
+        assertEquals(0, service.send(source, receiver, false));
+
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getRequestBlocked()), any(Map.class));
+        assertTrue(service.incoming(receiverId).isEmpty());
+    }
+
+    @Test
+    @DisplayName("should toggle the block and drop pending requests")
+    void shouldToggleBlock() {
+        service.send(source, receiver, false);
+        when(source.getSender()).thenReturn(receiver);
+
+        assertEquals(1, service.block(source, sender));
+        assertTrue(new TpaBlockStore(() -> storage).isBlocked(receiverId, senderId));
+        assertTrue(service.incoming(receiverId).isEmpty());
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getBlockAdded()), any(Map.class));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getAutoCancelled()), any(Map.class));
+
+        assertEquals(1, service.block(source, sender));
+        assertFalse(new TpaBlockStore(() -> storage).isBlocked(receiverId, senderId));
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getBlockRemoved()), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("should reject blocking self")
+    void shouldRejectSelfBlock() {
+        assertEquals(0, service.block(source, sender));
+
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getBlockSelf()), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("should bulk send to every sendable target")
+    void shouldBulkSend() {
+        pluginConfig.getTpa().getConcurrency().setAllowConcurrent(true);
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+
+        assertEquals(1, service.sendBulk(source, List.of(sender, receiver, other), false));
+
+        assertEquals(1, service.incoming(receiverId).size());
+        assertEquals(1, service.incoming(other.getUniqueId()).size());
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getTpallSent()), any(Map.class));
+    }
+
+    @Test
+    @DisplayName("should skip blocked and duplicate targets in bulk")
+    void shouldSkipUnsuitableBulkTargets() {
+        pluginConfig.getTpa().getConcurrency().setAllowConcurrent(true);
+        Player blocked = player(UUID.randomUUID(), "Blocked");
+        online.put(blocked.getUniqueId(), blocked);
+        new TpaBlockStore(() -> storage).setBlocked(blocked.getUniqueId(), senderId, true);
+        service.send(source, receiver, false);
+
+        assertEquals(1, service.sendBulk(source, List.of(receiver, blocked), false));
+
+        assertEquals(1, service.incoming(receiverId).size());
+        assertTrue(service.incoming(blocked.getUniqueId()).isEmpty());
+    }
+
+    @Test
+    @DisplayName("should gate bulk sends on concurrency")
+    void shouldGateBulkOnConcurrency() {
+        assertEquals(0, service.sendBulk(source, List.of(receiver), false));
+
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getNeedsConcurrency()), any(Map.class));
+        assertTrue(service.incoming(receiverId).isEmpty());
+    }
+
+    @Test
+    @DisplayName("should name the most recent pending sender")
+    void shouldNamePendingSender() {
+        Player rival = player(UUID.randomUUID(), "Rival");
+        online.put(rival.getUniqueId(), rival);
+        pluginConfig.getTpa().getConcurrency().setAllowConcurrent(true);
+        service.send(source, receiver, false);
+        when(source.getSender()).thenReturn(rival);
+        service.send(source, receiver, false);
+
+        assertEquals(Optional.of("Rival"), service.latestPendingSender(receiverId));
+        assertEquals(Optional.empty(), service.latestPendingSender(senderId));
     }
 
     @Test

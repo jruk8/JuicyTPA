@@ -3,6 +3,7 @@ package com.jruk8.juicytpa.core.placeholders;
 import com.jruk8.juicytpa.core.Bootstrap;
 import com.jruk8.juicytpa.core.Reloadable;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
+import com.jruk8.juicytpa.core.commands.tpa.TpaService;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,14 +21,17 @@ public final class PlaceholdersBootstrap implements Bootstrap, Reloadable {
 
     private final TpaUsageTracker tracker;
     private final TpaModeStore modes;
+    private final TpaService service;
     private final JavaPlugin plugin;
     private final Logger logger;
 
     private TpaExpansion expansion;
 
-    public PlaceholdersBootstrap(TpaUsageTracker tracker, TpaModeStore modes, JavaPlugin plugin, Logger logger) {
+    public PlaceholdersBootstrap(
+            TpaUsageTracker tracker, TpaModeStore modes, TpaService service, JavaPlugin plugin, Logger logger) {
         this.tracker = tracker;
         this.modes = modes;
+        this.service = service;
         this.plugin = plugin;
         this.logger = logger;
     }
@@ -39,7 +43,11 @@ public final class PlaceholdersBootstrap implements Bootstrap, Reloadable {
             return;
         }
         this.expansion = new TpaExpansion(
-                this.tracker, this.modes, this.plugin, name -> Bukkit.getOfflinePlayer(name).getUniqueId());
+                this.tracker,
+                this.modes,
+                this.service,
+                this.plugin,
+                name -> Bukkit.getOfflinePlayer(name).getUniqueId());
         if (this.expansion.register()) {
             this.logger.info("Registered placeholders with identifier '" + TpaExpansion.IDENTIFIER + "'.");
         } else {

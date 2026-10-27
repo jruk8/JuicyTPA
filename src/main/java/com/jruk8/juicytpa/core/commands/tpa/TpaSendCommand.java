@@ -1,17 +1,22 @@
 package com.jruk8.juicytpa.core.commands.tpa;
 
 import com.jruk8.juicytpa.core.commands.CommandContext;
+import com.jruk8.juicytpa.core.commands.TpaPermissions;
 import com.jruk8.juicytpa.core.commands.selectors.TargetSelector;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import org.bukkit.entity.Player;
+
+import java.util.List;
 
 /**
  * A request root ({@code tpa}, {@code tpahere}): sends a teleport request
- * to exactly one player. Plain requests move the sender; {@code here}
- * requests move the receiver.
+ * to one player, or to several at once for senders holding the tpall
+ * permission. Plain requests move the sender; {@code here} requests move
+ * the receiver.
  */
 public class TpaSendCommand {
 
@@ -47,8 +52,16 @@ public class TpaSendCommand {
                         .executes(context -> {
                             PlayerSelectorArgumentResolver selector = context.getArgument(
                                     "targets", PlayerSelectorArgumentResolver.class);
-                            var target = TargetSelector.single(context.getSource(), selector, ctx);
-                            return target.map(player -> service.send(context.getSource(), player, here)).orElse(0);
+                            boolean multi = context.getSource().getSender().hasPermission(TpaPermissions.TPALL);
+                            var targets = TargetSelector.group(context.getSource(), selector, multi, ctx);
+                            return targets.map(players -> send(context.getSource(), players)).orElse(0);
                         }));
+    }
+
+    private int send(CommandSourceStack source, List<Player> targets) {
+        if (targets.size() > 1) {
+            return service.sendBulk(source, targets, here);
+        }
+        return service.send(source, targets.getFirst(), here);
     }
 }

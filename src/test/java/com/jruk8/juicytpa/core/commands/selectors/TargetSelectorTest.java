@@ -100,6 +100,34 @@ class TargetSelectorTest {
     }
 
     @Test
+    @DisplayName("should resolve several players when multi is allowed")
+    void shouldResolveSeveralWhenMultiAllowed() throws Exception {
+        lenient().when(source.getSender()).thenReturn(mock(Player.class));
+        List<Player> pair = List.of(player(UUID.randomUUID()), player(UUID.randomUUID()));
+        when(selector.resolve(source)).thenReturn(pair);
+
+        var resolved = TargetSelector.group(source, selector, true, ctx);
+
+        assertTrue(resolved.isPresent());
+        assertEquals(pair, resolved.get());
+    }
+
+    @Test
+    @DisplayName("should send not-single when multi is off")
+    void shouldSendNotSingleWhenMultiOff() throws Exception {
+        lenient().when(source.getSender()).thenReturn(mock(Player.class));
+        List<Player> pair = List.of(player(UUID.randomUUID()), player(UUID.randomUUID()));
+        when(selector.resolve(source)).thenReturn(pair);
+
+        var resolved = TargetSelector.group(source, selector, false, ctx);
+
+        assertTrue(resolved.isEmpty());
+        var captor = ArgumentCaptor.forClass(Function.class);
+        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
+        assertEquals("single", selectedMessage(captor.getValue()));
+    }
+
+    @Test
     @DisplayName("should resolve the single player")
     void shouldResolveSinglePlayer() throws Exception {
         lenient().when(source.getSender()).thenReturn(mock(Player.class));

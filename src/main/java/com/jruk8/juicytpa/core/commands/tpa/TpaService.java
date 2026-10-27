@@ -30,6 +30,7 @@ public class TpaService {
     private final CommandContext ctx;
     private final PluginConfig pluginConfig;
     private final TpaModeStore modes;
+    private final TpaBlockStore blocks;
     private final TpaUsageTracker tracker;
     private final Plugin plugin;
     private final TaskScheduler scheduler;
@@ -40,6 +41,7 @@ public class TpaService {
             CommandContext ctx,
             PluginConfig pluginConfig,
             TpaModeStore modes,
+            TpaBlockStore blocks,
             TpaUsageTracker tracker,
             Plugin plugin,
             TaskScheduler scheduler,
@@ -48,6 +50,7 @@ public class TpaService {
         this.ctx = ctx;
         this.pluginConfig = pluginConfig;
         this.modes = modes;
+        this.blocks = blocks;
         this.tracker = tracker;
         this.plugin = plugin;
         this.scheduler = scheduler;
@@ -76,21 +79,73 @@ public class TpaService {
             ctx.error(source, m -> m.getTpa().getAlreadyPending(), Map.of());
             return 0;
         }
+        if (blocks.isBlocked(target.getUniqueId(), sender.getUniqueId())) {
+            ctx.error(source, m -> m.getTpa().getRequestBlocked(), Map.of("player", target.getName()));
+            return 0;
+        }
         if (modes.mode(target.getUniqueId()) == TpaMode.BLOCK_ALL) {
             ctx.error(source, m -> m.getTpa().getReceiverBlocked(), Map.of("player", target.getName()));
             return 0;
         }
-        var request = new TpaRequest(
-                sender.getUniqueId(), sender.getName(), target.getUniqueId(), target.getName(), here);
-        tracker.recordSent(sender.getUniqueId());
-        tracker.recordReceived(target.getUniqueId());
-        if (modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL) {
-            acceptRequest(request);
+        deliver(sender, target, here);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * Sends one request to every listed target, skipping the sender,
+     * duplicates, blocked pairs and receivers in block-all mode. Needs
+     * concurrent requests enabled.
+     *
+     * @param source the command source
+     * @param targets the receiving players
+     * @param here whether the receivers teleport to the sender
+     * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
+     */
+    public int sendBulk(CommandSourceStack source, List<Player> targets, boolean here) {
+        if (!(source.getSender() instanceof Player sender)) {
+            ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
+            return 0;
+        }
+        if (!concurrency().isAllowConcurrent()) {
+            ctx.error(source, m -> m.getTpa().getNeedsConcurrency(), Map.of());
+            return 0;
+        }
+        int delivered = 0;
+        for (Player target : targets) {
+            if (sendable(sender, target, here)) {
+                deliver(sender, target, here);
+                delivered++;
+            }
+        }
+        ctx.send(source, m -> m.getTpa().getTpallSent(), Map.of("count", String.valueOf(delivered)));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * Toggles the block between the executor and the target. Blocking
+     * drops the target's pending requests to the executor.
+     *
+     * @param source the command source
+     * @param target the blocked or unblocked player
+     * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
+     */
+    public int block(CommandSourceStack source, Player target) {
+        if (!(source.getSender() instanceof Player blocker)) {
+            ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
+            return 0;
+        }
+        if (target.getUniqueId().equals(blocker.getUniqueId())) {
+            ctx.error(source, m -> m.getTpa().getBlockSelf(), Map.of());
+            return 0;
+        }
+        if (blocks.isBlocked(blocker.getUniqueId(), target.getUniqueId())) {
+            blocks.setBlocked(blocker.getUniqueId(), target.getUniqueId(), false);
+            ctx.send(source, m -> m.getTpa().getBlockRemoved(), Map.of("player", target.getName()));
             return Command.SINGLE_SUCCESS;
         }
-        ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
-        pending.put(key, new Entry(request, task));
-        sendRequestFeedback(sender, target);
+        blocks.setBlocked(blocker.getUniqueId(), target.getUniqueId(), true);
+        dropIncoming(blocker, target);
+        ctx.send(source, m -> m.getTpa().getBlockAdded(), Map.of("player", target.getName()));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -204,6 +259,20 @@ public class TpaService {
         return matches;
     }
 
+    /**
+     * Names the most recent pending incoming request's sender.
+     *
+     * @param receiver the receiving player
+     * @return the sender name, or empty when nothing is pending
+     */
+    public Optional<String> latestPendingSender(UUID receiver) {
+        List<TpaRequest> matches = incoming(receiver);
+        if (matches.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(matches.getLast().senderName());
+    }
+
     private int answer(CommandSourceStack source, Optional<Player> named, boolean accept) {
         if (!(source.getSender() instanceof Player receiver)) {
             ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
@@ -231,6 +300,42 @@ public class TpaService {
             denyRequest(receiver, match.get());
         }
         return Command.SINGLE_SUCCESS;
+    }
+
+    private void deliver(Player sender, Player target, boolean here) {
+        var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
+        var request = new TpaRequest(
+                sender.getUniqueId(), sender.getName(), target.getUniqueId(), target.getName(), here);
+        tracker.recordSent(sender.getUniqueId());
+        tracker.recordReceived(target.getUniqueId());
+        if (modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL) {
+            acceptRequest(request);
+            return;
+        }
+        ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
+        pending.put(key, new Entry(request, task));
+        sendRequestFeedback(sender, target);
+    }
+
+    private boolean sendable(Player sender, Player target, boolean here) {
+        if (target.getUniqueId().equals(sender.getUniqueId())) {
+            return false;
+        }
+        var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
+        return !pending.containsKey(key)
+                && !blocks.isBlocked(target.getUniqueId(), sender.getUniqueId())
+                && modes.mode(target.getUniqueId()) != TpaMode.BLOCK_ALL;
+    }
+
+    private void dropIncoming(Player blocker, Player target) {
+        for (TpaRequest request : incoming(blocker.getUniqueId())) {
+            if (!request.sender().equals(target.getUniqueId())) {
+                continue;
+            }
+            remove(request);
+            chat(target, m -> m.getTpa().getAutoCancelled(), Map.of("player", blocker.getName()));
+            ctx.soundPlayer().play(target, ctx.sounds().getNeutral());
+        }
     }
 
     private void acceptRequest(TpaRequest request) {

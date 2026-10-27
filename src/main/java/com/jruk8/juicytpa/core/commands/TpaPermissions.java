@@ -37,6 +37,16 @@ public final class TpaPermissions {
     public static final String MODE = "juicytpa.mode";
 
     /**
+     * Block requests from specific players with /tpablock.
+     */
+    public static final String BLOCK = "juicytpa.block";
+
+    /**
+     * Send requests to everyone with /tpall, and use @a in /tpa and /tpahere.
+     */
+    public static final String TPALL = "juicytpa.tpall";
+
+    /**
      * Reload the plugin configuration.
      */
     public static final String RELOAD = "juicytpa.reload";

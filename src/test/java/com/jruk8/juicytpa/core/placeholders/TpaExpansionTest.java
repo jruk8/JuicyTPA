@@ -2,6 +2,7 @@ package com.jruk8.juicytpa.core.placeholders;
 
 import com.jruk8.juicytpa.core.commands.tpa.TpaMode;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
+import com.jruk8.juicytpa.core.commands.tpa.TpaService;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,10 +35,13 @@ class TpaExpansionTest {
     private TpaModeStore modes;
 
     @Mock
+    private TpaService service;
+
+    @Mock
     private JavaPlugin plugin;
 
     private TpaExpansion expansion() {
-        return new TpaExpansion(tracker, modes, plugin, Map.of("Alex", otherId)::get);
+        return new TpaExpansion(tracker, modes, service, plugin, Map.of("Alex", otherId)::get);
     }
 
     private OfflinePlayer player(UUID id) {
@@ -60,7 +64,7 @@ class TpaExpansionTest {
         var placeholders = expansion().getPlaceholders();
 
         assertEquals("jtpa", expansion().getIdentifier());
-        assertEquals(8, placeholders.size());
+        assertEquals(9, placeholders.size());
         assertTrue(placeholders.contains("%jtpa_sent%"));
         assertTrue(placeholders.contains("%jtpa_sent_<player>%"));
         assertTrue(placeholders.contains("%jtpa_sent_global%"));
@@ -69,6 +73,7 @@ class TpaExpansionTest {
         assertTrue(placeholders.contains("%jtpa_received_global%"));
         assertTrue(placeholders.contains("%jtpa_mode%"));
         assertTrue(placeholders.contains("%jtpa_mode_<player>%"));
+        assertTrue(placeholders.contains("%jtpa_pending%"));
     }
 
     @Test
@@ -123,10 +128,21 @@ class TpaExpansionTest {
     }
 
     @Test
+    @DisplayName("should resolve the pending sender or dashes")
+    void shouldResolvePending() {
+        when(service.latestPendingSender(selfId)).thenReturn(java.util.Optional.of("Alex"));
+        when(service.latestPendingSender(otherId)).thenReturn(java.util.Optional.empty());
+
+        assertEquals("Alex", expansion().onRequest(player(selfId), "pending"));
+        assertEquals("---", expansion().onRequest(player(otherId), "pending"));
+    }
+
+    @Test
     @DisplayName("should return null for missing context and unknown params")
     void shouldReturnNullForUnresolvable() {
         assertNull(expansion().onRequest(null, "sent"));
         assertNull(expansion().onRequest(null, "mode"));
+        assertNull(expansion().onRequest(null, "pending"));
         assertNull(expansion().onRequest(mock(OfflinePlayer.class), "sent_"));
         assertNull(expansion().onRequest(mock(OfflinePlayer.class), "mode_"));
         assertNull(expansion().onRequest(mock(OfflinePlayer.class), "unknown"));

@@ -2,10 +2,12 @@ package com.jruk8.juicytpa.core;
 
 import com.jruk8.juicytpa.core.commands.CommandContext;
 import com.jruk8.juicytpa.core.commands.CommandsRegistrar;
+import com.jruk8.juicytpa.core.commands.tpa.TpaBlockStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
 import com.jruk8.juicytpa.core.configs.ConfigRegistrar;
 import com.jruk8.juicytpa.core.messages.MessageBootstrap;
+import com.jruk8.juicytpa.core.messages.Messenger;
 import com.jruk8.juicytpa.core.placeholders.PlaceholdersBootstrap;
 import com.jruk8.juicytpa.core.placeholders.TpaUsageTracker;
 import com.jruk8.juicytpa.core.sounds.SoundPlayer;
@@ -20,6 +22,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
 
     private StorageBootstrap storageBootstrap;
     private TpaModeStore modeStore;
+    private TpaBlockStore blockStore;
 
     @Override
     public void onEnable() {
@@ -56,15 +59,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
         var soundPlayer = new SoundPlayer(logger);
 
         // Initialize update checker
-        var updateChecker = new UpdateCheckerBootstrap(
-                this,
-                configRegistrar.getPluginConfig(),
-                messenger,
-                configRegistrar.getMessagesConfig(),
-                logger
-        );
-        updateChecker.register();
-        reloader.register(updateChecker);
+        var updateChecker = setupUpdateChecker(reloader, configRegistrar, messenger, logger);
 
         // Initialize storage and placeholders first: commands record usage stats
         TpaUsageTracker usageTracker = setupStorageAndPlaceholders(logger, reloader, configRegistrar);
@@ -76,6 +71,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 messenger,
                 soundPlayer);
         var tpaService = tpaService(context, configRegistrar, usageTracker);
+        setupPlaceholders(reloader, logger, usageTracker, tpaService);
         setupCommands(reloader, configRegistrar, context, updateChecker, tpaService);
 
         // Initialize bStats unless anonymous statistics are disabled
@@ -88,16 +84,39 @@ public final class JuicyTPAPlugin extends JavaPlugin {
         metricsBootstrap.register();
     }
 
+    private UpdateCheckerBootstrap setupUpdateChecker(
+            Reloader reloader, ConfigRegistrar configRegistrar, Messenger messenger, Logger logger) {
+        var updateChecker = new UpdateCheckerBootstrap(
+                this,
+                configRegistrar.getPluginConfig(),
+                messenger,
+                configRegistrar.getMessagesConfig(),
+                logger);
+        updateChecker.register();
+        reloader.register(updateChecker);
+        return updateChecker;
+    }
+
     private TpaService tpaService(
             CommandContext context, ConfigRegistrar configRegistrar, TpaUsageTracker usageTracker) {
         return new TpaService(
                 context,
                 configRegistrar.getPluginConfig(),
                 this.modeStore,
+                this.blockStore,
                 usageTracker,
                 this,
                 (task, delay) -> Bukkit.getGlobalRegionScheduler().runDelayed(this, scheduled -> task.run(), delay),
                 Bukkit::getPlayer);
+    }
+
+    private void setupPlaceholders(
+            Reloader reloader, Logger logger, TpaUsageTracker usageTracker, TpaService tpaService) {
+        // PlaceholderAPI placeholders (needs the request service for jtpa_pending)
+        var placeholdersBootstrap = new PlaceholdersBootstrap(
+                usageTracker, this.modeStore, tpaService, this, logger);
+        placeholdersBootstrap.register();
+        reloader.register(placeholdersBootstrap);
     }
 
     private void setupCommands(
@@ -121,11 +140,7 @@ public final class JuicyTPAPlugin extends JavaPlugin {
         reloader.register(this.storageBootstrap);
         var usageTracker = new TpaUsageTracker(this.storageBootstrap::getStorage);
         this.modeStore = new TpaModeStore(this.storageBootstrap::getStorage);
-
-        // Initialize PlaceholderAPI placeholders
-        var placeholdersBootstrap = new PlaceholdersBootstrap(usageTracker, this.modeStore, this, logger);
-        placeholdersBootstrap.register();
-        reloader.register(placeholdersBootstrap);
+        this.blockStore = new TpaBlockStore(this.storageBootstrap::getStorage);
         return usageTracker;
     }
 }

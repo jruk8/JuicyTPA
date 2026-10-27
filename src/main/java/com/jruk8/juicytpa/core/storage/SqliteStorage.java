@@ -33,6 +33,7 @@ public final class SqliteStorage implements AutoCloseable {
 
     private static final String TABLE_PLAYER_STATS = "player_stats";
     private static final String TABLE_GLOBAL_STATS = "global_stats";
+    private static final String TABLE_TPA_BLOCKS = "tpa_blocks";
 
     private static final String CREATE_PLAYER_STATS =
             "CREATE TABLE IF NOT EXISTS " + TABLE_PLAYER_STATS + " ("
@@ -46,6 +47,12 @@ public final class SqliteStorage implements AutoCloseable {
                     + "key TEXT NOT NULL PRIMARY KEY,"
                     + "value INTEGER NOT NULL DEFAULT 0)";
 
+    private static final String CREATE_TPA_BLOCKS =
+            "CREATE TABLE IF NOT EXISTS " + TABLE_TPA_BLOCKS + " ("
+                    + "blocker TEXT NOT NULL,"
+                    + "blocked TEXT NOT NULL,"
+                    + "PRIMARY KEY (blocker, blocked))";
+
     private static final String INSERT_OR_IGNORE_PLAYER =
             "INSERT OR IGNORE INTO " + TABLE_PLAYER_STATS + " (key, player, value) VALUES (?, ?, 0)";
     private static final String INCREMENT_PLAYER =
@@ -55,6 +62,13 @@ public final class SqliteStorage implements AutoCloseable {
     private static final String UPSERT_PLAYER =
             "INSERT INTO " + TABLE_PLAYER_STATS + " (key, player, value) VALUES (?, ?, ?)"
                     + " ON CONFLICT (key, player) DO UPDATE SET value = excluded.value";
+
+    private static final String INSERT_BLOCK =
+            "INSERT OR IGNORE INTO " + TABLE_TPA_BLOCKS + " (blocker, blocked) VALUES (?, ?)";
+    private static final String DELETE_BLOCK =
+            "DELETE FROM " + TABLE_TPA_BLOCKS + " WHERE blocker = ? AND blocked = ?";
+    private static final String SELECT_BLOCK =
+            "SELECT 1 FROM " + TABLE_TPA_BLOCKS + " WHERE blocker = ? AND blocked = ? LIMIT 1";
 
     private static final String INSERT_OR_IGNORE_GLOBAL =
             "INSERT OR IGNORE INTO " + TABLE_GLOBAL_STATS + " (key, value) VALUES (?, 0)";
@@ -100,6 +114,7 @@ public final class SqliteStorage implements AutoCloseable {
             try (Statement statement = this.connection.createStatement()) {
                 statement.execute(CREATE_PLAYER_STATS);
                 statement.execute(CREATE_GLOBAL_STATS);
+                statement.execute(CREATE_TPA_BLOCKS);
             }
             return true;
         } catch (SQLException | ClassNotFoundException e) {
@@ -208,6 +223,63 @@ public final class SqliteStorage implements AutoCloseable {
         } catch (SQLException e) {
             this.logger.log(Level.WARNING, "Failed to read player value '" + key + "'", e);
             return Optional.empty();
+        }
+    }
+
+    /**
+     * Records that one player blocks requests from another.
+     *
+     * @param blocker the player doing the blocking
+     * @param blocked the player being blocked
+     */
+    public synchronized void addBlock(UUID blocker, UUID blocked) {
+        if (!isReady()) {
+            return;
+        }
+        try {
+            executeUpdate(INSERT_BLOCK, blocker.toString(), blocked.toString());
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to store TPA block", e);
+        }
+    }
+
+    /**
+     * Removes a block between two players.
+     *
+     * @param blocker the player doing the blocking
+     * @param blocked the player being blocked
+     */
+    public synchronized void removeBlock(UUID blocker, UUID blocked) {
+        if (!isReady()) {
+            return;
+        }
+        try {
+            executeUpdate(DELETE_BLOCK, blocker.toString(), blocked.toString());
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to remove TPA block", e);
+        }
+    }
+
+    /**
+     * Checks whether one player blocks requests from another.
+     *
+     * @param blocker the player doing the blocking
+     * @param blocked the player being blocked
+     * @return {@code true} when a block row exists
+     */
+    public synchronized boolean isBlocked(UUID blocker, UUID blocked) {
+        if (!isReady()) {
+            return false;
+        }
+        try (PreparedStatement statement = this.connection.prepareStatement(SELECT_BLOCK)) {
+            statement.setString(1, blocker.toString());
+            statement.setString(2, blocked.toString());
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next();
+            }
+        } catch (SQLException e) {
+            this.logger.log(Level.WARNING, "Failed to read TPA block", e);
+            return false;
         }
     }
 

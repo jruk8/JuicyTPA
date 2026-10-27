@@ -27,7 +27,8 @@ import java.util.logging.Logger;
 public class TpaCommandsRegistrar implements Bootstrap {
 
     private static final Set<String> HUB_COMMANDS = Set.of(
-            "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "reload", "help", "version");
+            "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall",
+            "reload", "help", "version");
 
     private final LiteralArgumentBuilder<CommandSourceStack> root;
     private final CommandContext ctx;
@@ -69,6 +70,16 @@ public class TpaCommandsRegistrar implements Bootstrap {
         for (String alias : hubAliases(channel().getTpamode().getAliases(), used)) {
             root.then(mode.node(alias));
         }
+        var block = new TpaBlockCommand(ctx, service);
+        root.then(block.node("tpablock"));
+        for (String alias : hubAliases(channel().getTpablock().getAliases(), used)) {
+            root.then(block.node(alias));
+        }
+        var all = new TpaAllCommand(ctx, service);
+        root.then(all.node("tpall"));
+        for (String alias : hubAliases(channel().getTpall().getAliases(), used)) {
+            root.then(all.node(alias));
+        }
     }
 
     /**
@@ -86,6 +97,8 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerRespondRoot(registrar, "tpadeny", false, channel().getTpadeny(), TpaPermissions.DENY, taken);
         registerCancelRoot(registrar, channel().getTpacancel(), taken);
         registerModeRoot(registrar, channel().getTpamode(), taken);
+        registerBlockRoot(registrar, channel().getTpablock(), taken);
+        registerAllRoot(registrar, channel().getTpall(), taken);
     }
 
     private void registerSend(String label, boolean here, List<String> aliases, String permission, Set<String> used) {
@@ -145,6 +158,22 @@ public class TpaCommandsRegistrar implements Bootstrap {
         }
         registerRoot(registrar, new TpaModeCommand(ctx, service).node("tpamode").build(),
                 "JuicyTPA tpamode command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerBlockRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaBlockCommand(ctx, service).node("tpablock").build(),
+                "JuicyTPA tpablock command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerAllRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaAllCommand(ctx, service).node("tpall").build(),
+                "JuicyTPA tpall command", channelAliases(channel.getAliases(), taken));
     }
 
     private void registerRoot(

@@ -14,9 +14,9 @@ import lombok.Setter;
  * accept prompts, {rc} for reject prompts and {sc} for sender feedback.
  * Commands insert runtime values through {bracket} placeholders: {version},
  * {authors}, {time}, {syntax}, {description}, {latest}, {current}, {url},
- * {modrinth-url}, {permission}, {player}, {mode}, {input}, {accept} and
- * {reject}. Angle brackets are reserved for raw MiniMessage, and \n breaks
- * the line.
+ * {modrinth-url}, {permission}, {player}, {mode}, {input}, {count},
+ * {accept} and {reject}. Angle brackets are reserved for raw MiniMessage,
+ * and \n breaks the line.
  */
 @Getter
 @Setter
@@ -173,6 +173,24 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Sent when console runs a player-only TPA command")
         private String playerOnly = "{prefix}{error}Only players can use this command.";
+
+        @Comment("Sent when the receiver blocked the sender (use {player})")
+        private String requestBlocked = "{prefix}{hl}{player} {error}has blocked you.";
+
+        @Comment("Sent when the sender blocks a player (use {player})")
+        private String blockAdded = "{prefix}{sc}Blocked TP requests from {hl}{player}{sc}.";
+
+        @Comment("Sent when the sender unblocks a player (use {player})")
+        private String blockRemoved = "{prefix}{sc}Unblocked TP requests from {hl}{player}{sc}.";
+
+        @Comment("Sent when the sender tries to block themselves")
+        private String blockSelf = "{prefix}{error}You cannot block yourself.";
+
+        @Comment("Sent when a bulk request finishes (use {count})")
+        private String tpallSent = "{prefix}{sc}Sent TP requests to {hl}{count} players{sc}.";
+
+        @Comment("Sent when a bulk request needs concurrency enabled")
+        private String needsConcurrency = "{prefix}{error}Enable concurrent requests to send to several players.";
 
         @Comment("Sent when a pending request is auto-cancelled by another accept (use {player})")
         private String autoCancelled = "{prefix}{plain}TP request to {hl}{player}{plain} was cancelled.";

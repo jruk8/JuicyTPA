@@ -3,6 +3,7 @@ package com.jruk8.juicytpa.core.commands.tpa;
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.jruk8.juicytpa.core.commands.CommandContext;
+import com.jruk8.juicytpa.core.commands.TpaPermissions;
 import com.jruk8.juicytpa.core.configs.PluginConfig;
 import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import com.jruk8.juicytpa.core.messages.Messenger;
@@ -31,6 +32,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -72,8 +74,9 @@ class TpaSuggestionsTest {
         assertTrue(storage.init());
         var ctx = new CommandContext(new MessagesConfig(), new SoundsConfig(), messenger, soundPlayer);
         service = new TpaService(
-                ctx, new PluginConfig(), new TpaModeStore(() -> storage), new TpaUsageTracker(() -> storage),
-                plugin, (task, delay) -> mock(ScheduledTask.class), online::get);
+                ctx, new PluginConfig(), new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
+                new TpaUsageTracker(() -> storage), plugin, (task, delay) -> mock(ScheduledTask.class),
+                online::get);
     }
 
     @AfterEach
@@ -92,7 +95,7 @@ class TpaSuggestionsTest {
             var candidates = TpaSuggestions.suggestTargets(source, null);
 
             assertTrue(candidates.contains("@p"));
-            assertTrue(candidates.contains("@a"));
+            assertTrue(candidates.contains("@r"));
             assertTrue(candidates.contains("Alex"));
             assertTrue(candidates.stream().noneMatch("Self"::equals));
         } finally {
@@ -110,7 +113,42 @@ class TpaSuggestionsTest {
             when(source.getSender()).thenReturn(self);
 
             assertEquals(List.of("Alex"), TpaSuggestions.suggestTargets(source, "al"));
-            assertEquals(List.of("@a"), TpaSuggestions.suggestTargets(source, "@a"));
+            assertEquals(List.of(), TpaSuggestions.suggestTargets(source, "@a"));
+        } finally {
+            self.disconnect();
+            alex.disconnect();
+        }
+    }
+
+    @Test
+    @DisplayName("should gate at-a on the tpall permission")
+    void shouldGateAtAll() {
+        Player plain = mock(Player.class);
+        when(plain.getName()).thenReturn("Plain");
+        when(plain.hasPermission(TpaPermissions.TPALL)).thenReturn(false);
+        when(source.getSender()).thenReturn(plain);
+
+        assertFalse(TpaSuggestions.suggestTargets(source, null).contains("@a"));
+
+        Player privileged = mock(Player.class);
+        when(privileged.getName()).thenReturn("Privileged");
+        when(privileged.hasPermission(TpaPermissions.TPALL)).thenReturn(true);
+        when(source.getSender()).thenReturn(privileged);
+
+        assertTrue(TpaSuggestions.suggestTargets(source, null).contains("@a"));
+    }
+
+    @Test
+    @DisplayName("should suggest names without selectors")
+    void shouldSuggestNames() {
+        var self = server.addPlayer("Self");
+        var alex = server.addPlayer("Alex");
+        try {
+            when(source.getSender()).thenReturn(self);
+
+            var candidates = TpaSuggestions.suggestNames(source, null);
+
+            assertEquals(List.of("Alex"), candidates);
         } finally {
             self.disconnect();
             alex.disconnect();
