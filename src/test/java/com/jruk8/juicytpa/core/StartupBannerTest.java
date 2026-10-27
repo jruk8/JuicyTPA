@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core;
+package com.jruk8.juicytpa.core;
 
 import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.DisplayName;
@@ -14,10 +14,10 @@ class StartupBannerTest {
     @Test
     @DisplayName("should list modrinth, discord and github after the title")
     void shouldOrderLinks() {
-        List<String> lines = StartupBanner.lines("JTemplate", "1.0.0");
+        List<String> lines = StartupBanner.lines("JuicyTPA", "1.0.0");
 
         assertEquals(4, lines.size());
-        assertEquals("\u00A7b\u00A7lJTemplate \u00A78v1.0.0 \u00A77enabled", lines.get(0));
+        assertEquals("\u00A7a\u00A7lJuicyTPA \u00A78v1.0.0 \u00A77enabled", lines.get(0));
         assertEquals("\u00A78\u00BB \u00A77Modrinth: \u00A7fhttps://modrinth.com/project/juicytpa", lines.get(1));
         assertEquals("\u00A78\u00BB \u00A77Discord: \u00A7fhttps://discord.com/invite/hkWmCVmWDC", lines.get(2));
         assertEquals("\u00A78\u00BB \u00A77GitHub: \u00A7fhttps://github.com/jruk8/JuicyTPA", lines.get(3));
@@ -28,7 +28,7 @@ class StartupBannerTest {
     void shouldPadBanner() {
         List<Component> sent = new ArrayList<>();
 
-        StartupBanner.print(sent::add, "JTemplate", "1.0.0");
+        StartupBanner.print(sent::add, "JuicyTPA", "1.0.0");
 
         assertEquals(8, sent.size());
         assertEquals(Component.empty(), sent.get(0));

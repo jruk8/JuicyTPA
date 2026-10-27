@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core.messages;
+package com.jruk8.juicytpa.core.messages;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;

@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core.update;
+package com.jruk8.juicytpa.core.update;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

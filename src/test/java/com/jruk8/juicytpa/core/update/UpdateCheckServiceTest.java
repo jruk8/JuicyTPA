@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core.update;
+package com.jruk8.juicytpa.core.update;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class UpdateCheckServiceTest {
     }
 
     private GitHubRelease release(String number) {
-        return new GitHubRelease(number, "https://github.com/jruk8/JPaperTemplate/releases/tag/v" + number);
+        return new GitHubRelease(number, "https://github.com/jruk8/JuicyTPA/releases/tag/v" + number);
     }
 
     @Test

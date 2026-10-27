@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core.update;
+package com.jruk8.juicytpa.core.update;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ class GitHubReleaseHttpTest {
 
     private static final String RELEASE = """
             {"tag_name":"v1.4.0","prerelease":false,\
-            "html_url":"https://github.com/jruk8/JPaperTemplate/releases/tag/v1.4.0"}""";
+            "html_url":"https://github.com/jruk8/JuicyTPA/releases/tag/v1.4.0"}""";
 
     @Test
     @DisplayName("should read tag and page URL from a release")
@@ -19,7 +19,7 @@ class GitHubReleaseHttpTest {
 
         assertTrue(release.isPresent());
         assertEquals("v1.4.0", release.get().versionNumber());
-        assertEquals("https://github.com/jruk8/JPaperTemplate/releases/tag/v1.4.0", release.get().pageUrl());
+        assertEquals("https://github.com/jruk8/JuicyTPA/releases/tag/v1.4.0", release.get().pageUrl());
     }
 
     @Test

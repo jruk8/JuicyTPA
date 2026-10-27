@@ -1,6 +1,6 @@
-package com.jruk8.jtemplate.core.commands.user;
+package com.jruk8.juicytpa.core.commands.user;
 
-import com.jruk8.jtemplate.core.commands.user.help.HelpEntry;
+import com.jruk8.juicytpa.core.commands.user.help.HelpEntry;
 import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,9 +17,9 @@ import static org.mockito.Mockito.when;
 class HelpEntryTest {
 
     private static final List<HelpEntry> ENTRIES = List.of(
-            new HelpEntry("/jtemplate help [query]", "Shows this help menu."),
-            new HelpEntry("/jtemplate version", "Shows the plugin version.", "jtemplate.version"),
-            new HelpEntry("/jtemplate reload", "Reloads the plugin configuration.", "jtemplate.reload")
+            new HelpEntry("/juicytpa help [query]", "Shows this help menu."),
+            new HelpEntry("/juicytpa version", "Shows the plugin version.", "juicytpa.version"),
+            new HelpEntry("/juicytpa reload", "Reloads the plugin configuration.", "juicytpa.reload")
     );
 
     @Nested
@@ -49,7 +49,7 @@ class HelpEntryTest {
             var matches = HelpEntry.matching(ENTRIES, "VERSION");
 
             assertEquals(1, matches.size());
-            assertEquals("/jtemplate version", matches.getFirst().syntax());
+            assertEquals("/juicytpa version", matches.getFirst().syntax());
         }
 
         @Test
@@ -58,7 +58,7 @@ class HelpEntryTest {
             var matches = HelpEntry.matching(ENTRIES, "reloads");
 
             assertEquals(1, matches.size());
-            assertEquals("/jtemplate reload", matches.getFirst().syntax());
+            assertEquals("/juicytpa reload", matches.getFirst().syntax());
         }
 
         @Test
@@ -84,9 +84,9 @@ class HelpEntryTest {
         @DisplayName("should gate entries on any of their permissions")
         void shouldGateOnPermissions() {
             CommandSender sender = mock(CommandSender.class);
-            when(sender.hasPermission("jtemplate.version")).thenReturn(true);
-            var entry = new HelpEntry("/jtemplate speed reset", "Resets both.",
-                    "jtemplate.flyspeed", "jtemplate.version");
+            when(sender.hasPermission("juicytpa.version")).thenReturn(true);
+            var entry = new HelpEntry("/juicytpa speed reset", "Resets both.",
+                    "juicytpa.flyspeed", "juicytpa.version");
 
             assertTrue(entry.visibleTo(sender));
             assertTrue(ENTRIES.get(1).visibleTo(sender));

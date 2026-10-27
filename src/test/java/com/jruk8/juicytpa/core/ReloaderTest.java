@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core;
+package com.jruk8.juicytpa.core;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

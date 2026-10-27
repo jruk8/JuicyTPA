@@ -1,5 +1,7 @@
-package com.jruk8.jtemplate.core.placeholders;
+package com.jruk8.juicytpa.core.placeholders;
 
+import com.jruk8.juicytpa.core.commands.tpa.TpaMode;
+import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,19 +22,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UsageExpansionTest {
+class TpaExpansionTest {
 
     private final UUID selfId = UUID.randomUUID();
     private final UUID otherId = UUID.randomUUID();
 
     @Mock
-    private CommandUsageTracker tracker;
+    private TpaUsageTracker tracker;
+
+    @Mock
+    private TpaModeStore modes;
 
     @Mock
     private JavaPlugin plugin;
 
-    private UsageExpansion expansion() {
-        return new UsageExpansion(tracker, plugin, Map.of("Alex", otherId)::get);
+    private TpaExpansion expansion() {
+        return new TpaExpansion(tracker, modes, plugin, Map.of("Alex", otherId)::get);
     }
 
     private OfflinePlayer player(UUID id) {
@@ -50,57 +55,80 @@ class UsageExpansionTest {
     }
 
     @Test
-    @DisplayName("should advertise the jtemplate identifier and every placeholder")
+    @DisplayName("should advertise the jtpa identifier and every placeholder")
     void shouldAdvertisePlaceholders() {
         var placeholders = expansion().getPlaceholders();
 
-        assertEquals("jtemplate", expansion().getIdentifier());
-        assertEquals(3, placeholders.size());
-        assertTrue(placeholders.contains("%jtemplate_uses%"));
-        assertTrue(placeholders.contains("%jtemplate_uses_<player>%"));
-        assertTrue(placeholders.contains("%jtemplate_uses_global%"));
+        assertEquals("jtpa", expansion().getIdentifier());
+        assertEquals(8, placeholders.size());
+        assertTrue(placeholders.contains("%jtpa_sent%"));
+        assertTrue(placeholders.contains("%jtpa_sent_<player>%"));
+        assertTrue(placeholders.contains("%jtpa_sent_global%"));
+        assertTrue(placeholders.contains("%jtpa_received%"));
+        assertTrue(placeholders.contains("%jtpa_received_<player>%"));
+        assertTrue(placeholders.contains("%jtpa_received_global%"));
+        assertTrue(placeholders.contains("%jtpa_mode%"));
+        assertTrue(placeholders.contains("%jtpa_mode_<player>%"));
     }
 
     @Test
     @DisplayName("should read author, version and required plugin from metadata")
     void shouldReadMetadata() {
-        meta("JTemplate", "1.0.0");
+        meta("JuicyTPA", "1.0.0");
 
         assertEquals("jruk", expansion().getAuthor());
         assertEquals("1.0.0", expansion().getVersion());
-        assertEquals("JTemplate", expansion().getRequiredPlugin());
+        assertEquals("JuicyTPA", expansion().getRequiredPlugin());
     }
 
     @Test
-    @DisplayName("should resolve the counter for the requesting player")
-    void shouldResolveSelfCounter() {
-        when(tracker.playerUses(selfId)).thenReturn(7);
+    @DisplayName("should resolve the counters for the requesting player")
+    void shouldResolveSelfCounters() {
+        when(tracker.playerSent(selfId)).thenReturn(7);
+        when(tracker.playerReceived(selfId)).thenReturn(3);
         OfflinePlayer self = player(selfId);
 
-        assertEquals("7", expansion().onRequest(self, "uses"));
+        assertEquals("7", expansion().onRequest(self, "sent"));
+        assertEquals("3", expansion().onRequest(self, "received"));
     }
 
     @Test
-    @DisplayName("should resolve the counter for a named player")
-    void shouldResolveNamedCounter() {
-        when(tracker.playerUses(otherId)).thenReturn(4);
+    @DisplayName("should resolve the counters for a named player")
+    void shouldResolveNamedCounters() {
+        when(tracker.playerSent(otherId)).thenReturn(4);
+        when(tracker.playerReceived(otherId)).thenReturn(9);
 
-        assertEquals("4", expansion().onRequest(mock(OfflinePlayer.class), "uses_Alex"));
+        assertEquals("4", expansion().onRequest(mock(OfflinePlayer.class), "sent_Alex"));
+        assertEquals("9", expansion().onRequest(mock(OfflinePlayer.class), "received_Alex"));
     }
 
     @Test
-    @DisplayName("should resolve the global counter")
-    void shouldResolveGlobalCounter() {
-        when(tracker.globalUses()).thenReturn(11);
+    @DisplayName("should resolve the global counters")
+    void shouldResolveGlobalCounters() {
+        when(tracker.globalSent()).thenReturn(11);
+        when(tracker.globalReceived()).thenReturn(13);
 
-        assertEquals("11", expansion().onRequest(mock(OfflinePlayer.class), "uses_global"));
+        assertEquals("11", expansion().onRequest(mock(OfflinePlayer.class), "sent_global"));
+        assertEquals("13", expansion().onRequest(mock(OfflinePlayer.class), "received_global"));
+    }
+
+    @Test
+    @DisplayName("should resolve the mode display name")
+    void shouldResolveMode() {
+        when(modes.mode(selfId)).thenReturn(TpaMode.BLOCK_ALL);
+        when(modes.mode(otherId)).thenReturn(TpaMode.ACCEPT_ALL);
+
+        assertEquals("Block all", expansion().onRequest(player(selfId), "mode"));
+        assertEquals("Accept all", expansion().onRequest(mock(OfflinePlayer.class), "mode_Alex"));
     }
 
     @Test
     @DisplayName("should return null for missing context and unknown params")
     void shouldReturnNullForUnresolvable() {
-        assertNull(expansion().onRequest(null, "uses"));
-        assertNull(expansion().onRequest(mock(OfflinePlayer.class), "uses_"));
+        assertNull(expansion().onRequest(null, "sent"));
+        assertNull(expansion().onRequest(null, "mode"));
+        assertNull(expansion().onRequest(mock(OfflinePlayer.class), "sent_"));
+        assertNull(expansion().onRequest(mock(OfflinePlayer.class), "mode_"));
         assertNull(expansion().onRequest(mock(OfflinePlayer.class), "unknown"));
     }
 }

@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core.storage;
+package com.jruk8.juicytpa.core.storage;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

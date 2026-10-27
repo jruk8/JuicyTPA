@@ -1,9 +1,9 @@
-package com.jruk8.jtemplate.core.commands.admin.reload;
+package com.jruk8.juicytpa.core.commands.admin.reload;
 
-import com.jruk8.jtemplate.core.Reloader;
-import com.jruk8.jtemplate.core.commands.CommandContext;
-import com.jruk8.jtemplate.core.configs.PluginConfig;
-import com.jruk8.jtemplate.core.messages.MessagesConfig;
+import com.jruk8.juicytpa.core.Reloader;
+import com.jruk8.juicytpa.core.commands.CommandContext;
+import com.jruk8.juicytpa.core.configs.PluginConfig;
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

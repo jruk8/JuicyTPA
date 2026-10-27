@@ -1,6 +1,6 @@
-package com.jruk8.jtemplate.core.messages;
+package com.jruk8.juicytpa.core.messages;
 
-import com.jruk8.jtemplate.core.configs.PluginConfig;
+import com.jruk8.juicytpa.core.configs.PluginConfig;
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import net.kyori.adventure.text.Component;
@@ -75,7 +75,7 @@ class MessageParserTest {
             Component result = parser.parse(raw, Map.of());
             // After MiniMessage parsing, the result should contain the prefix text
             String resultString = PLAIN_TEXT.serialize(result);
-            assertTrue(resultString.contains("[JTemplate]"));
+            assertTrue(resultString.contains("[JuicyTPA]"));
         }
     }
 
@@ -89,10 +89,10 @@ class MessageParserTest {
             String raw = "{plain}a{brand}b{hl}c{error}d";
             Component result = parser.parse(raw, Map.of());
             String serialized = MINI_MESSAGE.serialize(result);
-            assertTrue(serialized.contains("#b8d8e0"));
-            assertTrue(serialized.contains("#84b8db"));
-            assertTrue(serialized.contains("#ebf1f2"));
-            assertTrue(serialized.contains("#415ad9"));
+            assertTrue(serialized.contains("#b9e0b8"));
+            assertTrue(serialized.contains("#87db84"));
+            assertTrue(serialized.contains("#ebf2eb"));
+            assertTrue(serialized.contains("#e63e3e"));
         }
 
         @Test
@@ -192,7 +192,7 @@ class MessageParserTest {
         void shouldResolveColorsInValues() {
             Component result = parser.parse("Hi {name}", Map.of("name", "{hl}Steve"));
             String serialized = MINI_MESSAGE.serialize(result);
-            assertTrue(serialized.contains("#ebf1f2"));
+            assertTrue(serialized.contains("#ebf2eb"));
             assertTrue(PLAIN_TEXT.serialize(result).contains("Steve"));
         }
     }

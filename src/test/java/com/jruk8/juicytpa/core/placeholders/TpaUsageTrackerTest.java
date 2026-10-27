@@ -1,6 +1,6 @@
-package com.jruk8.jtemplate.core.placeholders;
+package com.jruk8.juicytpa.core.placeholders;
 
-import com.jruk8.jtemplate.core.storage.SqliteStorage;
+import com.jruk8.juicytpa.core.storage.SqliteStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,18 +12,18 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class CommandUsageTrackerTest {
+class TpaUsageTrackerTest {
 
     private final UUID player = UUID.randomUUID();
 
     private SqliteStorage storage;
-    private CommandUsageTracker tracker;
+    private TpaUsageTracker tracker;
 
     @BeforeEach
     void setUp() {
         storage = new SqliteStorage("jdbc:sqlite::memory:", Logger.getLogger("tracker-test"));
         assertTrue(storage.init());
-        tracker = new CommandUsageTracker(storage);
+        tracker = new TpaUsageTracker(() -> storage);
     }
 
     @AfterEach
@@ -34,27 +34,41 @@ class CommandUsageTrackerTest {
     @Test
     @DisplayName("should start at zero")
     void shouldStartAtZero() {
-        assertEquals(0, tracker.playerUses(player));
-        assertEquals(0, tracker.globalUses());
+        assertEquals(0, tracker.playerSent(player));
+        assertEquals(0, tracker.playerReceived(player));
+        assertEquals(0, tracker.globalSent());
+        assertEquals(0, tracker.globalReceived());
     }
 
     @Test
-    @DisplayName("should record one use per execution")
-    void shouldRecordUse() {
-        tracker.recordUse(player);
+    @DisplayName("should record one sent request per execution")
+    void shouldRecordSent() {
+        tracker.recordSent(player);
 
-        assertEquals(1, tracker.playerUses(player));
-        assertEquals(1, tracker.globalUses());
+        assertEquals(1, tracker.playerSent(player));
+        assertEquals(1, tracker.globalSent());
     }
 
     @Test
-    @DisplayName("should accumulate usages per player over time")
-    void shouldAccumulateUsages() {
-        tracker.recordUse(player);
-        tracker.recordUse(player);
-        tracker.recordUse(UUID.randomUUID());
+    @DisplayName("should accumulate sent requests per player over time")
+    void shouldAccumulateSent() {
+        tracker.recordSent(player);
+        tracker.recordSent(player);
+        tracker.recordSent(UUID.randomUUID());
 
-        assertEquals(2, tracker.playerUses(player));
-        assertEquals(3, tracker.globalUses());
+        assertEquals(2, tracker.playerSent(player));
+        assertEquals(3, tracker.globalSent());
+    }
+
+    @Test
+    @DisplayName("should track received separately from sent")
+    void shouldTrackReceivedSeparately() {
+        tracker.recordReceived(player);
+        tracker.recordReceived(player);
+
+        assertEquals(2, tracker.playerReceived(player));
+        assertEquals(2, tracker.globalReceived());
+        assertEquals(0, tracker.playerSent(player));
+        assertEquals(0, tracker.globalSent());
     }
 }

@@ -1,4 +1,4 @@
-package com.jruk8.jtemplate.core.commands.selectors;
+package com.jruk8.juicytpa.core.commands.selectors;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
