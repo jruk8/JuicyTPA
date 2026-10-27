@@ -12,7 +12,7 @@ tpa:
     afkMinUnanswered: 3
     afkMinPendingSeconds: 180
     cancellerMinDenied: 3
-    cancellerMinPendingSeconds: 75
+    cancellerMinPendingSeconds: 20
     confirmWindowSeconds: 15
     nudgeCooldownSeconds: 300
     nudgeMinCancelStreak: 3
@@ -34,7 +34,10 @@ Block All; after `harassMinRequests` requests from one sender within
 `harassWindowSeconds` it offers Block player. `/tpall` skips warning
 confirmations.
 
-Long-term counters persist in the database (`jtpa_warn_unanswered`,
+Answering shows intent: an accept clears every warning counter and
+that sender's harassment hits, while a deny clears the AFK counters
+and harassment hits but grows the canceller chain. Long-term
+counters persist in the database (`jtpa_warn_unanswered`,
 `jtpa_warn_pending_seconds`, `jtpa_warn_denied`,
 `jtpa_warn_denied_seconds`); streaks, confirmations and throttles are
 in-memory. The sender warnings and nudges are `messages.yml` keys

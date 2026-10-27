@@ -25,7 +25,7 @@ online; `@s` and `@p` are not supported.
 | `/tpablock <player>` | Block or unblock a player's requests. | `juicytpa.block` |
 | `/tpall` | Request everyone at once. | `juicytpa.tpall` |
 | `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
-| `/tpaauto` | Flip between normal and accept-all. | `juicytpa.mode` |
+| `/tpacceptall` | Flip between normal and accept-all. | `juicytpa.mode` |
 | `/tpablockall` | Flip between normal and block-all. | `juicytpa.mode` |
 | `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
@@ -40,7 +40,7 @@ online; `@s` and `@p` are not supported.
 | `/tpatrust` | `tpat`, `tptrust`, `tpt` |
 | `/tpamode` | `tpam`, `tpmode`, `tpm`, `tpatoggle`, `tptoggle` |
 | `/tpablock` | `tpab`, `tpblock`, `tpb`, `tpaignore`, `tpai`, `tpignore`, `tpi` |
-| `/tpaauto` | `tpauto` |
+| `/tpacceptall` | `tpaauto`, `tpauto` |
 | `/tpablockall` | `tpaba`, `tpblockall`, `tpba` |
 
 How requests flow is on the [Requests](requests.md) page; modes,

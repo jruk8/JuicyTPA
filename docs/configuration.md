@@ -95,9 +95,10 @@ commands:
       - tpai
       - tpignore
       - tpi
-  tpaauto:
+  tpacceptall:
     enabled: true
     aliases:
+      - tpaauto
       - tpauto
   tpablockall:
     enabled: true
@@ -150,7 +151,7 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
 Each channel has an `enabled` toggle registering (or hiding) its
 standalone root command (`tpa`, `tpahere`, `tpaccept`, `tpadeny`,
 `tpacancel`, `tpamode`, `tpablock`, `tpall`, `tpalist`, `tpatrust`,
-`tpaauto`, `tpablockall`), plus
+`tpacceptall`, `tpablockall`), plus
 `aliases` » extra labels for that root.
 The `/juicytpa` subcommands always exist. Aliases colliding with a hub
 label, a subcommand or another alias are ignored. Changes take effect
