@@ -47,6 +47,12 @@ public class MessagesConfig extends OkaeriConfig {
         @Comment("One help entry (use {syntax} and {description})")
         private String helpEntryFormat = "{brand}» {hl}{syntax}{plain}: {description}";
 
+        @Comment("Sent when a help query matches no commands")
+        private String helpNoMatch = "{prefix}{plain}No commands match that query.";
+
+        @Comment("Sent when no commands are visible to the sender")
+        private String helpNoCommands = "{prefix}{plain}No commands are available for you.";
+
         @Comment("Version command output (use {version} and {authors})")
         private String versionSuccess = "\n{prefix}{brand}Version {hl}{version}"
                 + "\n{brand}» {hl}Authors: {plain}{authors}"

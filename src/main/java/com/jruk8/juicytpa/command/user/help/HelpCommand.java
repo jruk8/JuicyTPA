@@ -57,13 +57,24 @@ public class HelpCommand {
     public void showHelp(CommandSourceStack sender, String query) {
         ctx.playHelp(sender);
         ctx.sendMessage(sender, m -> m.getCore().getHelpHeader(), Map.of("version", version));
-        HelpEntry.matching(entries(ctx.messagesFor(sender.getSender()).getHelp()), query).stream()
+        List<HelpEntry> matching =
+                HelpEntry.matching(entries(ctx.messagesFor(sender.getSender()).getHelp()), query);
+        if (matching.isEmpty()) {
+            ctx.sendMessage(sender, m -> m.getCore().getHelpNoMatch(), Map.of());
+            return;
+        }
+        List<HelpEntry> visible = matching.stream()
                 .filter(entry -> entry.visibleTo(sender.getSender()))
-                .forEach(entry -> ctx.sendMessage(
-                        sender,
-                        m -> m.getCore().getHelpEntryFormat(),
-                        Map.of("syntax", entry.syntax(), "description", entry.description())
-                ));
+                .toList();
+        if (visible.isEmpty()) {
+            ctx.sendMessage(sender, m -> m.getCore().getHelpNoCommands(), Map.of());
+            return;
+        }
+        visible.forEach(entry -> ctx.sendMessage(
+                sender,
+                m -> m.getCore().getHelpEntryFormat(),
+                Map.of("syntax", entry.syntax(), "description", entry.description())
+        ));
     }
 
     private List<HelpEntry> entries(MessagesConfig.Help help) {

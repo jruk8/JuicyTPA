@@ -5,6 +5,8 @@ core:
   reloadRestartRequired: "{prefix}{hl}Reload complete. {plain}Command label changes need a server restart."
   helpHeader: "\\n{prefix}{brand}JuicyTPA {version} Help:"
   helpEntryFormat: "{brand}» {hl}{syntax}{plain}: {description}"
+  helpNoMatch: "{prefix}{plain}No commands match that query."
+  helpNoCommands: "{prefix}{plain}No commands are available for you."
   versionSuccess: "\\n{prefix}{brand}Version {hl}{version}\\n{brand}» {hl}Authors: {plain}{authors}\\n{brand}» {hl}Links: {modrinth}{plain} | {github}{plain} | {donate}"
   updateAvailable: "\\n{prefix}{hl}JuicyTPA {latest}{brand} is available (running {hl}{current}{brand}).\\n{brand}» {hl}Update: {modrinth} {plain}| {github} {plain}| {discord}"
   noPermission: "{prefix}{error}You do not have the permission {hl}'{permission}'{error} to use this command."
