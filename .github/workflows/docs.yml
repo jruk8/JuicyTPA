@@ -62,7 +62,8 @@ jobs:
 
   site:
     if: github.event_name != 'pull_request'
-    needs: [check, links]
+    # External link checks are informational only and never block deploys.
+    needs: [check]
     runs-on: ubuntu-latest
     permissions:
       contents: read
