@@ -37,7 +37,17 @@ public class ReloadCommand {
      * @return the configured subcommand node
      */
     public LiteralArgumentBuilder<CommandSourceStack> node() {
-        return Commands.literal("reload")
+        return node("reload");
+    }
+
+    /**
+     * Builds the node for the given label.
+     *
+     * @param label the root or subcommand label
+     * @return the configured command node
+     */
+    public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
+        return Commands.literal(label)
                 .requires(CommandContext.requiresPermission(Permissions.RELOAD))
                 .executes(context -> {
                     onReload(context.getSource());

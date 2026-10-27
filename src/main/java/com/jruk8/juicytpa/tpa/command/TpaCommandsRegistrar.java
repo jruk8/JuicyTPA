@@ -2,12 +2,19 @@ package com.jruk8.juicytpa.tpa.command;
 
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.command.Permissions;
+import com.jruk8.juicytpa.command.admin.reload.ReloadCommand;
+import com.jruk8.juicytpa.command.user.help.HelpCommand;
+import com.jruk8.juicytpa.command.user.version.AuthorFormatter;
+import com.jruk8.juicytpa.command.user.version.VersionCommand;
 import com.jruk8.juicytpa.config.PluginConfig;
 import com.jruk8.juicytpa.core.Bootstrap;
+import com.jruk8.juicytpa.core.Reloader;
+import com.jruk8.juicytpa.update.UpdateCheckService;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.configuration.PluginMeta;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
@@ -37,6 +44,9 @@ public class TpaCommandsRegistrar implements Bootstrap {
             "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall", "tpalist",
             "tpatrust", "tpacceptall", "tpablockall", "tpalanguage", "reload", "help", "version");
 
+    /** Always-on shortcut roots (and their aliases) no channel alias may steal. */
+    private static final Set<String> SHORTCUT_LABELS = Set.of("tpahelp", "tpaversion", "tpav", "tpareload");
+
     private final LiteralArgumentBuilder<CommandSourceStack> root;
     private final CommandContext ctx;
     private final TpaService service;
@@ -44,6 +54,10 @@ public class TpaCommandsRegistrar implements Bootstrap {
     private final PluginConfig pluginConfig;
     private final Plugin plugin;
     private final Logger logger;
+    private final PluginMeta pluginMeta;
+    private final UpdateCheckService updateChecks;
+    private final Reloader reloader;
+    private final HelpCommand help;
 
     public TpaCommandsRegistrar(
             LiteralArgumentBuilder<CommandSourceStack> root,
@@ -52,7 +66,10 @@ public class TpaCommandsRegistrar implements Bootstrap {
             PlayerLanguage languages,
             PluginConfig pluginConfig,
             Plugin plugin,
-            Logger logger
+            Logger logger,
+            PluginMeta pluginMeta,
+            UpdateCheckService updateChecks,
+            Reloader reloader
     ) {
         this.root = root;
         this.ctx = commandContext;
@@ -61,6 +78,10 @@ public class TpaCommandsRegistrar implements Bootstrap {
         this.pluginConfig = pluginConfig;
         this.plugin = plugin;
         this.logger = logger;
+        this.pluginMeta = pluginMeta;
+        this.updateChecks = updateChecks;
+        this.reloader = reloader;
+        this.help = new HelpCommand(commandContext, pluginMeta.getVersion());
     }
 
     @Override
@@ -110,6 +131,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
     public void registerStandalone(Commands registrar, List<String> hubLabels) {
         var taken = new HashSet<>(hubLabels);
         taken.addAll(HUB_COMMANDS);
+        taken.addAll(SHORTCUT_LABELS);
         registerSendRoot(registrar, "tpa", false, channel().getTpa(), Permissions.TPA, taken);
         registerSendRoot(registrar, "tpahere", true, channel().getTpahere(), Permissions.TPAHERE, taken);
         registerRespondRoot(registrar, "tpaccept", true, channel().getTpaccept(), Permissions.ACCEPT, taken);
@@ -123,10 +145,17 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerAutoRoot(registrar, channel().getTpacceptall(), taken);
         registerBlockAllRoot(registrar, channel().getTpablockall(), taken);
         registerLanguageRoot(registrar, channel().getTpalanguage(), taken);
+        registerRoot(registrar, help::node, "tpahelp",
+                "JuicyTPA tpahelp command", List.of());
+        registerRoot(registrar,
+                new VersionCommand(new AuthorFormatter(), ctx, pluginMeta, updateChecks)::node,
+                "tpaversion", "JuicyTPA tpaversion command", List.of("tpav"));
+        registerRoot(registrar, new ReloadCommand(reloader, ctx, pluginConfig)::node, "tpareload",
+                "JuicyTPA tpareload command", List.of());
     }
 
     private void registerSend(String label, boolean here, List<String> aliases, String permission, Set<String> used) {
-        var command = new TpaSendCommand(ctx, service, permission, here);
+        var command = new TpaSendCommand(ctx, service, permission, here, help);
         root.then(command.node(label));
         for (String alias : hubAliases(aliases, used)) {
             root.then(command.node(alias));
@@ -151,7 +180,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaSendCommand(ctx, service, permission, here)::node, label,
+        registerRoot(registrar, new TpaSendCommand(ctx, service, permission, here, help)::node, label,
                 "JuicyTPA " + label + " command", channelAliases(channel.getAliases(), taken));
     }
 

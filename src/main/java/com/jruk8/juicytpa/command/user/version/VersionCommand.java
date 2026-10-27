@@ -41,7 +41,17 @@ public class VersionCommand {
      * @return the configured subcommand node
      */
     public LiteralArgumentBuilder<CommandSourceStack> node() {
-        return Commands.literal("version")
+        return node("version");
+    }
+
+    /**
+     * Builds the node for the given label.
+     *
+     * @param label the root or subcommand label
+     * @return the configured command node
+     */
+    public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
+        return Commands.literal(label)
                 .requires(CommandContext.requiresPermission(Permissions.VERSION))
                 .executes(context -> {
                     onVersion(context.getSource());

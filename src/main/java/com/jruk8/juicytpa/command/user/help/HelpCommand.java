@@ -35,7 +35,17 @@ public class HelpCommand {
      * @return the configured subcommand node
      */
     public LiteralArgumentBuilder<CommandSourceStack> node() {
-        return Commands.literal("help")
+        return node("help");
+    }
+
+    /**
+     * Builds the node for the given label.
+     *
+     * @param label the root or subcommand label
+     * @return the configured command node
+     */
+    public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
+        return Commands.literal(label)
                 .requires(CommandContext.requiresPermission(Permissions.HELP))
                 .executes(context -> {
                     showHelp(context.getSource(), null);

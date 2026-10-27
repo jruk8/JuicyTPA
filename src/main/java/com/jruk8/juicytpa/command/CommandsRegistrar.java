@@ -76,7 +76,8 @@ public class CommandsRegistrar implements Bootstrap {
             // registerStandalone never touches the hub builder; any instance works.
             new TpaCommandsRegistrar(
                     mainHub, commandContext, tpaService, playerLanguage,
-                    pluginConfig, plugin, plugin.getLogger())
+                    pluginConfig, plugin, plugin.getLogger(),
+                    pluginMeta, updateChecks, reloader)
                     .registerStandalone(event.registrar(), hubAliases);
         });
     }
@@ -96,7 +97,8 @@ public class CommandsRegistrar implements Bootstrap {
         new AdminCommandsRegistrar(root, commandContext, reloader, pluginConfig).register();
         new TpaCommandsRegistrar(
                 root, commandContext, tpaService, playerLanguage,
-                pluginConfig, plugin, plugin.getLogger())
+                pluginConfig, plugin, plugin.getLogger(),
+                pluginMeta, updateChecks, reloader)
                 .register();
         return root;
     }
