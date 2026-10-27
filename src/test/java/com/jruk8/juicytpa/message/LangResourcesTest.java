@@ -40,7 +40,7 @@ class LangResourcesTest {
     @DisplayName("should load every shipped language")
     void shouldLoadEveryLanguage(@TempDir Path dir) {
         var bundles = new MessageBundles(
-                english, uuid -> null, dir.toFile(), Logger.getLogger("lang-resources-test"));
+                english, uuid -> null, dir.toFile(), Logger.getLogger("lang-resources-test"), () -> "auto");
 
         for (String code : TpaLanguages.SUPPORTED) {
             if (TpaLanguages.ENGLISH.equals(code)) {
@@ -55,7 +55,7 @@ class LangResourcesTest {
     @DisplayName("should keep every translated value non-blank and MiniMessage-clean")
     void shouldKeepValuesClean(@TempDir Path dir) {
         var bundles = new MessageBundles(
-                english, uuid -> null, dir.toFile(), Logger.getLogger("lang-resources-test"));
+                english, uuid -> null, dir.toFile(), Logger.getLogger("lang-resources-test"), () -> "auto");
 
         for (String code : TpaLanguages.SUPPORTED) {
             MessagesConfig bundle = bundles.configForCode(code);

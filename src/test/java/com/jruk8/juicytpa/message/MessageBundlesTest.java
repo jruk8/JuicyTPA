@@ -44,7 +44,12 @@ class MessageBundlesTest {
     }
 
     private MessageBundles bundles(@TempDir Path dir) {
-        return new MessageBundles(english, pins::get, dir.toFile(), Logger.getLogger("bundles-test"));
+        return bundles(dir, "auto");
+    }
+
+    private MessageBundles bundles(Path dir, String defaultLanguage) {
+        return new MessageBundles(
+                english, pins::get, dir.toFile(), Logger.getLogger("bundles-test"), () -> defaultLanguage);
     }
 
     private Player player(UUID id, String locale) {
@@ -123,6 +128,36 @@ class MessageBundlesTest {
         bundles.reload();
 
         assertNotSame(english, bundles.configForCode("fi"));
+    }
+
+    @Test
+    @DisplayName("should use the server default without a pin")
+    void shouldUseServerDefault(@TempDir Path dir) {
+        var id = UUID.randomUUID();
+        var bundles = bundles(dir, "fi");
+
+        MessagesConfig bundle = bundles.configFor(player(id, "de-DE"));
+
+        assertSame(bundles.configForCode("fi"), bundle);
+    }
+
+    @Test
+    @DisplayName("should prefer the pin over the server default")
+    void shouldPreferPinOverServerDefault(@TempDir Path dir) {
+        var id = UUID.randomUUID();
+        pins.put(id, "de");
+        var bundles = bundles(dir, "fi");
+
+        assertSame(bundles.configForCode("de"), bundles.configFor(player(id, "fi-FI")));
+    }
+
+    @Test
+    @DisplayName("should follow the client on an unknown server default")
+    void shouldFollowClientOnUnknownDefault(@TempDir Path dir) {
+        var id = UUID.randomUUID();
+        var bundles = bundles(dir, "xx");
+
+        assertSame(bundles.configForCode("fi"), bundles.configFor(player(id, "fi-FI")));
     }
 
     @Test
