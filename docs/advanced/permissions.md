@@ -14,12 +14,14 @@ icon: material/key
 | `juicytpa.deny` | Deny requests with `/tpadeny`. | Everyone |
 | `juicytpa.cancel` | Cancel requests with `/tpacancel`. | Everyone |
 | `juicytpa.list` | List requests with `/tpalist`. | Everyone |
+| `juicytpa.trust` | Trust players with `/tpatrust`. | Everyone |
 | `juicytpa.mode` | Change your mode with `/tpamode`. | Everyone |
 | `juicytpa.block` | Block requests with `/tpablock`. | Everyone |
 | `juicytpa.tpall` | Request everyone with `/tpall`, and use `@a`. | OP |
 | `juicytpa.reload` | Use `/juicytpa reload`. | OP |
 | `juicytpa.help` | Use `/juicytpa help`. | Everyone |
 | `juicytpa.version` | Use `/juicytpa version`. | Everyone |
+| `juicytpa.language` | Show or set your language with `/tpalanguage`. | Everyone |
 
 Permissions are checked on the command nodes with Brigadier `requires()`
 predicates (see `CommandContext.requiresPermission`); the node constants

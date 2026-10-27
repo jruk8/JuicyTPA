@@ -49,3 +49,30 @@ Commands fill these per message: `{version}`, `{authors}`, `{time}`,
   confirmations, accept/deny/timeout/cancel pairs (chat plus
   actionbar), mode and block feedback, usage and cooldown errors, and
   the warning and nudge texts.
+- `help` » the `/juicytpa help` description per command.
+
+## Languages
+
+Messages are per player, never per server: every recipient reads the
+bundle matching their own language. Without a pin the language follows
+the client's locale live; `/tpalanguage <language>` (alias `/tpalang`)
+pins one persistently, `/tpalanguage auto` clears the pin, and a bare
+`/tpalanguage` shows the current one. English is the fallback
+everywhere: console, unknown locales, missing files and missing keys
+all read `messages.yml`. Each used language seeds its `lang/<code>.yml`
+from the bundled translation on first use; the files stay
+admin-editable and overlay the English schema, so deleting a key (or a
+whole file) just reads English again. Duration units (`48s`, `19m 25s`)
+stay English abbreviations in every language.
+
+| Code | Language | Code | Language |
+| --- | --- | --- | --- |
+| `en` | English | `ja` | 日本語 |
+| `fi` | Suomi | `pl` | Polski |
+| `de` | Deutsch | `tr` | Türkçe |
+| `es` | Español | `it` | Italiano |
+| `fr` | Français | `ko` | 한국어 |
+| `zh` | 中文 | `nl` | Nederlands |
+| `ru` | Русский | `uk` | Українська |
+| `pt` | Português | `se` | Svenska |
+| | | `no` | Norsk |

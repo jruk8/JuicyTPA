@@ -27,6 +27,7 @@ online; `@s` and `@p` are not supported.
 | `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
 | `/tpacceptall` | Flip between normal and accept-all. | `juicytpa.mode` |
 | `/tpablockall` | Flip between normal and block-all. | `juicytpa.mode` |
+| `/tpalanguage [language]` | Show or set your language (`auto` follows the client again). | `juicytpa.language` |
 | `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
 | Command | Default root aliases |
@@ -42,6 +43,7 @@ online; `@s` and `@p` are not supported.
 | `/tpablock` | `tpab`, `tpblock`, `tpb`, `tpaignore`, `tpai`, `tpignore`, `tpi` |
 | `/tpacceptall` | `tpaauto`, `tpauto` |
 | `/tpablockall` | `tpaba`, `tpblockall`, `tpba` |
+| `/tpalanguage` | `tpalang` |
 
 How requests flow is on the [Requests](requests.md) page; modes,
 blocks and warnings live under [Receiving](receiving.md).

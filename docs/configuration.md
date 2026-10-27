@@ -106,6 +106,10 @@ commands:
       - tpaba
       - tpblockall
       - tpba
+  tpalanguage:
+    enabled: true
+    aliases:
+      - tpalang
   tpall:
     enabled: true
     aliases: []
@@ -142,8 +146,9 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
 
 - `dbFile` » name of the SQLite database file created in the plugin's data
   folder. The database holds request counters (tables `player_stats` and
-  `global_stats`), each player's TPA mode (key `jtpa_mode`) and the
-  warning statistics (`jtpa_warn_unanswered`, `jtpa_warn_pending_seconds`,
+  `global_stats`), each player's TPA mode (key `jtpa_mode`), language pin
+  (key `jtpa_lang`, unset while following the client) and the warning
+  statistics (`jtpa_warn_unanswered`, `jtpa_warn_pending_seconds`,
   `jtpa_warn_denied`, `jtpa_warn_denied_seconds`).
 
 ### `commands`
@@ -151,7 +156,7 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
 Each channel has an `enabled` toggle registering (or hiding) its
 standalone root command (`tpa`, `tpahere`, `tpaccept`, `tpadeny`,
 `tpacancel`, `tpamode`, `tpablock`, `tpall`, `tpalist`, `tpatrust`,
-`tpacceptall`, `tpablockall`), plus
+`tpacceptall`, `tpablockall`, `tpalanguage`), plus
 `aliases` » extra labels for that root.
 The `/juicytpa` subcommands always exist. Aliases colliding with a hub
 label, a subcommand or another alias are ignored. Changes take effect
