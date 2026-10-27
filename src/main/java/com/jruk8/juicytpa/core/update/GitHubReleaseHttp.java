@@ -44,8 +44,12 @@ public final class GitHubReleaseHttp implements UpdateCheckHttp {
         connection.setRequestProperty("User-Agent", userAgent);
         connection.setRequestProperty("Accept", "application/vnd.github+json");
         try {
-            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 300) {
-                throw new IOException("GitHub releases returned HTTP " + connection.getResponseCode());
+            int status = connection.getResponseCode();
+            if (noReleasePublished(status)) {
+                return Optional.empty();
+            }
+            if (status < 200 || status >= 300) {
+                throw new IOException("GitHub releases returned HTTP " + status);
             }
             try (InputStream body = connection.getInputStream()) {
                 return parseLatest(new String(body.readAllBytes(), StandardCharsets.UTF_8));
@@ -53,6 +57,17 @@ public final class GitHubReleaseHttp implements UpdateCheckHttp {
         } finally {
             connection.disconnect();
         }
+    }
+
+    /**
+     * GitHub answers 404 when no full release exists yet (drafts and
+     * prereleases do not count), which is not a failure. Pure for tests.
+     *
+     * @param statusCode the HTTP status code
+     * @return true when the status means nothing is published
+     */
+    static boolean noReleasePublished(int statusCode) {
+        return statusCode == 404;
     }
 
     /**

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GitHubReleaseHttpTest {
@@ -33,5 +34,13 @@ class GitHubReleaseHttpTest {
     void shouldReturnEmptyForUnparseable() {
         assertTrue(GitHubReleaseHttp.parseLatest("{}").isEmpty());
         assertTrue(GitHubReleaseHttp.parseLatest("not json").isEmpty());
+    }
+
+    @Test
+    @DisplayName("should treat 404 as nothing published")
+    void shouldTreatNotFoundAsUnpublished() {
+        assertTrue(GitHubReleaseHttp.noReleasePublished(404));
+        assertFalse(GitHubReleaseHttp.noReleasePublished(200));
+        assertFalse(GitHubReleaseHttp.noReleasePublished(500));
     }
 }
