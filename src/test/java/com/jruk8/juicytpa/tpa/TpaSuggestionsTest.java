@@ -3,6 +3,7 @@ package com.jruk8.juicytpa.tpa;
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.command.Permissions;
 import com.jruk8.juicytpa.config.PluginConfig;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.MessagesConfig;
 import com.jruk8.juicytpa.message.Messenger;
 import com.jruk8.juicytpa.sound.SoundPlayer;
@@ -34,6 +35,8 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -72,7 +75,10 @@ class TpaSuggestionsTest {
     void setUp() {
         storage = new SqliteStorage("jdbc:sqlite::memory:", Logger.getLogger("suggest-test"));
         assertTrue(storage.init());
-        var ctx = new CommandContext(new MessagesConfig(), new SoundsConfig(), messenger, soundPlayer);
+        var messages = new MessagesConfig();
+        var bundles = mock(MessageBundles.class);
+        lenient().when(bundles.configFor(any())).thenReturn(messages);
+        var ctx = new CommandContext(messages, new SoundsConfig(), messenger, soundPlayer, bundles);
         var pluginConfig = new PluginConfig();
         var warns = new TpaWarnManager(
                 new TpaWarnStore(() -> storage), pluginConfig, System::currentTimeMillis);

@@ -30,20 +30,15 @@ class TpaModeTest {
     }
 
     @Test
-    @DisplayName("should expose friendly display names")
-    void shouldDisplay() {
+    @DisplayName("should map every mode to its configured display name")
+    void shouldMapModes() {
         var names = new MessagesConfig().getTpa();
-        assertEquals("Normal", names.modeName(TpaMode.NORMAL));
-        assertEquals("<#f5c542>Block All", names.modeName(TpaMode.BLOCK_ALL));
-        assertEquals("<#f5535e>Accept All", names.modeName(TpaMode.ACCEPT_ALL));
-    }
+        names.setModeNormal("Custom Normal");
+        names.setModeBlockAll("Custom Block All");
+        names.setModeAcceptAll("Custom Accept All");
 
-    @Test
-    @DisplayName("should read renamed display names")
-    void shouldReadRenamed() {
-        var names = new MessagesConfig().getTpa();
-        names.setModeBlockAll("Nope");
-
-        assertEquals("Nope", names.modeName(TpaMode.BLOCK_ALL));
+        assertEquals("Custom Normal", names.modeName(TpaMode.NORMAL));
+        assertEquals("Custom Block All", names.modeName(TpaMode.BLOCK_ALL));
+        assertEquals("Custom Accept All", names.modeName(TpaMode.ACCEPT_ALL));
     }
 }

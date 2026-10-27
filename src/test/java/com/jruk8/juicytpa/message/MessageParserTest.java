@@ -72,11 +72,10 @@ class MessageParserTest {
         @Test
         @DisplayName("should replace {prefix} placeholder")
         void shouldReplacePrefixPlaceholder() {
-            String raw = "{prefix}Hello";
-            Component result = parser.parse(raw, Map.of());
-            // After MiniMessage parsing, the result should contain the prefix text
+            messagesConfig.setPrefix("[T] ");
+            Component result = parser.parse("{prefix}Hello", Map.of());
             String resultString = PLAIN_TEXT.serialize(result);
-            assertTrue(resultString.contains("[JuicyTPA]"));
+            assertTrue(resultString.contains("[T] Hello"));
         }
     }
 
@@ -85,18 +84,14 @@ class MessageParserTest {
     class LinkButtonTests {
 
         @Test
-        @DisplayName("should replace link placeholders with clickable buttons")
-        void shouldReplaceLinkPlaceholders() {
+        @DisplayName("should leave link placeholders for the messenger to inject")
+        void shouldLeaveLinkPlaceholders() {
             Component result = parser.parse("{modrinth} {github} {discord} {donate}", Map.of());
             String plain = PLAIN_TEXT.serialize(result);
-            assertTrue(plain.contains("Modrinth"));
-            assertTrue(plain.contains("GitHub"));
-            assertTrue(plain.contains("Discord"));
-            assertTrue(plain.contains("Donate"));
-            String serialized = MINI_MESSAGE.serialize(result);
-            assertTrue(serialized.contains("modrinth.com/project/juicytpa"));
-            assertTrue(serialized.contains("discord.com/invite/hkWmCVmWDC"));
-            assertTrue(serialized.contains("#6258f2"));
+            assertTrue(plain.contains("{modrinth}"));
+            assertTrue(plain.contains("{github}"));
+            assertTrue(plain.contains("{discord}"));
+            assertTrue(plain.contains("{donate}"));
         }
     }
 
@@ -107,15 +102,21 @@ class MessageParserTest {
         @Test
         @DisplayName("should replace every color placeholder with its config tag")
         void shouldReplaceColorPlaceholders() {
-            String raw = "{plain}a{brand}b{hl}c{error}d{lh}e{wn}f";
-            Component result = parser.parse(raw, Map.of());
+            var colors = pluginConfig.getColors();
+            colors.setPlainColor("<red>");
+            colors.setBrandColor("<blue>");
+            colors.setHighlightColor("<yellow>");
+            colors.setErrorColor("<green>");
+            colors.setLhColor("<gray>");
+            colors.setWarnColor("<gold>");
+            Component result = parser.parse("{plain}a{brand}b{hl}c{error}d{lh}e{wn}f", Map.of());
             String serialized = MINI_MESSAGE.serialize(result);
-            assertTrue(serialized.contains("#b9e0b8"));
-            assertTrue(serialized.contains("#87db84"));
-            assertTrue(serialized.contains("#bababa"));
-            assertTrue(serialized.contains("#e6db3e"));
-            assertTrue(serialized.contains("#ebf2eb"));
-            assertTrue(serialized.contains("#eb5757"));
+            assertTrue(serialized.contains("red"));
+            assertTrue(serialized.contains("blue"));
+            assertTrue(serialized.contains("yellow"));
+            assertTrue(serialized.contains("green"));
+            assertTrue(serialized.contains("gray"));
+            assertTrue(serialized.contains("gold"));
         }
 
         @Test
@@ -213,9 +214,10 @@ class MessageParserTest {
         @Test
         @DisplayName("should resolve color tags inside placeholder values")
         void shouldResolveColorsInValues() {
+            pluginConfig.getColors().setHighlightColor("<red>");
             Component result = parser.parse("Hi {name}", Map.of("name", "{hl}Steve"));
             String serialized = MINI_MESSAGE.serialize(result);
-            assertTrue(serialized.contains("#ebf2eb"));
+            assertTrue(serialized.contains("red"));
             assertTrue(PLAIN_TEXT.serialize(result).contains("Steve"));
         }
     }

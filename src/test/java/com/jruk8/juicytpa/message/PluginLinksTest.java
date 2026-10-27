@@ -13,7 +13,7 @@ class PluginLinksTest {
     @Test
     @DisplayName("should expose all four link buttons")
     void shouldExposeLinks() {
-        Map<String, String> links = PluginLinks.placeholders();
+        Map<String, String> links = PluginLinks.buttons(new MessagesConfig());
 
         assertEquals(4, links.size());
         assertTrue(links.containsKey("{modrinth}"));
@@ -23,19 +23,13 @@ class PluginLinksTest {
     }
 
     @Test
-    @DisplayName("should click through with fully colored tooltips")
-    void shouldColorLinks() {
-        Map<String, String> links = PluginLinks.placeholders();
+    @DisplayName("should resolve each button url from code constants")
+    void shouldResolveUrls() {
+        Map<String, String> links = PluginLinks.buttons(new MessagesConfig());
 
-        assertEquals(
-                "<click:open_url:'https://modrinth.com/project/juicytpa'>"
-                        + "<hover:show_text:'<#5ae663>Open on Modrinth'>"
-                        + "<#5ae663>Modrinth</hover></click>",
-                links.get("{modrinth}"));
-        assertEquals(
-                "<click:open_url:'https://discord.com/invite/hkWmCVmWDC'>"
-                        + "<hover:show_text:'<#6258f2>Join the Discord'>"
-                        + "<#6258f2>Discord</hover></click>",
-                links.get("{discord}"));
+        assertTrue(links.get("{modrinth}").contains(PluginLinks.MODRINTH_URL));
+        assertTrue(links.get("{github}").contains(PluginLinks.GITHUB_URL));
+        assertTrue(links.get("{discord}").contains(PluginLinks.DISCORD_URL));
+        assertTrue(links.get("{donate}").contains(PluginLinks.DONATE_URL));
     }
 }

@@ -2,6 +2,7 @@ package com.jruk8.juicytpa.tpa;
 
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.config.PluginConfig;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.MessagesConfig;
 import com.jruk8.juicytpa.message.Messenger;
 import com.jruk8.juicytpa.sound.SoundPlayer;
@@ -94,7 +95,9 @@ class TpaServiceTest {
         pluginConfig.getTpa().getCooldown().setEnabled(false);
         messages = new MessagesConfig();
         sounds = new SoundsConfig();
-        var ctx = new CommandContext(messages, sounds, messenger, soundPlayer);
+        var bundles = mock(MessageBundles.class);
+        lenient().when(bundles.configFor(any())).thenReturn(messages);
+        var ctx = new CommandContext(messages, sounds, messenger, soundPlayer, bundles);
         var warns = new TpaWarnManager(new TpaWarnStore(() -> storage), pluginConfig, clock::get);
         var cooldowns = new TpaCooldowns(pluginConfig, clock::get, (player, key) -> metas.get(player.getUniqueId()));
         service = new TpaService(

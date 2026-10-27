@@ -1,6 +1,7 @@
 package com.jruk8.juicytpa.placeholder;
 
 import com.jruk8.juicytpa.api.TpaMode;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.MessagesConfig;
 import com.jruk8.juicytpa.tpa.TpaModeStore;
 import com.jruk8.juicytpa.tpa.TpaService;
@@ -21,6 +22,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import com.jruk8.juicytpa.tpa.TpaUsageTracker;
@@ -44,8 +47,15 @@ class TpaExpansionTest {
     private JavaPlugin plugin;
 
     private TpaExpansion expansion() {
+        return expansion(new MessagesConfig());
+    }
+
+    private TpaExpansion expansion(MessagesConfig messages) {
+        var bundles = mock(MessageBundles.class);
+        lenient().when(bundles.configFor(any())).thenReturn(messages);
+        lenient().when(bundles.english()).thenReturn(messages);
         return new TpaExpansion(
-                tracker, modes, service, plugin, new MessagesConfig(), Map.of("Alex", otherId)::get);
+                tracker, modes, service, plugin, bundles, Map.of("Alex", otherId)::get);
     }
 
     private OfflinePlayer player(UUID id) {
@@ -126,9 +136,14 @@ class TpaExpansionTest {
     void shouldResolveMode() {
         when(modes.mode(selfId)).thenReturn(TpaMode.BLOCK_ALL);
         when(modes.mode(otherId)).thenReturn(TpaMode.ACCEPT_ALL);
+        var messages = new MessagesConfig();
+        messages.getTpa().setModeBlockAll("Custom Block All");
+        messages.getTpa().setModeAcceptAll("Custom Accept All");
 
-        assertEquals("<#f5c542>Block All", expansion().onRequest(player(selfId), "mode"));
-        assertEquals("<#f5535e>Accept All", expansion().onRequest(mock(OfflinePlayer.class), "mode_Alex"));
+        assertEquals("Custom Block All", expansion(messages).onRequest(player(selfId), "mode"));
+        assertEquals(
+                "Custom Accept All",
+                expansion(messages).onRequest(mock(OfflinePlayer.class), "mode_Alex"));
     }
 
     @Test

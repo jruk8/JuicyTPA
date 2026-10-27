@@ -2,6 +2,7 @@ package com.jruk8.juicytpa.tpa;
 
 import com.jruk8.juicytpa.command.CommandContext;
 import com.jruk8.juicytpa.config.PluginConfig;
+import com.jruk8.juicytpa.message.MessageBundles;
 import com.jruk8.juicytpa.message.MessagesConfig;
 import com.jruk8.juicytpa.message.Messenger;
 import com.jruk8.juicytpa.sound.SoundPlayer;
@@ -96,7 +97,9 @@ class TpaServiceReceivingTest {
         pluginConfig.getTpa().getCooldown().setEnabled(false);
         messages = new MessagesConfig();
         sounds = new SoundsConfig();
-        var ctx = new CommandContext(messages, sounds, messenger, soundPlayer);
+        var bundles = mock(MessageBundles.class);
+        lenient().when(bundles.configFor(any())).thenReturn(messages);
+        var ctx = new CommandContext(messages, sounds, messenger, soundPlayer, bundles);
         var warns = new TpaWarnManager(new TpaWarnStore(() -> storage), pluginConfig, clock::get);
         var cooldowns = new TpaCooldowns(pluginConfig, clock::get, (player, key) -> metas.get(player.getUniqueId()));
         service = new TpaService(
@@ -184,10 +187,10 @@ class TpaServiceReceivingTest {
         inOrder.verify(messenger, times(4))
                 .send(eq(sender), eq(messages.getTpa().getListLine()), bodyCaptor.capture());
         var lines = bodyCaptor.getAllValues();
-        assertEquals("Received TP requests", lines.get(0).get("category"));
-        assertEquals("Received TPH requests", lines.get(1).get("category"));
-        assertEquals("Sent TP requests", lines.get(2).get("category"));
-        assertEquals("Sent TPH requests", lines.get(3).get("category"));
+        assertEquals(messages.getTpa().getListIncomingAsk(), lines.get(0).get("category"));
+        assertEquals(messages.getTpa().getListIncomingHere(), lines.get(1).get("category"));
+        assertEquals(messages.getTpa().getListOutgoingHere(), lines.get(2).get("category"));
+        assertEquals(messages.getTpa().getListOutgoingAsk(), lines.get(3).get("category"));
         assertTrue(lines.get(0).get("players").contains("/tpaccept Rival"));
         assertTrue(lines.get(2).get("players").contains("/tpacancel Receiver"));
         verify(soundPlayer, times(3)).play(sender, sounds.getNeutral());
@@ -264,9 +267,9 @@ class TpaServiceReceivingTest {
         inOrder.verify(messenger, times(2))
                 .send(eq(sender), eq(messages.getTpa().getListLine()), bodyCaptor.capture());
         var lines = bodyCaptor.getAllValues();
-        assertEquals("Trusted", lines.get(0).get("category"));
+        assertEquals(messages.getTpa().getListTrusted(), lines.get(0).get("category"));
         assertTrue(lines.get(0).get("players").contains("/tpatrust Rival"));
-        assertEquals("Sent TP requests", lines.get(1).get("category"));
+        assertEquals(messages.getTpa().getListOutgoingHere(), lines.get(1).get("category"));
     }
 
     @Test

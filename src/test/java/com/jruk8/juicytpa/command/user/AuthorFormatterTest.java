@@ -42,7 +42,7 @@ class AuthorFormatterTest {
         @Test
         @DisplayName("should format two authors with 'and' in gray")
         void shouldFormatTwoAuthorsWithAnd() {
-            String result = authorFormatter.formatTwoAuthors("MyAuthor", "MyOther");
+            String result = authorFormatter.formatTwoAuthors("MyAuthor", "MyOther", "<gray>and</gray>");
             assertEquals("MyAuthor <gray>and</gray> MyOther", result);
         }
     }
@@ -55,16 +55,19 @@ class AuthorFormatterTest {
         @DisplayName("should format three authors with commas and 'and' in gray")
         void shouldFormatThreeAuthors() {
             List<String> authors = List.of("MyAuthor", "MyOther", "MyOtherOther");
-            String result = authorFormatter.formatThreePlusAuthors(authors);
-            assertEquals("MyAuthor<gray>,</gray> MyOther<gray>, and</gray> MyOtherOther", result);
+            String result = authorFormatter.formatThreePlusAuthors(
+                    authors, "<gray>,</gray>", "<gray>and</gray>");
+            assertEquals("MyAuthor<gray>,</gray> MyOther<gray>,</gray> <gray>and</gray> MyOtherOther", result);
         }
 
         @Test
         @DisplayName("should format four authors")
         void shouldFormatFourAuthors() {
             List<String> authors = List.of("Author1", "Author2", "Author3", "Author4");
-            String result = authorFormatter.formatThreePlusAuthors(authors);
-            assertEquals("Author1<gray>,</gray> Author2<gray>,</gray> Author3<gray>, and</gray> Author4", result);
+            String result = authorFormatter.formatThreePlusAuthors(
+                    authors, "<gray>,</gray>", "<gray>and</gray>");
+            assertEquals("Author1<gray>,</gray> Author2<gray>,</gray>"
+                    + " Author3<gray>,</gray> <gray>and</gray> Author4", result);
         }
     }
 
@@ -75,14 +78,15 @@ class AuthorFormatterTest {
         @Test
         @DisplayName("should format single author")
         void shouldFormatSingleAuthor() {
-            String result = authorFormatter.formatAuthors(List.of("MyAuthor"));
+            String result = authorFormatter.formatAuthors(List.of("MyAuthor"), "<gray>,</gray>", "<gray>and</gray>");
             assertEquals("MyAuthor", result);
         }
 
         @Test
         @DisplayName("should format two authors with 'and'")
         void shouldFormatTwoAuthors() {
-            String result = authorFormatter.formatAuthors(List.of("MyAuthor", "MyOther"));
+            String result = authorFormatter.formatAuthors(
+                    List.of("MyAuthor", "MyOther"), "<gray>,</gray>", "<gray>and</gray>");
             assertEquals("MyAuthor <gray>and</gray> MyOther", result);
         }
 
@@ -90,14 +94,15 @@ class AuthorFormatterTest {
         @DisplayName("should format three authors with commas and 'and'")
         void shouldFormatThreeAuthors() {
             List<String> authors = List.of("MyAuthor", "MyOther", "MyOtherOther");
-            String result = authorFormatter.formatAuthors(authors);
-            assertEquals("MyAuthor<gray>,</gray> MyOther<gray>, and</gray> MyOtherOther", result);
+            String result = authorFormatter.formatAuthors(authors, "<gray>,</gray>", "<gray>and</gray>");
+            assertEquals("MyAuthor<gray>,</gray> MyOther<gray>,</gray> <gray>and</gray> MyOtherOther", result);
         }
 
         @Test
         @DisplayName("should return empty string for no authors")
         void shouldReturnEmptyForNoAuthors() {
-            String result = authorFormatter.formatAuthors(Collections.emptyList());
+            String result = authorFormatter.formatAuthors(
+                    Collections.emptyList(), "<gray>,</gray>", "<gray>and</gray>");
             assertEquals("", result);
         }
     }
@@ -119,7 +124,7 @@ class AuthorFormatterTest {
         @Test
         @DisplayName("should link only the known author in a pair")
         void shouldLinkOnlyKnownAuthor() {
-            String result = authorFormatter.formatTwoAuthors("jruk", "MyOther");
+            String result = authorFormatter.formatTwoAuthors("jruk", "MyOther", "<gray>and</gray>");
             assertEquals(
                     "<click:open_url:'https://github.com/jruk8'>"
                             + "<hover:show_text:'https://github.com/jruk8'>jruk</hover></click>"

@@ -14,7 +14,7 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpaccept Steve'>"
                         + "<hover:show_text:'{ac}Click to accept {hl}Steve{ac}.'>"
                         + "{ac}[✔ Accept]</hover></click>",
-                RequestPrompts.accept("Steve", "[✔ Accept]"));
+                RequestPrompts.accept("Steve", "[✔ Accept]", "{ac}Click to accept {hl}{player}{ac}."));
     }
 
     @Test
@@ -24,7 +24,7 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpadeny Steve'>"
                         + "<hover:show_text:'{rc}Click to reject {hl}Steve{rc}.'>"
                         + "{rc}[✕ Reject]</hover></click>",
-                RequestPrompts.reject("Steve", "[✕ Reject]"));
+                RequestPrompts.reject("Steve", "[✕ Reject]", "{rc}Click to reject {hl}{player}{rc}."));
     }
 
     @Test
@@ -34,7 +34,7 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpamode block'>"
                         + "<hover:show_text:'{lh}Click to block all requests.'>"
                         + "{lh}[💻 Block All]</hover></click>",
-                RequestPrompts.blockAll("{lh}[💻 Block All]"));
+                RequestPrompts.blockAll("{lh}[💻 Block All]", "{lh}Click to block all requests."));
     }
 
     @Test
@@ -44,7 +44,7 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpablock Steve'>"
                         + "<hover:show_text:'{lh}Click to block {hl}Steve{lh}.'>"
                         + "{lh}[👤 Block Steve]</hover></click>",
-                RequestPrompts.blockPlayer("Steve", "{lh}[👤 Block Steve]"));
+                RequestPrompts.blockPlayer("Steve", "{lh}[👤 Block Steve]", "{lh}Click to block {hl}{player}{lh}."));
     }
 
     @Test
@@ -54,7 +54,7 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpaccept Steve'>"
                         + "<hover:show_text:'{ac}Click to accept {hl}Steve{ac}.'>"
                         + "Steve</hover></click>",
-                RequestPrompts.listAccept("Steve"));
+                RequestPrompts.listAccept("Steve", "{ac}Click to accept {hl}{player}{ac}."));
     }
 
     @Test
@@ -64,7 +64,7 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpacancel Steve'>"
                         + "<hover:show_text:'{sc}Click to cancel {hl}Steve{sc}.'>"
                         + "Steve</hover></click>",
-                RequestPrompts.listCancel("Steve"));
+                RequestPrompts.listCancel("Steve", "{sc}Click to cancel {hl}{player}{sc}."));
     }
 
     @Test
@@ -74,6 +74,6 @@ class RequestPromptsTest {
                 "<click:run_command:'/tpatrust Steve'>"
                         + "<hover:show_text:'{hl}Click to untrust {hl}Steve{hl}.'>"
                         + "Steve</hover></click>",
-                RequestPrompts.listTrust("Steve"));
+                RequestPrompts.listTrust("Steve", "{hl}Click to untrust {hl}{player}{hl}."));
     }
 }

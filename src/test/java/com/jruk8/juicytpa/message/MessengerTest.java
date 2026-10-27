@@ -6,12 +6,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,13 +30,23 @@ class MessengerTest {
     private MessageParser messageParser;
 
     @Mock
+    private MessageBundles bundles;
+
+    @Mock
     private CommandSender sender;
 
     private Messenger messenger;
 
     @BeforeEach
     void setUp() {
-        messenger = new Messenger(messageParser);
+        messenger = new Messenger(messageParser, bundles);
+    }
+
+    private Map<String, String> withLinks(Map<String, String> tags) {
+        Map<String, String> merged = new HashMap<>(
+                PluginLinks.buttons(new MessagesConfig()));
+        merged.putAll(tags);
+        return merged;
     }
 
     @Nested
@@ -71,14 +86,33 @@ class MessengerTest {
             Map<String, String> placeholders = Map.of("player", "Steve");
             Component parsed = Component.text("Hello Steve");
 
-            when(messageParser.parse(eq(rawMessage), eq(placeholders)))
+            when(bundles.configFor(sender)).thenReturn(new MessagesConfig());
+            when(messageParser.parse(eq(rawMessage), eq(withLinks(placeholders))))
                 .thenReturn(parsed);
 
             messenger.send(sender, rawMessage, placeholders);
 
             verify(messageParser, times(1))
-                .parse(eq(rawMessage), eq(placeholders));
+                .parse(eq(rawMessage), eq(withLinks(placeholders)));
             verify(sender, times(1)).sendMessage(parsed);
+        }
+
+        @Test
+        @DisplayName("should merge link buttons into the parsed placeholders")
+        void shouldMergeLinkButtons() {
+            var captor = ArgumentCaptor.forClass(Map.class);
+            when(bundles.configFor(sender)).thenReturn(new MessagesConfig());
+            when(messageParser.parse(eq("{version}"), anyMap())).thenReturn(Component.text("v"));
+
+            messenger.send(sender, "{version}", Map.of("player", "Steve"));
+
+            verify(messageParser).parse(eq("{version}"), captor.capture());
+            Map<?, ?> merged = captor.getValue();
+            assertEquals("Steve", merged.get("player"));
+            assertTrue(merged.containsKey("{modrinth}"));
+            assertTrue(merged.containsKey("{github}"));
+            assertTrue(merged.containsKey("{discord}"));
+            assertTrue(merged.containsKey("{donate}"));
         }
 
         @Test
@@ -87,13 +121,14 @@ class MessengerTest {
             String rawMessage = "{prefix}Hello";
             Component parsed = Component.text("Hello");
 
-            when(messageParser.parse(eq(rawMessage), eq(Map.of())))
+            when(bundles.configFor(sender)).thenReturn(new MessagesConfig());
+            when(messageParser.parse(eq(rawMessage), eq(withLinks(Map.of()))))
                 .thenReturn(parsed);
 
             messenger.send(sender, rawMessage);
 
             verify(messageParser, times(1))
-                .parse(eq(rawMessage), eq(Map.of()));
+                .parse(eq(rawMessage), eq(withLinks(Map.of())));
             verify(sender, times(1)).sendMessage(parsed);
         }
     }
