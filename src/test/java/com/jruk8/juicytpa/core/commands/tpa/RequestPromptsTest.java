@@ -13,8 +13,8 @@ class RequestPromptsTest {
         assertEquals(
                 "<click:run_command:'/tpaccept Steve'>"
                         + "<hover:show_text:'{ac}Click to accept {hl}Steve{ac}.'>"
-                        + "{ac}[Accept]</hover></click>",
-                RequestPrompts.accept("Steve"));
+                        + "{ac}[✔ Accept]</hover></click>",
+                RequestPrompts.accept("Steve", "[✔ Accept]"));
     }
 
     @Test
@@ -23,7 +23,7 @@ class RequestPromptsTest {
         assertEquals(
                 "<click:run_command:'/tpadeny Steve'>"
                         + "<hover:show_text:'{rc}Click to reject {hl}Steve{rc}.'>"
-                        + "{rc}[Reject]</hover></click>",
-                RequestPrompts.reject("Steve"));
+                        + "{rc}[✕ Reject]</hover></click>",
+                RequestPrompts.reject("Steve", "[✕ Reject]"));
     }
 }

@@ -84,7 +84,7 @@ colors:
   plainColor: '<#b9e0b8>'
   brandColor: '<#87db84>'
   highlightColor: '<#ebf2eb>'
-  errorColor: '<#e63e3e>'
+  errorColor: '<#eb5757>'
   acceptColor: '<#7be63e>'
   rejectColor: '<#e63e5a>'
   sentColor: '<#44e63e>'

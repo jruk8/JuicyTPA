@@ -80,6 +80,26 @@ class MessageParserTest {
     }
 
     @Nested
+    @DisplayName("parse() link button replacement")
+    class LinkButtonTests {
+
+        @Test
+        @DisplayName("should replace link placeholders with clickable buttons")
+        void shouldReplaceLinkPlaceholders() {
+            Component result = parser.parse("{modrinth} {github} {discord} {donate}", Map.of());
+            String plain = PLAIN_TEXT.serialize(result);
+            assertTrue(plain.contains("Modrinth"));
+            assertTrue(plain.contains("GitHub"));
+            assertTrue(plain.contains("Discord"));
+            assertTrue(plain.contains("Donate"));
+            String serialized = MINI_MESSAGE.serialize(result);
+            assertTrue(serialized.contains("modrinth.com/project/juicytpa"));
+            assertTrue(serialized.contains("discord.com/invite/hkWmCVmWDC"));
+            assertTrue(serialized.contains("#6258f2"));
+        }
+    }
+
+    @Nested
     @DisplayName("parse() color palette replacement")
     class ColorPaletteTests {
 
@@ -92,7 +112,7 @@ class MessageParserTest {
             assertTrue(serialized.contains("#b9e0b8"));
             assertTrue(serialized.contains("#87db84"));
             assertTrue(serialized.contains("#ebf2eb"));
-            assertTrue(serialized.contains("#e63e3e"));
+            assertTrue(serialized.contains("#eb5757"));
         }
 
         @Test

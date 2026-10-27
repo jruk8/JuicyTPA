@@ -16,23 +16,25 @@ public final class RequestPrompts {
      * Builds the accept prompt for one sender.
      *
      * @param senderName the request sender's name
+     * @param text the clickable button text from messages.yml
      * @return the raw MiniMessage accept prompt
      */
-    public static String accept(String senderName) {
+    public static String accept(String senderName, String text) {
         return "<click:run_command:'/tpaccept " + senderName + "'>"
                 + "<hover:show_text:'{ac}Click to accept {hl}" + senderName + "{ac}.'>"
-                + "{ac}[Accept]</hover></click>";
+                + "{ac}" + text + "</hover></click>";
     }
 
     /**
      * Builds the reject prompt for one sender.
      *
      * @param senderName the request sender's name
+     * @param text the clickable button text from messages.yml
      * @return the raw MiniMessage reject prompt
      */
-    public static String reject(String senderName) {
+    public static String reject(String senderName, String text) {
         return "<click:run_command:'/tpadeny " + senderName + "'>"
                 + "<hover:show_text:'{rc}Click to reject {hl}" + senderName + "{rc}.'>"
-                + "{rc}[Reject]</hover></click>";
+                + "{rc}" + text + "</hover></click>";
     }
 }

@@ -441,8 +441,8 @@ public class TpaService {
             chat(target, m -> m.getTpa().getRequestReceived(), Map.of(
                     "player", sender.getName(),
                     "time", time,
-                    "accept", RequestPrompts.accept(sender.getName()),
-                    "reject", RequestPrompts.reject(sender.getName())));
+                    "accept", RequestPrompts.accept(sender.getName(), ctx.messages().getTpa().getAcceptText()),
+                    "reject", RequestPrompts.reject(sender.getName(), ctx.messages().getTpa().getRejectText())));
         }
         if (receiverFeedback.isActionbar()) {
             bar(target, m -> m.getTpa().getRequestReceivedActionbar(), Map.of("player", sender.getName()));

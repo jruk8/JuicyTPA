@@ -28,8 +28,6 @@ public final class JuicyTPAPlugin extends JavaPlugin {
     public void onEnable() {
         // Set up all core modules
         setupCoreModules();
-        StartupBanner.print(
-                Bukkit.getConsoleSender()::sendMessage, getName(), getPluginMeta().getVersion());
     }
 
     @Override
@@ -91,7 +89,8 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 configRegistrar.getPluginConfig(),
                 messenger,
                 configRegistrar.getMessagesConfig(),
-                logger);
+                logger,
+                this::printBanner);
         updateChecker.register();
         reloader.register(updateChecker);
         return updateChecker;
@@ -117,6 +116,14 @@ public final class JuicyTPAPlugin extends JavaPlugin {
                 usageTracker, this.modeStore, tpaService, this, logger);
         placeholdersBootstrap.register();
         reloader.register(placeholdersBootstrap);
+    }
+
+    private void printBanner(boolean updateAvailable) {
+        StartupBanner.print(
+                Bukkit.getConsoleSender()::sendMessage,
+                getName(),
+                getPluginMeta().getVersion(),
+                updateAvailable);
     }
 
     private void setupCommands(
