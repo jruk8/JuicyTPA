@@ -80,8 +80,8 @@ public class TpaService {
             ctx.error(source, m -> m.getTpa().getSelfRequest(), Map.of());
             return 0;
         }
-        var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
-        if (pending.containsKey(key) || atConcurrencyCap(sender.getUniqueId())) {
+        if (hasPendingPair(sender.getUniqueId(), target.getUniqueId())
+                || atConcurrencyCap(sender.getUniqueId())) {
             ctx.error(source, m -> m.getTpa().getAlreadyPending(), Map.of());
             return 0;
         }
@@ -217,6 +217,31 @@ public class TpaService {
     }
 
     /**
+     * Lists the executor's pending incoming and outgoing requests,
+     * grouped by direction and request type with clickable names.
+     *
+     * @param source the command source
+     * @return {@link Command#SINGLE_SUCCESS}, or 0 when a check fails
+     */
+    public int list(CommandSourceStack source) {
+        if (!(source.getSender() instanceof Player viewer)) {
+            ctx.error(source, m -> m.getTpa().getPlayerOnly(), Map.of());
+            return 0;
+        }
+        List<TpaRequest> in = incoming(viewer.getUniqueId());
+        List<TpaRequest> out = outgoing(viewer.getUniqueId());
+        if (in.isEmpty() && out.isEmpty()) {
+            ctx.send(source, m -> m.getTpa().getListEmpty(), Map.of());
+            return Command.SINGLE_SUCCESS;
+        }
+        chat(viewer, m -> m.getTpa().getListHeader(), Map.of());
+        sendListLines(viewer, in, true);
+        sendListLines(viewer, out, false);
+        ctx.soundPlayer().play(viewer, ctx.sounds().getNeutral());
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
      * Cycles the executor's mode, or sets it from the argument.
      *
      * @param source the command source
@@ -342,10 +367,39 @@ public class TpaService {
         if (target.getUniqueId().equals(sender.getUniqueId())) {
             return false;
         }
-        var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
-        return !pending.containsKey(key)
+        return !hasPendingPair(sender.getUniqueId(), target.getUniqueId())
                 && !blocks.isBlocked(target.getUniqueId(), sender.getUniqueId())
                 && (here || modes.mode(target.getUniqueId()) != TpaMode.BLOCK_ALL);
+    }
+
+    private boolean hasPendingPair(UUID sender, UUID receiver) {
+        return pending.containsKey(new RequestKey(sender, receiver, false))
+                || pending.containsKey(new RequestKey(sender, receiver, true));
+    }
+
+    private void sendListLines(Player viewer, List<TpaRequest> requests, boolean inbound) {
+        sendListLine(viewer, requests, false, inbound);
+        sendListLine(viewer, requests, true, inbound);
+    }
+
+    private void sendListLine(Player viewer, List<TpaRequest> requests, boolean here, boolean inbound) {
+        List<String> names = new ArrayList<>();
+        for (TpaRequest request : requests) {
+            if (request.here() != here) {
+                continue;
+            }
+            String name = inbound ? request.senderName() : request.receiverName();
+            names.add(inbound ? RequestPrompts.listAccept(name) : RequestPrompts.listCancel(name));
+        }
+        if (names.isEmpty()) {
+            return;
+        }
+        var tpa = ctx.messages().getTpa();
+        String direction = inbound ? tpa.getListIncoming() : tpa.getListOutgoing();
+        String type = inbound != here ? tpa.getRequestTypeAsk() : tpa.getRequestTypeHere();
+        chat(viewer, m -> m.getTpa().getListLine(), Map.of(
+                "category", direction + " " + type,
+                "players", TpaListFormatter.join(names, tpa.getListComma(), tpa.getListAnd(), tpa.getListMore())));
     }
 
     private void dropIncoming(Player blocker, Player target) {

@@ -20,6 +20,7 @@ online; `@s` and `@p` are not supported.
 | `/tpaccept [player]` | Accept a TP request. | `juicytpa.accept` |
 | `/tpadeny [player]` | Deny a TP request. | `juicytpa.deny` |
 | `/tpacancel [player]` | Cancel an outgoing TP request. | `juicytpa.cancel` |
+| `/tpalist` | List pending TP requests. | `juicytpa.list` |
 | `/tpablock <player>` | Block or unblock a player's requests. | `juicytpa.block` |
 | `/tpall` | Request everyone at once. | `juicytpa.tpall` |
 | `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
@@ -32,6 +33,7 @@ online; `@s` and `@p` are not supported.
 | `/tpaccept` | `tpacc` |
 | `/tpadeny` | `tpad`, `tpdeny`, `tpd` |
 | `/tpacancel` | `tpac`, `tpcancel`, `tpc` |
+| `/tpalist` | `tpal`, `tplist`, `tpl` |
 | `/tpamode` | `tpam`, `tpmode`, `tpm` |
 | `/tpablock` | `tpab`, `tpblock`, `tpb` |
 

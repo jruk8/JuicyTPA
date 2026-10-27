@@ -74,6 +74,7 @@ public class HelpCommand {
                 new HelpEntry("/tpaccept [player]", "Accepts a TP request.", TpaPermissions.ACCEPT),
                 new HelpEntry("/tpadeny [player]", "Denies a TP request.", TpaPermissions.DENY),
                 new HelpEntry("/tpacancel [player]", "Cancels an outgoing TP request.", TpaPermissions.CANCEL),
+                new HelpEntry("/tpalist", "Lists your pending TP requests.", TpaPermissions.LIST),
                 new HelpEntry("/tpablock <player>", "Blocks or unblocks a player's requests.", TpaPermissions.BLOCK),
                 new HelpEntry("/tpall", "Requests everyone at once.", TpaPermissions.TPALL),
                 new HelpEntry("/tpamode [mode]", "Cycles or sets your TPA mode.", TpaPermissions.MODE),

@@ -32,6 +32,11 @@ public final class TpaPermissions {
     public static final String CANCEL = "juicytpa.cancel";
 
     /**
+     * List pending TP requests with /tpalist.
+     */
+    public static final String LIST = "juicytpa.list";
+
+    /**
      * Change your TPA mode with /tpamode.
      */
     public static final String MODE = "juicytpa.mode";

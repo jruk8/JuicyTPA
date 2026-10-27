@@ -219,7 +219,7 @@ public class MessagesConfig extends OkaeriConfig {
         private String autoCancelled = "{prefix}{plain}TP request to {hl}{player}{plain} was cancelled.";
 
         @Comment("Request type word for /tpa, used via {type} in warnings")
-        private String requestTypeAsk = "TP request";
+        private String requestTypeAsk = "TP to you";
 
         @Comment("Request type word for /tpahere, used via {type} in warnings")
         private String requestTypeHere = "TP to them";
@@ -249,5 +249,29 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Block-player button text in nudges, wrapped with its click action (use {player})")
         private String warnBlockPlayerButton = "{lh}[👤 Block {player}]";
+
+        @Comment("Sent when /tpalist finds nothing pending")
+        private String listEmpty = "{prefix}{plain}You have no pending TP requests.";
+
+        @Comment("Header of the /tpalist listing")
+        private String listHeader = "\\n{prefix}{brand} TPA List:";
+
+        @Comment("One /tpalist category line (use {category} and {players})")
+        private String listLine = "{brand}• {plain}{category} {brand}» {hl}{players}";
+
+        @Comment("Direction word for incoming requests in /tpalist categories")
+        private String listIncoming = "Incoming";
+
+        @Comment("Direction word for outgoing requests in /tpalist categories")
+        private String listOutgoing = "Outgoing";
+
+        @Comment("Name separator in /tpalist lines")
+        private String listComma = "{hl},";
+
+        @Comment("'and' word in /tpalist lines")
+        private String listAnd = "{hl}and";
+
+        @Comment("Overflow tail in /tpalist lines (use {count})")
+        private String listMore = "{plain}, and {hl}{count} more.";
     }
 }

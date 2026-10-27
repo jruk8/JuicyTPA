@@ -63,4 +63,28 @@ public final class RequestPrompts {
                 + "<hover:show_text:'{lh}Click to block {hl}" + targetName + "{lh}.'>"
                 + text + "</hover></click>";
     }
+
+    /**
+     * Builds one clickable /tpalist name running /tpaccept.
+     *
+     * @param playerName the player to accept
+     * @return the raw MiniMessage list entry
+     */
+    public static String listAccept(String playerName) {
+        return "<click:run_command:'/tpaccept " + playerName + "'>"
+                + "<hover:show_text:'{ac}Click to accept {hl}" + playerName + "{ac}.'>"
+                + playerName + "</hover></click>";
+    }
+
+    /**
+     * Builds one clickable /tpalist name running /tpacancel.
+     *
+     * @param playerName the player to cancel
+     * @return the raw MiniMessage list entry
+     */
+    public static String listCancel(String playerName) {
+        return "<click:run_command:'/tpacancel " + playerName + "'>"
+                + "<hover:show_text:'{sc}Click to cancel {hl}" + playerName + "{sc}.'>"
+                + playerName + "</hover></click>";
+    }
 }

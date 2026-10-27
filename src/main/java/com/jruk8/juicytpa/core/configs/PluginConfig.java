@@ -217,6 +217,9 @@ public class PluginConfig extends OkaeriConfig {
         @Comment("Standalone /tpacancel root command and its extra labels.")
         private Channel tpacancel = new Channel(List.of("tpac", "tpcancel", "tpc"));
 
+        @Comment("Standalone /tpalist root command and its extra labels.")
+        private Channel tpalist = new Channel(List.of("tpal", "tplist", "tpl"));
+
         @Comment("Standalone /tpamode root command and its extra labels.")
         private Channel tpamode = new Channel(List.of("tpam", "tpmode", "tpm"));
 

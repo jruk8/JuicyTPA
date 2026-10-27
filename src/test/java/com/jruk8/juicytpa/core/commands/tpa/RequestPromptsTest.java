@@ -46,4 +46,24 @@ class RequestPromptsTest {
                         + "{lh}[👤 Block Steve]</hover></click>",
                 RequestPrompts.blockPlayer("Steve", "{lh}[👤 Block Steve]"));
     }
+
+    @Test
+    @DisplayName("should link list names to tpaccept with a tooltip")
+    void shouldBuildListAccept() {
+        assertEquals(
+                "<click:run_command:'/tpaccept Steve'>"
+                        + "<hover:show_text:'{ac}Click to accept {hl}Steve{ac}.'>"
+                        + "Steve</hover></click>",
+                RequestPrompts.listAccept("Steve"));
+    }
+
+    @Test
+    @DisplayName("should link list names to tpacancel with a tooltip")
+    void shouldBuildListCancel() {
+        assertEquals(
+                "<click:run_command:'/tpacancel Steve'>"
+                        + "<hover:show_text:'{sc}Click to cancel {hl}Steve{sc}.'>"
+                        + "Steve</hover></click>",
+                RequestPrompts.listCancel("Steve"));
+    }
 }

@@ -640,6 +640,70 @@ class TpaServiceTest {
     }
 
     @Test
+    @DisplayName("should reject the opposite direction to the same player")
+    void shouldRejectOppositeDirection() {
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(0, service.send(source, receiver, true));
+
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getAlreadyPending()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should skip conflicting pairs in bulk sends")
+    void shouldSkipConflictingPairsInBulk() {
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+        assertEquals(1, service.send(source, receiver, false));
+
+        assertEquals(1, service.sendBulk(source, List.of(receiver, other), true));
+
+        assertEquals(1, service.incoming(receiverId).size());
+        assertEquals(1, service.incoming(other.getUniqueId()).size());
+    }
+
+    @Test
+    @DisplayName("should list nothing pending gracefully")
+    void shouldListEmpty() {
+        assertEquals(1, service.list(source));
+
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getListEmpty()), anyMap());
+        verify(soundPlayer).play((CommandSender) sender, sounds.getNeutral());
+    }
+
+    @Test
+    @DisplayName("should list incoming before outgoing with clickable names")
+    void shouldListRequests() {
+        Player other = player(UUID.randomUUID(), "Other");
+        online.put(other.getUniqueId(), other);
+        Player rival = player(UUID.randomUUID(), "Rival");
+        online.put(rival.getUniqueId(), rival);
+        Player third = player(UUID.randomUUID(), "Third");
+        online.put(third.getUniqueId(), third);
+        service.send(source, receiver, false);
+        service.send(source, other, true);
+        when(source.getSender()).thenReturn(rival);
+        service.send(source, sender, false);
+        when(source.getSender()).thenReturn(third);
+        service.send(source, sender, true);
+        when(source.getSender()).thenReturn(sender);
+
+        assertEquals(1, service.list(source));
+
+        var inOrder = inOrder(messenger);
+        inOrder.verify(messenger).send(eq(sender), eq(messages.getTpa().getListHeader()), anyMap());
+        inOrder.verify(messenger, times(4))
+                .send(eq(sender), eq(messages.getTpa().getListLine()), bodyCaptor.capture());
+        var lines = bodyCaptor.getAllValues();
+        assertEquals("Incoming TP to you", lines.get(0).get("category"));
+        assertEquals("Incoming TP to them", lines.get(1).get("category"));
+        assertEquals("Outgoing TP to them", lines.get(2).get("category"));
+        assertEquals("Outgoing TP to you", lines.get(3).get("category"));
+        assertTrue(lines.get(0).get("players").contains("/tpaccept Rival"));
+        assertTrue(lines.get(2).get("players").contains("/tpacancel Receiver"));
+        verify(soundPlayer, times(3)).play(sender, sounds.getNeutral());
+    }
+
+    @Test
     @DisplayName("should reject console senders")
     void shouldRejectConsole() {
         when(source.getSender()).thenReturn(mock(CommandSender.class));

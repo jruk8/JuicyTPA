@@ -16,7 +16,13 @@ actionbar can be toggled separately (see
 
 Answering bare (`/tpaccept`, `/tpadeny`) answers the single pending
 request; with several pending (concurrency on), name the player.
-`/tpacancel` mirrors this for outgoing requests.
+`/tpacancel` mirrors this for outgoing requests. `/tpalist` lists
+everything pending, incoming first, with clickable names to accept
+(incoming) or cancel (outgoing).
+
+One player can never hold both a `/tpa` and a `/tpahere` request to
+the same player; trying the second reports the request as already
+pending. `/tpall` and `@a` silently skip such conflicting pairs.
 
 Cooldowns (on, 15 seconds by default) limit how often a player may
 send `/tpa` and `/tpahere`; `/tpall` is exempt. Servers with

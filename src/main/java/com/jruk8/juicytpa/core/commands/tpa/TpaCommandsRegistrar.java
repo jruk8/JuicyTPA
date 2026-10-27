@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 public class TpaCommandsRegistrar implements Bootstrap {
 
     private static final Set<String> HUB_COMMANDS = Set.of(
-            "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall",
+            "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall", "tpalist",
             "reload", "help", "version");
 
     private final LiteralArgumentBuilder<CommandSourceStack> root;
@@ -80,6 +80,11 @@ public class TpaCommandsRegistrar implements Bootstrap {
         for (String alias : hubAliases(channel().getTpall().getAliases(), used)) {
             root.then(all.node(alias));
         }
+        var list = new TpaListCommand(ctx, service);
+        root.then(list.node("tpalist"));
+        for (String alias : hubAliases(channel().getTpalist().getAliases(), used)) {
+            root.then(list.node(alias));
+        }
     }
 
     /**
@@ -99,6 +104,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         registerModeRoot(registrar, channel().getTpamode(), taken);
         registerBlockRoot(registrar, channel().getTpablock(), taken);
         registerAllRoot(registrar, channel().getTpall(), taken);
+        registerListRoot(registrar, channel().getTpalist(), taken);
     }
 
     private void registerSend(String label, boolean here, List<String> aliases, String permission, Set<String> used) {
@@ -174,6 +180,14 @@ public class TpaCommandsRegistrar implements Bootstrap {
         }
         registerRoot(registrar, new TpaAllCommand(ctx, service).node("tpall").build(),
                 "JuicyTPA tpall command", channelAliases(channel.getAliases(), taken));
+    }
+
+    private void registerListRoot(Commands registrar, PluginConfig.Channel channel, Set<String> taken) {
+        if (!channel.isEnabled()) {
+            return;
+        }
+        registerRoot(registrar, new TpaListCommand(ctx, service).node("tpalist").build(),
+                "JuicyTPA tpalist command", channelAliases(channel.getAliases(), taken));
     }
 
     private void registerRoot(

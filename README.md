@@ -49,6 +49,7 @@ toggles how you receive them.
 | `/tpaccept [player]` | Accept a TP request. |
 | `/tpadeny [player]` | Deny a TP request. |
 | `/tpacancel [player]` | Cancel an outgoing TP request. |
+| `/tpalist` | List pending TP requests. |
 | `/tpablock <player>` | Block or unblock a player's requests. |
 | `/tpall` | Request everyone at once. |
 | `/tpamode [mode]` | Cycle or set your TPA mode. |
@@ -65,6 +66,7 @@ See the full [Commands Page](https://jruk8.github.io/JuicyTPA/basics/commands/) 
 | `juicytpa.accept` | Accept requests with `/tpaccept`. | Everyone |
 | `juicytpa.deny` | Deny requests with `/tpadeny`. | Everyone |
 | `juicytpa.cancel` | Cancel requests with `/tpacancel`. | Everyone |
+| `juicytpa.list` | List requests with `/tpalist`. | Everyone |
 | `juicytpa.mode` | Change your mode with `/tpamode`. | Everyone |
 | `juicytpa.block` | Block requests with `/tpablock`. | Everyone |
 | `juicytpa.tpall` | Request everyone with `/tpall`, and use `@a`. | OP |

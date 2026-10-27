@@ -13,6 +13,7 @@ icon: material/key
 | `juicytpa.accept` | Accept requests with `/tpaccept`. | Everyone |
 | `juicytpa.deny` | Deny requests with `/tpadeny`. | Everyone |
 | `juicytpa.cancel` | Cancel requests with `/tpacancel`. | Everyone |
+| `juicytpa.list` | List requests with `/tpalist`. | Everyone |
 | `juicytpa.mode` | Change your mode with `/tpamode`. | Everyone |
 | `juicytpa.block` | Block requests with `/tpablock`. | Everyone |
 | `juicytpa.tpall` | Request everyone with `/tpall`, and use `@a`. | OP |

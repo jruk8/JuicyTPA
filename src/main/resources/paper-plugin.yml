@@ -38,6 +38,9 @@ permissions:
   juicytpa.cancel:
     description: Cancel outgoing TP requests with /tpacancel.
     default: true
+  juicytpa.list:
+    description: List pending TP requests with /tpalist.
+    default: true
   juicytpa.mode:
     description: Change your TPA mode with /tpamode.
     default: true
