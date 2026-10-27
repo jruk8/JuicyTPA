@@ -21,9 +21,12 @@ online; `@s` and `@p` are not supported.
 | `/tpadeny [player]` | Deny a TP request. | `juicytpa.deny` |
 | `/tpacancel [player]` | Cancel an outgoing TP request. | `juicytpa.cancel` |
 | `/tpalist` | List pending TP requests. | `juicytpa.list` |
+| `/tpatrust <player>` | Trust or untrust a player's TP asks. | `juicytpa.trust` |
 | `/tpablock <player>` | Block or unblock a player's requests. | `juicytpa.block` |
 | `/tpall` | Request everyone at once. | `juicytpa.tpall` |
 | `/tpamode [mode]` | Cycle or set your TPA mode. | `juicytpa.mode` |
+| `/tpaauto` | Flip between normal and accept-all. | `juicytpa.mode` |
+| `/tpablockall` | Flip between normal and block-all. | `juicytpa.mode` |
 | `/juicytpa <help\|version\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). | — |
 
 | Command | Default root aliases |
@@ -34,8 +37,11 @@ online; `@s` and `@p` are not supported.
 | `/tpadeny` | `tpad`, `tpdeny`, `tpd` |
 | `/tpacancel` | `tpac`, `tpcancel`, `tpc` |
 | `/tpalist` | `tpal`, `tplist`, `tpl` |
-| `/tpamode` | `tpam`, `tpmode`, `tpm` |
-| `/tpablock` | `tpab`, `tpblock`, `tpb` |
+| `/tpatrust` | `tpat`, `tptrust`, `tpt` |
+| `/tpamode` | `tpam`, `tpmode`, `tpm`, `tpatoggle`, `tptoggle` |
+| `/tpablock` | `tpab`, `tpblock`, `tpb`, `tpaignore`, `tpai`, `tpignore`, `tpi` |
+| `/tpaauto` | `tpauto` |
+| `/tpablockall` | `tpaba`, `tpblockall`, `tpba` |
 
 How requests flow is on the [Requests](requests.md) page; modes,
 blocks and warnings live under [Receiving](receiving.md).
