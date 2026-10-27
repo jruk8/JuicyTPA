@@ -94,8 +94,10 @@ class TpaSuggestionsTest {
 
             var candidates = TpaSuggestions.suggestTargets(source, null);
 
-            assertTrue(candidates.contains("@p"));
             assertTrue(candidates.contains("@r"));
+            assertFalse(candidates.contains("@p"));
+            assertFalse(candidates.contains("@s"));
+            assertFalse(candidates.contains("@a"));
             assertTrue(candidates.contains("Alex"));
             assertTrue(candidates.stream().noneMatch("Self"::equals));
         } finally {

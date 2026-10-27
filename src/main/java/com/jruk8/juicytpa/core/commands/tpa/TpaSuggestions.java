@@ -22,9 +22,9 @@ public final class TpaSuggestions {
     }
 
     /**
-     * Candidates for /tpa and /tpahere: vanilla selectors, then every
-     * online player but the sender. {@code @a} only shows for senders
-     * holding the tpall permission.
+     * Candidates for /tpa and /tpahere: {@code @r}, then every online
+     * player but the sender. {@code @a} only shows for senders holding
+     * the tpall permission; {@code @s} and {@code @p} are unsupported.
      *
      * @param source the command source completing the argument
      * @param prefix the already-typed input used for filtering (may be null)
@@ -33,9 +33,9 @@ public final class TpaSuggestions {
     public static List<String> suggestTargets(CommandSourceStack source, String prefix) {
         CommandSender sender = source.getSender();
         String name = sender instanceof Player player ? player.getName() : "";
-        List<String> candidates = new ArrayList<>(List.of("@p", "@r", "@s"));
+        List<String> candidates = new ArrayList<>(List.of("@r"));
         if (sender.hasPermission(TpaPermissions.TPALL)) {
-            candidates.add(1, "@a");
+            candidates.add("@a");
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!player.getName().equals(name)) {

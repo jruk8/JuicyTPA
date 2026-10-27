@@ -96,7 +96,7 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Request confirmation sent to the sender (use {player} and {time})")
         private String requestSent = "{prefix}{sc}Sent TP request to {hl}{player}{sc}."
-                + " They have {hl}{time}{plain} to accept.";
+                + " They have {hl}{time}{sc} to accept.";
 
         @Comment("Request actionbar shown to the sender (use {player})")
         private String requestSentActionbar = "{sc}Sent TP request to {hl}{player}{sc}.";
@@ -170,6 +170,9 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Sent when a selector resolves to anything but one player")
         private String notSingle = "{prefix}{error}Specify exactly one player.";
+
+        @Comment("Sent when a removed selector (@s or @p) is used")
+        private String selectorUnsupported = "{prefix}{error}That selector is not supported. Name a player instead.";
 
         @Comment("Sent when console runs a player-only TPA command")
         private String playerOnly = "{prefix}{error}Only players can use this command.";

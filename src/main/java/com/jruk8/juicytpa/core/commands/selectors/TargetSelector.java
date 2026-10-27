@@ -5,11 +5,14 @@ import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 /**
@@ -17,7 +20,9 @@ import java.util.function.Function;
  * <p>
  * An omitted selector means the executor themselves (console gets an error).
  * TPA requests are strictly one-to-one, so an explicit selector must
- * resolve to exactly one player.
+ * resolve to exactly one player. {@code @s} and {@code @p} are not
+ * supported at all; a bare {@code @r} that lands on the sender is
+ * re-rolled to someone else while others are online.
  */
 public final class TargetSelector {
 
@@ -79,9 +84,13 @@ public final class TargetSelector {
             boolean allowMulti,
             CommandContext ctx
     ) {
+        if (isRemovedSelector(selector)) {
+            ctx.error(source, m -> m.getTpa().getSelectorUnsupported(), Map.of());
+            return Optional.empty();
+        }
         List<Player> targets;
         try {
-            targets = selector.resolve(source);
+            targets = rerollRandomSelf(source, selector, selector.resolve(source));
         } catch (CommandSyntaxException unmatched) {
             ctx.error(source, m -> m.getCore().getNoTargets(), Map.of());
             return Optional.empty();
@@ -95,5 +104,39 @@ public final class TargetSelector {
             return Optional.empty();
         }
         return Optional.of(targets);
+    }
+
+    private static boolean isRemovedSelector(PlayerSelectorArgumentResolver selector) {
+        if (!(selector instanceof PlayerSelectorArgument.Captured captured)) {
+            return false;
+        }
+        String raw = captured.rawInput().trim();
+        return raw.startsWith("@s") || raw.startsWith("@p");
+    }
+
+    private static List<Player> rerollRandomSelf(
+            CommandSourceStack source,
+            PlayerSelectorArgumentResolver selector,
+            List<Player> targets
+    ) {
+        if (!(selector instanceof PlayerSelectorArgument.Captured captured)
+                || !captured.rawInput().trim().equals("@r")) {
+            return targets;
+        }
+        if (!(source.getSender() instanceof Player self)
+                || targets.size() != 1
+                || !targets.getFirst().getUniqueId().equals(self.getUniqueId())) {
+            return targets;
+        }
+        List<Player> others = new ArrayList<>();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!player.getUniqueId().equals(self.getUniqueId())) {
+                others.add(player);
+            }
+        }
+        if (others.isEmpty()) {
+            return targets;
+        }
+        return List.of(others.get(ThreadLocalRandom.current().nextInt(others.size())));
     }
 }

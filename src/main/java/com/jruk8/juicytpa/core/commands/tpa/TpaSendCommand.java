@@ -2,11 +2,11 @@ package com.jruk8.juicytpa.core.commands.tpa;
 
 import com.jruk8.juicytpa.core.commands.CommandContext;
 import com.jruk8.juicytpa.core.commands.TpaPermissions;
+import com.jruk8.juicytpa.core.commands.selectors.PlayerSelectorArgument;
 import com.jruk8.juicytpa.core.commands.selectors.TargetSelector;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import org.bukkit.entity.Player;
 
@@ -41,7 +41,7 @@ public class TpaSendCommand {
     public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
         return Commands.literal(label)
                 .requires(CommandContext.requiresPermission(permission))
-                .then(Commands.argument("targets", ArgumentTypes.players())
+                .then(Commands.argument("targets", PlayerSelectorArgument.players())
                         .suggests((context, builder) -> {
                             for (String candidate : TpaSuggestions.suggestTargets(
                                     context.getSource(), builder.getRemainingLowerCase())) {

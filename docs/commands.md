@@ -8,7 +8,8 @@ Every TPA command is a standalone root (plus a `/juicytpa` subcommand)
 by default; disable a root in `commands` to keep only the hub form (see
 [configuration.md](configuration.md)). Requests are strictly one-to-one:
 a selector must resolve to exactly one player, and console cannot send or
-answer requests.
+answer requests. A bare `@r` never picks the sender while others are
+online; `@s` and `@p` are not supported.
 
 | Command | Description | Permission |
 | --- | --- | --- |

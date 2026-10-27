@@ -1,11 +1,15 @@
 package com.jruk8.juicytpa.core.commands.selectors;
 
+import be.seeseemelk.mockbukkit.MockBukkit;
+import be.seeseemelk.mockbukkit.ServerMock;
 import com.jruk8.juicytpa.core.commands.CommandContext;
 import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import org.bukkit.entity.Player;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,11 +28,24 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TargetSelectorTest {
+
+    private static ServerMock server;
+
+    @BeforeAll
+    static void startServer() {
+        server = MockBukkit.mock();
+    }
+
+    @AfterAll
+    static void stopServer() {
+        MockBukkit.unmock();
+    }
 
     @Mock
     private CommandContext ctx;
@@ -53,6 +70,7 @@ class TargetSelectorTest {
         lenient().when(messages.getTpa()).thenReturn(tpa);
         lenient().when(core.getNoTargets()).thenReturn("none");
         lenient().when(tpa.getNotSingle()).thenReturn("single");
+        lenient().when(tpa.getSelectorUnsupported()).thenReturn("unsupported");
         return messageSelector.apply(messages);
     }
 
@@ -125,6 +143,77 @@ class TargetSelectorTest {
         var captor = ArgumentCaptor.forClass(Function.class);
         verify(ctx).error(eq(source), captor.capture(), any(Map.class));
         assertEquals("single", selectedMessage(captor.getValue()));
+    }
+
+    @Test
+    @DisplayName("should reject at-s selectors")
+    void shouldRejectAtSelf() throws Exception {
+        var captured = mock(PlayerSelectorArgument.Captured.class);
+        when(captured.rawInput()).thenReturn("@s");
+        lenient().when(source.getSender()).thenReturn(mock(Player.class));
+
+        var resolved = TargetSelector.single(source, captured, ctx);
+
+        assertTrue(resolved.isEmpty());
+        var captor = ArgumentCaptor.forClass(Function.class);
+        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
+        assertEquals("unsupported", selectedMessage(captor.getValue()));
+        verify(captured, never()).resolve(source);
+    }
+
+    @Test
+    @DisplayName("should reject at-p selectors")
+    void shouldRejectAtNearest() throws Exception {
+        var captured = mock(PlayerSelectorArgument.Captured.class);
+        when(captured.rawInput()).thenReturn("@p");
+        lenient().when(source.getSender()).thenReturn(mock(Player.class));
+
+        var resolved = TargetSelector.single(source, captured, ctx);
+
+        assertTrue(resolved.isEmpty());
+        var captor = ArgumentCaptor.forClass(Function.class);
+        verify(ctx).error(eq(source), captor.capture(), any(Map.class));
+        assertEquals("unsupported", selectedMessage(captor.getValue()));
+    }
+
+    @Test
+    @DisplayName("should re-roll random self picks while others are online")
+    void shouldRerollRandomSelf() throws Exception {
+        var self = server.addPlayer("Self");
+        var alex = server.addPlayer("Alex");
+        try {
+            var captured = mock(PlayerSelectorArgument.Captured.class);
+            when(captured.rawInput()).thenReturn("@r");
+            when(captured.resolve(source)).thenReturn(List.of(self));
+            when(source.getSender()).thenReturn(self);
+
+            var resolved = TargetSelector.single(source, captured, ctx);
+
+            assertTrue(resolved.isPresent());
+            assertEquals(alex, resolved.get());
+        } finally {
+            self.disconnect();
+            alex.disconnect();
+        }
+    }
+
+    @Test
+    @DisplayName("should keep random self picks when alone online")
+    void shouldKeepRandomSelfWhenAlone() throws Exception {
+        var self = server.addPlayer("Self");
+        try {
+            var captured = mock(PlayerSelectorArgument.Captured.class);
+            when(captured.rawInput()).thenReturn("@r");
+            when(captured.resolve(source)).thenReturn(List.of(self));
+            when(source.getSender()).thenReturn(self);
+
+            var resolved = TargetSelector.single(source, captured, ctx);
+
+            assertTrue(resolved.isPresent());
+            assertEquals(self, resolved.get());
+        } finally {
+            self.disconnect();
+        }
     }
 
     @Test
