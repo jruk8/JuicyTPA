@@ -30,6 +30,9 @@ import com.jruk8.juicytpa.tpa.TpaService;
  */
 public class TpaCommandsRegistrar implements Bootstrap {
 
+    /** Namespace prefix for strict refs: every root and alias also registers as {@code jtpa:<label>}. */
+    public static final String NAMESPACE = "jtpa";
+
     private static final Set<String> HUB_COMMANDS = Set.of(
             "tpa", "tpahere", "tpaccept", "tpadeny", "tpacancel", "tpamode", "tpablock", "tpall", "tpalist",
             "tpatrust", "tpacceptall", "tpablockall", "tpalanguage", "reload", "help", "version");
@@ -148,7 +151,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaSendCommand(ctx, service, permission, here).node(label).build(),
+        registerRoot(registrar, new TpaSendCommand(ctx, service, permission, here)::node, label,
                 "JuicyTPA " + label + " command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -161,7 +164,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaRespondCommand(ctx, service, permission, accept).node(label).build(),
+        registerRoot(registrar, new TpaRespondCommand(ctx, service, permission, accept)::node, label,
                 "JuicyTPA " + label + " command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -169,7 +172,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaCancelCommand(ctx, service).node("tpacancel").build(),
+        registerRoot(registrar, new TpaCancelCommand(ctx, service)::node, "tpacancel",
                 "JuicyTPA tpacancel command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -177,7 +180,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaModeCommand(ctx, service).node("tpamode").build(),
+        registerRoot(registrar, new TpaModeCommand(ctx, service)::node, "tpamode",
                 "JuicyTPA tpamode command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -185,7 +188,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaBlockCommand(ctx, service).node("tpablock").build(),
+        registerRoot(registrar, new TpaBlockCommand(ctx, service)::node, "tpablock",
                 "JuicyTPA tpablock command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -193,7 +196,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaAllCommand(ctx, service).node("tpall").build(),
+        registerRoot(registrar, new TpaAllCommand(ctx, service)::node, "tpall",
                 "JuicyTPA tpall command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -201,7 +204,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaListCommand(ctx, service).node("tpalist").build(),
+        registerRoot(registrar, new TpaListCommand(ctx, service)::node, "tpalist",
                 "JuicyTPA tpalist command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -209,7 +212,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaTrustCommand(ctx, service).node("tpatrust").build(),
+        registerRoot(registrar, new TpaTrustCommand(ctx, service)::node, "tpatrust",
                 "JuicyTPA tpatrust command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -217,7 +220,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaAcceptAllCommand(service).node("tpacceptall").build(),
+        registerRoot(registrar, new TpaAcceptAllCommand(service)::node, "tpacceptall",
                 "JuicyTPA tpacceptall command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -225,7 +228,7 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaBlockAllCommand(service).node("tpablockall").build(),
+        registerRoot(registrar, new TpaBlockAllCommand(service)::node, "tpablockall",
                 "JuicyTPA tpablockall command", channelAliases(channel.getAliases(), taken));
     }
 
@@ -233,17 +236,18 @@ public class TpaCommandsRegistrar implements Bootstrap {
         if (!channel.isEnabled()) {
             return;
         }
-        registerRoot(registrar, new TpaLanguageCommand(ctx, languages).node("tpalanguage").build(),
+        registerRoot(registrar, new TpaLanguageCommand(ctx, languages)::node, "tpalanguage",
                 "JuicyTPA tpalanguage command", channelAliases(channel.getAliases(), taken));
     }
 
     private void registerRoot(
             Commands registrar,
-            com.mojang.brigadier.tree.LiteralCommandNode<CommandSourceStack> node,
+            Function<String, LiteralArgumentBuilder<CommandSourceStack>> nodes,
+            String label,
             String description,
             List<String> aliases
     ) {
-        if (!claimLabel(node.getLiteral())) {
+        if (!claimLabel(label)) {
             return;
         }
         List<String> free = new ArrayList<>();
@@ -252,7 +256,24 @@ public class TpaCommandsRegistrar implements Bootstrap {
                 free.add(alias);
             }
         }
-        registrar.register(node, description, free);
+        registrar.register(nodes.apply(label).build(), description, free);
+        registerNamespaced(registrar, nodes, label, description);
+        for (String alias : free) {
+            registerNamespaced(registrar, nodes, alias, description);
+        }
+    }
+
+    private void registerNamespaced(
+            Commands registrar,
+            Function<String, LiteralArgumentBuilder<CommandSourceStack>> nodes,
+            String label,
+            String description
+    ) {
+        String namespaced = NAMESPACE + ":" + label;
+        if (!claimLabel(namespaced)) {
+            return;
+        }
+        registrar.register(nodes.apply(namespaced).build(), description, List.of());
     }
 
     /**
