@@ -13,6 +13,7 @@ import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,6 +79,7 @@ class TpaServiceTest {
     private Player sender;
     private Player receiver;
     private final List<Runnable> scheduled = new ArrayList<>();
+    private final List<Event> events = new ArrayList<>();
     private final Map<UUID, Player> online = new HashMap<>();
     private final Map<UUID, String> metas = new HashMap<>();
     private final AtomicLong clock = new AtomicLong();
@@ -98,7 +100,7 @@ class TpaServiceTest {
         service = new TpaService(
                 ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
                 new TpaTrustStore(() -> storage), warns, cooldowns, new TpaUsageTracker(() -> storage), plugin,
-                this::schedule, online::get, uuid -> onlineName(uuid));
+                this::schedule, online::get, uuid -> onlineName(uuid), events::add);
         sender = player(senderId, "Sender");
         receiver = player(receiverId, "Receiver");
         online.put(senderId, sender);

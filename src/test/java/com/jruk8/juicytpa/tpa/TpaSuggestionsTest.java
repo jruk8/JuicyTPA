@@ -80,7 +80,7 @@ class TpaSuggestionsTest {
         service = new TpaService(
                 ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
                 new TpaTrustStore(() -> storage), warns, cooldowns, new TpaUsageTracker(() -> storage), plugin,
-                (task, delay) -> mock(ScheduledTask.class), online::get, uuid -> null);
+                (task, delay) -> mock(ScheduledTask.class), online::get, uuid -> null, event -> { });
     }
 
     @AfterEach

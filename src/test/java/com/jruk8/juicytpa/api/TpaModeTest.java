@@ -1,4 +1,4 @@
-package com.jruk8.juicytpa.tpa;
+package com.jruk8.juicytpa.api;
 
 import com.jruk8.juicytpa.message.MessagesConfig;
 
@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import com.jruk8.juicytpa.api.TpaMode;
 
 class TpaModeTest {
 
@@ -33,18 +32,18 @@ class TpaModeTest {
     @Test
     @DisplayName("should expose friendly display names")
     void shouldDisplay() {
-        var names = new MessagesConfig();
-        assertEquals("Normal", TpaMode.NORMAL.display(names));
-        assertEquals("<#f5c542>Block All", TpaMode.BLOCK_ALL.display(names));
-        assertEquals("<#f5535e>Accept All", TpaMode.ACCEPT_ALL.display(names));
+        var names = new MessagesConfig().getTpa();
+        assertEquals("Normal", names.modeName(TpaMode.NORMAL));
+        assertEquals("<#f5c542>Block All", names.modeName(TpaMode.BLOCK_ALL));
+        assertEquals("<#f5535e>Accept All", names.modeName(TpaMode.ACCEPT_ALL));
     }
 
     @Test
     @DisplayName("should read renamed display names")
     void shouldReadRenamed() {
-        var names = new MessagesConfig();
-        names.getTpa().setModeBlockAll("Nope");
+        var names = new MessagesConfig().getTpa();
+        names.setModeBlockAll("Nope");
 
-        assertEquals("Nope", TpaMode.BLOCK_ALL.display(names));
+        assertEquals("Nope", names.modeName(TpaMode.BLOCK_ALL));
     }
 }
