@@ -45,6 +45,11 @@ online; `@s` and `@p` are not supported.
 | `/tpablockall` | `tpaba`, `tpblockall`, `tpba` |
 | `/tpalanguage` | `tpalang` |
 
+Every root and alias also registers as `/jtpa:<label>`
+(`/jtpa:tpa`, `/jtpa:tpask`), including the hub itself
+(`/jtpa:juicytpa`), so there is always an unambiguous strict ref when
+another plugin claims a label.
+
 How requests flow is on the [Requests](requests.md) page; modes,
 blocks and warnings live under [Receiving](receiving.md).
 

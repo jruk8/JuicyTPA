@@ -34,6 +34,7 @@ aliases:
   - jtpa
   - jtp
   - jt
+defaultLanguage: auto
 storage:
   dbFile: juicytpa.db
 tpa:
@@ -142,6 +143,15 @@ work out of the box). Running the hub with no arguments shows the help
 listing. Blanks, duplicates and the `juicytpa` label itself are ignored.
 Applies on restart; `/juicytpa reload` reports when a restart is needed.
 
+### `defaultLanguage`
+
+Default language for players without a `/tpalanguage` pin: `auto`
+follows each player's client locale, any other
+[language key](configuration/messages.md#languages) forces that
+language. Pins always win; unknown keys warn and behave as `auto`.
+Takes effect on reload. Revoke `juicytpa.language` to strictly force
+one language server-wide.
+
 ### `storage`
 
 - `dbFile` » name of the SQLite database file created in the plugin's data
@@ -161,6 +171,9 @@ standalone root command (`tpa`, `tpahere`, `tpaccept`, `tpadeny`,
 The `/juicytpa` subcommands always exist. Aliases colliding with a hub
 label, a subcommand or another alias are ignored. Changes take effect
 after a restart; `/juicytpa reload` reports when a restart is needed.
+Every root and alias also registers under the `jtpa:` namespace
+(`/jtpa:tpa`, `/jtpa:tpask`), so there is always an unambiguous strict
+ref even when another plugin claims a label.
 
 ### `colors`
 

@@ -65,6 +65,14 @@ admin-editable and overlay the English schema, so deleting a key (or a
 whole file) just reads English again. Duration units (`48s`, `19m 25s`)
 stay English abbreviations in every language.
 
+The `defaultLanguage` key in `config.yml` decides what unpinned
+players read: `auto` (the default) keeps following each player's
+client locale, while any other key forces that language on everyone
+without a pin; existing pins always win. Unknown keys warn in the
+console and behave as `auto`. To strictly force one language (e.g.
+for unique messages), set it there and revoke `juicytpa.language`
+with your permissions plugin so nobody can pin anything else.
+
 | Code | Language | Code | Language |
 | --- | --- | --- | --- |
 | `en` | English | `da` | Dansk |

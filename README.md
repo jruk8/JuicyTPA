@@ -29,6 +29,8 @@ toggles how you receive them.
   your mode survives restarts.
 - **Full configurability** » expiry time, concurrency, chat/actionbar
   feedback per event, aliases off or on, permissions.
+- **52 languages** » per-player messages that follow the client locale,
+  pinnable with `/tpalanguage`, English fallback everywhere.
 - **For modern deployment** » MiniMessage, sounds, PAPI placeholders,
   LuckPerms meta for cooldown monetization, and an SQLite store for stats and modes.
 
@@ -78,6 +80,7 @@ Find `config.yml`, `messages.yml` and `sounds.yml` in `plugins/JuicyTPA/`:
 
 - `updateChecker` » checks for updates.
 - `aliases` » aliases for `/jtpa` root command (needs **R**estart).
+- `defaultLanguage` » `auto` follows each client, or one forced language.
 - `storage` » SQLite DB (stats plus TPA modes).
 - `tpa` » expiry, concurrency, feedback toggles, warnings, cooldowns.
 - `commands` » /tpa, /tpahere, ... aliases (**R**).
