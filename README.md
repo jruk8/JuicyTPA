@@ -4,7 +4,7 @@
 
 <h3>A clean starting point for modern Paper plugins.</h3>
 
-### [Wiki](https://jruk8.github.io/JPaperTemplate/) · [GitHub](https://github.com/jruk8/JPaperTemplate)
+### [Modrinth](https://modrinth.com/project/jtemplate) · [Wiki](https://jruk8.github.io/JPaperTemplate/) · [GitHub](https://github.com/jruk8/JPaperTemplate)
 
 </div>
 
@@ -19,8 +19,10 @@
 
 **That's it!** You have a working plugin with Brigadier commands,
 MiniMessage messages, sounds, PAPI placeholders, SQLite storage and a
-GitHub update checker. Delete the modules you do not need, then add your
-business logic on top.
+GitHub update checker.
+
+**Next:** delete the modules you don't need, then add your business
+logic on top.
 
 # Features
 
@@ -40,64 +42,47 @@ business logic on top.
 
 ### Requirements
 
-- Server Software » [Paper 26.2+](https://papermc.io/downloads/paper) (Folia supported)
+- Server Software » [Paper 26.2+](https://papermc.io/downloads/paper) (**Folia🍃** supported)
 - Java Version » **Java 25**
 - Dependencies » **None** (PlaceholderAPI is optional, only for the
   `%jtemplate_...%` placeholders)
 
-# Commands
+### Commands
 
 | Command | Description |
 | --- | --- |
 | `/jtemplate <help\|version\|reload>` | Help, version, and config reload (alias `/jt`). |
 
-Running the root with no arguments shows the help listing. Full table and
-examples live in
-[commands.md](https://github.com/jruk8/JPaperTemplate/blob/main/docs/commands.md).
+See the full [Commands Page](https://jruk8.github.io/JPaperTemplate/commands/) for more info.
 
-# Permissions
+### Permissions
 
 | Permission | Description | Default |
 | --- | --- | --- |
 | `jtemplate.other` | Target other players (needs the matching command permission too). | OP |
 | `jtemplate.reload` | Use `/jtemplate reload`. | OP |
-| `jtemplate.help` | Use `/jtemplate help` (entries are permission-filtered). | Everyone |
+| `jtemplate.help` | Use `/jtemplate help`. | Everyone |
 | `jtemplate.version` | Use `/jtemplate version`. | Everyone |
 
-# Configuration
+### Config
 
-First start generates `config.yml`, `messages.yml` and `sounds.yml` in
-`plugins/JTemplate/`:
+Find `config.yml`, `messages.yml` and `sounds.yml` in `plugins/JTemplate/`:
 
-- `updateChecker` » the async GitHub update check (console log,
-  join notice, `/version` line).
-- `aliases` » extra labels for the `/jtemplate` root (restart to apply).
-- `storage` » the SQLite database file.
-- `colors` » the shared message color palette.
-- `metrics` » anonymous bStats statistics (restart to apply).
-- `messages.yml` / `sounds.yml` » every message and the sound played
-  for each feedback event.
+- `updateChecker` » checks for updates.
+- `aliases` » aliases for `/jt` root command (needs **R**estart).
+- `storage` » SQLite DB (usage stats).
+- `colors` » color palette for messages.
+- `metrics` » anonymous bStats stats (**R**).
+- `messages.yml` / `sounds.yml` » messages and sounds.
 
-Every value is documented in [configuration.md](https://github.com/jruk8/JPaperTemplate/blob/main/docs/configuration.md).
+See the full [Configuration Page](https://jruk8.github.io/JPaperTemplate/configuration/) for more info.
 
-# Build
-
-```shell
-./gradlew build            # macOS/Linux
-.\gradlew.bat build        # Windows
-```
-
-`build` runs the tests and both checkstyle tasks; the jar lands in
-`build/libs/`. Built with Java 25 and the
-[jruk8 plugin-conventions](https://github.com/jruk8/plugin-conventions).
-
-### Links
+# Links
 
 - [Documentation](https://jruk8.github.io/JPaperTemplate/)
+- [Discord](https://discord.com/invite/hkWmCVmWDC)
 - [GitHub](https://github.com/jruk8/JPaperTemplate)
 
-## Contributing
+### Donate ☕
 
-See [CONTRIBUTING.md](https://github.com/jruk8/JPaperTemplate/blob/main/CONTRIBUTING.md).
-
-&copy; 2026 jruk8. Licensed under [GPL-3.0](https://github.com/jruk8/JPaperTemplate/blob/main/LICENSE).
+If you like my plugins, you can support my work through a [**small donation**](https://ko-fi.com/jruk). **Thanks!** 👐
