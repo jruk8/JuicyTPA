@@ -1,5 +1,6 @@
-package com.jruk8.jtemplate.core.placeholders;
+package com.jruk8.juicytpa.core.placeholders;
 
+import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,28 +11,34 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 /**
- * The JTemplate PlaceholderAPI expansion.
+ * The JuicyTPA PlaceholderAPI expansion.
  * <p>
- * Identifier {@code jtemplate}, with self, other-player and global
- * variants of the {@code uses} counter. Unknown players read as {@code 0};
- * the self variant needs a player context.
+ * Identifier {@code jtpa}, with self, other-player and global variants of
+ * the {@code sent} and {@code received} counters, plus self and
+ * other-player variants of the {@code mode} name. Unknown players read as
+ * {@code 0}; the self variants need a player context.
  */
-public final class UsageExpansion extends PlaceholderExpansion {
+public final class TpaExpansion extends PlaceholderExpansion {
 
-    public static final String IDENTIFIER = "jtemplate";
-    public static final String USES = "uses";
+    public static final String IDENTIFIER = "jtpa";
+    public static final String SENT = "sent";
+    public static final String RECEIVED = "received";
+    public static final String MODE = "mode";
     public static final String GLOBAL = "global";
 
-    private final CommandUsageTracker tracker;
+    private final TpaUsageTracker tracker;
+    private final TpaModeStore modes;
     private final JavaPlugin plugin;
     private final Function<String, UUID> nameResolver;
 
-    public UsageExpansion(
-            CommandUsageTracker tracker,
+    public TpaExpansion(
+            TpaUsageTracker tracker,
+            TpaModeStore modes,
             JavaPlugin plugin,
             Function<String, UUID> nameResolver
     ) {
         this.tracker = tracker;
+        this.modes = modes;
         this.plugin = plugin;
         this.nameResolver = nameResolver;
     }
@@ -60,34 +67,50 @@ public final class UsageExpansion extends PlaceholderExpansion {
     @Override
     public List<String> getPlaceholders() {
         return List.of(
-                "%" + IDENTIFIER + "_" + USES + "%",
-                "%" + IDENTIFIER + "_" + USES + "_<player>%",
-                "%" + IDENTIFIER + "_" + USES + "_" + GLOBAL + "%"
+                "%" + IDENTIFIER + "_" + SENT + "%",
+                "%" + IDENTIFIER + "_" + SENT + "_<player>%",
+                "%" + IDENTIFIER + "_" + SENT + "_" + GLOBAL + "%",
+                "%" + IDENTIFIER + "_" + RECEIVED + "%",
+                "%" + IDENTIFIER + "_" + RECEIVED + "_<player>%",
+                "%" + IDENTIFIER + "_" + RECEIVED + "_" + GLOBAL + "%",
+                "%" + IDENTIFIER + "_" + MODE + "%",
+                "%" + IDENTIFIER + "_" + MODE + "_<player>%"
         );
     }
 
     @Override
     public String onRequest(OfflinePlayer player, String params) {
-        if (USES.equals(params)) {
-            return selfUses(player, this.tracker::playerUses);
+        String sent = counterFor(player, SENT, params, this.tracker::playerSent, this.tracker.globalSent());
+        if (sent != null) {
+            return sent;
         }
-        if ((USES + "_" + GLOBAL).equals(params)) {
-            return String.valueOf(this.tracker.globalUses());
+        String received = counterFor(
+                player, RECEIVED, params, this.tracker::playerReceived, this.tracker.globalReceived());
+        if (received != null) {
+            return received;
         }
-        if (params.startsWith(USES + "_")) {
-            return namedUses(params.substring(USES.length() + 1), this.tracker::playerUses);
+        if (MODE.equals(params)) {
+            return player == null ? null : this.modes.mode(player.getUniqueId()).display();
+        }
+        if (params.startsWith(MODE + "_")) {
+            String name = params.substring(MODE.length() + 1);
+            return name.isEmpty() ? null : this.modes.mode(this.nameResolver.apply(name)).display();
         }
         return null;
     }
 
-    private static String selfUses(OfflinePlayer player, ToIntFunction<UUID> read) {
-        return player == null ? null : String.valueOf(read.applyAsInt(player.getUniqueId()));
-    }
-
-    private String namedUses(String name, ToIntFunction<UUID> read) {
-        if (name.isEmpty()) {
-            return null;
+    private String counterFor(
+            OfflinePlayer viewer, String key, String params, ToIntFunction<UUID> read, int global) {
+        if (key.equals(params)) {
+            return viewer == null ? null : String.valueOf(read.applyAsInt(viewer.getUniqueId()));
         }
-        return String.valueOf(read.applyAsInt(this.nameResolver.apply(name)));
+        if ((key + "_" + GLOBAL).equals(params)) {
+            return String.valueOf(global);
+        }
+        if (params.startsWith(key + "_")) {
+            String name = params.substring(key.length() + 1);
+            return name.isEmpty() ? null : String.valueOf(read.applyAsInt(this.nameResolver.apply(name)));
+        }
+        return null;
     }
 }

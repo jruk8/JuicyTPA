@@ -1,7 +1,8 @@
-package com.jruk8.jtemplate.core.placeholders;
+package com.jruk8.juicytpa.core.placeholders;
 
-import com.jruk8.jtemplate.core.Bootstrap;
-import com.jruk8.jtemplate.core.Reloadable;
+import com.jruk8.juicytpa.core.Bootstrap;
+import com.jruk8.juicytpa.core.Reloadable;
+import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,14 +18,16 @@ public final class PlaceholdersBootstrap implements Bootstrap, Reloadable {
 
     private static final String PLACEHOLDER_API_NAME = "PlaceholderAPI";
 
-    private final CommandUsageTracker tracker;
+    private final TpaUsageTracker tracker;
+    private final TpaModeStore modes;
     private final JavaPlugin plugin;
     private final Logger logger;
 
-    private UsageExpansion expansion;
+    private TpaExpansion expansion;
 
-    public PlaceholdersBootstrap(CommandUsageTracker tracker, JavaPlugin plugin, Logger logger) {
+    public PlaceholdersBootstrap(TpaUsageTracker tracker, TpaModeStore modes, JavaPlugin plugin, Logger logger) {
         this.tracker = tracker;
+        this.modes = modes;
         this.plugin = plugin;
         this.logger = logger;
     }
@@ -35,10 +38,10 @@ public final class PlaceholdersBootstrap implements Bootstrap, Reloadable {
             this.logger.info("PlaceholderAPI is not installed; skipping placeholder registration.");
             return;
         }
-        this.expansion = new UsageExpansion(
-                this.tracker, this.plugin, name -> Bukkit.getOfflinePlayer(name).getUniqueId());
+        this.expansion = new TpaExpansion(
+                this.tracker, this.modes, this.plugin, name -> Bukkit.getOfflinePlayer(name).getUniqueId());
         if (this.expansion.register()) {
-            this.logger.info("Registered placeholders with identifier '" + UsageExpansion.IDENTIFIER + "'.");
+            this.logger.info("Registered placeholders with identifier '" + TpaExpansion.IDENTIFIER + "'.");
         } else {
             unregister();
             this.logger.warning("PlaceholderAPI rejected the expansion registration.");

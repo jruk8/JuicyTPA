@@ -1,16 +1,12 @@
-package com.jruk8.jtemplate.core.commands.selectors;
+package com.jruk8.juicytpa.core.commands.selectors;
 
-import com.jruk8.jtemplate.core.commands.CommandContext;
-import com.jruk8.jtemplate.core.commands.TemplatePermissions;
-import com.jruk8.jtemplate.core.messages.MessagesConfig;
+import com.jruk8.juicytpa.core.commands.CommandContext;
+import com.jruk8.juicytpa.core.messages.MessagesConfig;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,9 +16,8 @@ import java.util.function.Function;
  * Resolves which players a command acts on.
  * <p>
  * An omitted selector means the executor themselves (console gets an error).
- * An explicit selector resolving to anyone but the sender additionally
- * requires {@code jtemplate.other}; a selector resolving only to the sender
- * (e.g. {@code @s}) needs just the command's own permission.
+ * TPA requests are strictly one-to-one, so an explicit selector must
+ * resolve to exactly one player.
  */
 public final class TargetSelector {
 
@@ -50,16 +45,16 @@ public final class TargetSelector {
     }
 
     /**
-     * Resolves an explicit selector, enforcing the {@code other} permission.
+     * Resolves an explicit selector to exactly one player.
      *
      * @param source the command source
      * @param selector the parsed selector argument
      * @param ctx the shared command services
-     * @return the resolved players, or empty when resolution fails, resolves to
-     *         nobody, or the sender lacks permission (an error is already sent in
-     *         all cases)
+     * @return the single resolved player, or empty when resolution fails,
+     *         resolves to nobody, or resolves to several players (an error
+     *         is already sent in all cases)
      */
-    public static Optional<List<Player>> fromSelector(
+    public static Optional<Player> single(
             CommandSourceStack source,
             PlayerSelectorArgumentResolver selector,
             CommandContext ctx
@@ -75,44 +70,10 @@ public final class TargetSelector {
             ctx.error(source, m -> m.getCore().getNoTargets(), Map.of());
             return Optional.empty();
         }
-        if (targetsOthers(source, targets) && !source.getSender().hasPermission(TemplatePermissions.OTHER)) {
-            var tags = Map.of("permission", TemplatePermissions.OTHER);
-            ctx.error(source, m -> m.getCore().getNoPermission(), tags);
+        if (targets.size() > 1) {
+            ctx.error(source, m -> m.getTpa().getNotSingle(), Map.of());
             return Optional.empty();
         }
-        return Optional.of(targets);
-    }
-
-    private static boolean targetsOthers(CommandSourceStack source, List<Player> targets) {
-        if (!(source.getSender() instanceof Player self)) {
-            return true;
-        }
-        return targets.stream().anyMatch(target -> !target.getUniqueId().equals(self.getUniqueId()));
-    }
-
-    /**
-     * Returns the tab-completion candidates for a target selector argument,
-     * gated by permission: without the {@code other} permission only the
-     * {@code @s} and own-name entries appear, and without the {@code self}
-     * permission those self entries are removed as well.
-     *
-     * @param source the command source completing the argument
-     * @param prefix the already-typed, lower-cased input used for filtering (may be null)
-     * @return the permitted selector candidates
-     */
-    public static List<String> suggestTargets(CommandSourceStack source, String prefix) {
-        CommandSender sender = source.getSender();
-        boolean other = sender.hasPermission(TemplatePermissions.OTHER);
-        boolean self = sender.hasPermission(TemplatePermissions.SELF);
-        String name = sender instanceof Player player ? player.getName() : "";
-        List<String> online = new ArrayList<>();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            online.add(player.getName());
-        }
-        List<String> candidates = new ArrayList<>(SelectorSuggestions.suggest(other, name, online, prefix));
-        if (!self) {
-            candidates.removeIf(candidate -> candidate.equals("@s") || candidate.equals(name));
-        }
-        return candidates;
+        return Optional.of(targets.getFirst());
     }
 }

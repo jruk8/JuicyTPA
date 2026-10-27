@@ -1,42 +1,70 @@
-package com.jruk8.jtemplate.core.placeholders;
+package com.jruk8.juicytpa.core.placeholders;
 
-import com.jruk8.jtemplate.core.storage.SqliteStorage;
+import com.jruk8.juicytpa.core.storage.SqliteStorage;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
- * Domain service for the command usage statistics behind the
- * {@code jtemplate} placeholders. Keeps the DB stat key in one place and
- * exposes the read/write operations the expansion and commands need.
+ * Domain service for the request statistics behind the {@code jtpa}
+ * placeholders. Keeps the DB stat keys in one place and exposes the
+ * read/write operations the expansion and commands need.
  */
-public final class CommandUsageTracker {
+public final class TpaUsageTracker {
 
     /**
-     * Stat key for total tracked command executions per player.
+     * Stat key for TP requests sent per player.
      */
-    public static final String USES_KEY = "jtemplate_uses";
+    public static final String SENT_KEY = "jtpa_sent";
 
-    private final SqliteStorage storage;
+    /**
+     * Stat key for TP requests received per player.
+     */
+    public static final String RECEIVED_KEY = "jtpa_received";
 
-    public CommandUsageTracker(SqliteStorage storage) {
+    private final Supplier<SqliteStorage> storage;
+
+    /**
+     * @param storage resolves the live storage; reloads swap the instance,
+     * so holders must not keep a direct reference
+     */
+    public TpaUsageTracker(Supplier<SqliteStorage> storage) {
         this.storage = storage;
     }
 
     /**
-     * Records one execution of a tracked command, per player and globally.
+     * Records one sent request, per player and globally.
      *
-     * @param player the player that executed the command
+     * @param player the player that sent the request
      */
-    public void recordUse(UUID player) {
-        this.storage.increment(USES_KEY, player);
-        this.storage.incrementGlobal(USES_KEY);
+    public void recordSent(UUID player) {
+        this.storage.get().increment(SENT_KEY, player);
+        this.storage.get().incrementGlobal(SENT_KEY);
     }
 
-    public int playerUses(UUID player) {
-        return this.storage.playerTotal(USES_KEY, player);
+    /**
+     * Records one received request, per player and globally.
+     *
+     * @param player the player that received the request
+     */
+    public void recordReceived(UUID player) {
+        this.storage.get().increment(RECEIVED_KEY, player);
+        this.storage.get().incrementGlobal(RECEIVED_KEY);
     }
 
-    public int globalUses() {
-        return this.storage.globalTotal(USES_KEY);
+    public int playerSent(UUID player) {
+        return this.storage.get().playerTotal(SENT_KEY, player);
+    }
+
+    public int playerReceived(UUID player) {
+        return this.storage.get().playerTotal(RECEIVED_KEY, player);
+    }
+
+    public int globalSent() {
+        return this.storage.get().globalTotal(SENT_KEY);
+    }
+
+    public int globalReceived() {
+        return this.storage.get().globalTotal(RECEIVED_KEY);
     }
 }
