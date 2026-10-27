@@ -4,8 +4,9 @@ icon: material/variable
 
 # Placeholders
 
-PlaceholderAPI support is handled by the `core.placeholders` module. When
-PlaceholderAPI is installed, the plugin registers an expansion with the
+> For: advanced users showing stats.
+
+When PlaceholderAPI is installed, the plugin registers an expansion with the
 identifier `jtpa`. The expansion is re-registered on
 `/juicytpa reload`, and unregistered when the plugin disables.
 
@@ -28,18 +29,5 @@ requests count; blocked ones never exist). Counts are stored in the SQLite
 database per player and globally, so they survive restarts. Unknown
 player names read as `0`.
 
-## Adding Your Own Placeholders
-
-Track new state with `TpaUsageTracker` (one stat key per counter,
-recorded from the command) and expose it in `TpaExpansion.onRequest()`:
-
-```java
-if ("my_stat".equals(params)) {
-    return counterFor(player, "my_stat", params, tracker::playerMyStat, tracker.globalMyStat());
-}
-```
-
-Provide the value through an injected service and store it in SQLite if it
-should survive restarts. Registered placeholders are announced to
-PlaceholderAPI via `getPlaceholders()`. A full walkthrough (including new
-stat keys) lives in [api.md](api.md).
+Adding your own placeholders is covered in the
+[Plugin API](api.md).

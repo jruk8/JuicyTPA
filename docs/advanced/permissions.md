@@ -4,6 +4,8 @@ icon: material/key
 
 # Permissions
 
+> For: advanced users gating commands.
+
 | Permission | Description | Default |
 | --- | --- | --- |
 | `juicytpa.tpa` | Send `/tpa` requests. | Everyone |
@@ -22,4 +24,4 @@ Permissions are checked on the command nodes with Brigadier `requires()`
 predicates (see `CommandContext.requiresPermission`); the node constants
 live in `TpaPermissions`. Every TPA command targets other players by
 design, so each command has its own node instead of a shared scope. See
-[commands.md](commands.md).
+[Commands](../basics/commands.md).

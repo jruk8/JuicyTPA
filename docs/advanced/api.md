@@ -2,7 +2,9 @@
 icon: material/puzzle
 ---
 
-# Extending the Template
+# Plugin API
+
+> For: developers extending JuicyTPA.
 
 This page explains where new code plugs in. Every module follows the same
 shape: a package under `com.jruk8.juicytpa.core`, its own config class (or
@@ -14,8 +16,10 @@ commands/placeholders. There are no singletons or static state.
 
 ## Add a Command
 
-1. Create a package `core.commands.user.<name>` (or `admin`) with a command
-   class that builds a Brigadier node:
+1. Create a command class in a new subpackage of `core.commands` (e.g.
+   `core.commands.user.fun`) that builds a Brigadier node with
+   `Commands.literal(...)`, gates it with `requires()`, and runs its logic
+   in `executes(...)`:
 
    ```java
    public class PingCommand {
@@ -23,10 +27,10 @@ commands/placeholders. There are no singletons or static state.
 
        public PingCommand(CommandContext ctx) { this.ctx = ctx; }
 
-       public LiteralArgumentBuilder<CommandSourceStack> node() {
-           return Commands.literal("ping")
+       public LiteralArgumentBuilder<CommandSourceStack> node(String label) {
+           return Commands.literal(label)
                    .requires(CommandContext.requiresPermission(TpaPermissions.PING))
-                   .executes(context -> {
+                   .execuses(context -> {
                        // Own text lives in MessagesConfig; {braces} resolve from the map.
                        ctx.sendMessage(context.getSource(),
                                messages -> messages.getCore().getHelpHeader(), Map.of());
@@ -43,14 +47,14 @@ commands/placeholders. There are no singletons or static state.
    Messages are strictly MiniMessage: plugin placeholders use `{braces}`,
    angle brackets are raw MiniMessage.
 
-2. Register it in the matching registrar
-   (`UserCommandsRegistrar.register()`):
-   `root.then(new PingCommand(ctx).node());`
+2. Attach the node to the root in the matching registrar
+   (`UserCommandsRegistrar` or `AdminCommandsRegistrar`) with
+   `root.then(new PingCommand(...).node(label))`, injecting only the
+   services it needs (commonly `CommandContext`).
 
 3. Declare the permission in `paper-plugin.yml` (with a constant in
-   `TpaPermissions`) and document the command in `docs/commands.md` and
-   `docs/permissions.md`. Add a `HelpEntry` in `HelpCommand` so
-   `/juicytpa help` lists it.
+   `TpaPermissions`), document it in [Permissions](permissions.md)
+   and add a `HelpEntry` so the command shows up in `/juicytpa help`.
 
 ## Add a Config Option
 
@@ -73,15 +77,16 @@ state is produced (listener, command) and consumed (placeholder).
 
 ## Add a Placeholder
 
-Add a branch to `TpaExpansion.onRequest()`:
+Track new state with `TpaUsageTracker` (one stat key per counter,
+recorded from the command) and expose it in `TpaExpansion.onRequest()`:
 
 ```java
 if ("my_stat".equals(params)) {
-    return selfUses(player, tracker::playerUses);
+    return counterFor(player, "my_stat", params, tracker::playerMyStat, tracker.globalMyStat());
 }
 ```
 
-Provider the value through an injected service and store it in SQLite if it
+Provide the value through an injected service and store it in SQLite if it
 should survive restarts. Registered placeholders are announced to
 PlaceholderAPI via `getPlaceholders()`.
 

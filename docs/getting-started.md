@@ -5,6 +5,8 @@ icon: material/rocket-launch
 ![Banner](assets/banner-1280x640.png)
 # Getting Started
 
+> For: everyone setting up the plugin.
+
 ## Requirements
 
 - Paper 26.2 or newer (Folia supported)
@@ -34,6 +36,6 @@ requests: run a few commands, install PlaceholderAPI, and try
 
 ## Next Steps
 
-- [Commands](commands.md)
+- [Commands](basics/commands.md)
 - [Configuration](configuration.md)
-- [Placeholders](placeholders.md)
+- [Placeholders](advanced/placeholders.md)

@@ -1,14 +1,29 @@
 ---
-icon: material/tune
+icon: material/cog
 ---
 
 # Configuration
+
+> For: intermediate admins. Start at [Requests](configuration/requests.md).
 
 The plugin writes `config.yml`, `messages.yml` and `sounds.yml` into its data
 folder (`plugins/JuicyTPA/`) on first start. Edit a file and run
 `/juicytpa reload` to apply the changes without restarting the server
 (command registration is the exception; see `commands` below). Missing
 keys are re-added with defaults; unknown keys are removed.
+
+See the individual configuration pages for detailed documentation:
+
+## Sections
+
+- [Requests](configuration/requests.md): expiry, concurrency,
+  feedback toggles, cooldowns and warnings.
+- [Warnings](configuration/warnings.md): AFK and canceller thresholds,
+  resend confirmations, nudges and harassment detection.
+- [Messages](configuration/messages.md): the `messages.yml` keys, the
+  color palette and the available placeholders.
+- [Sounds](configuration/sounds.md): the `sounds.yml` entries for every
+  request event.
 
 ## config.yml
 
@@ -22,38 +37,7 @@ aliases:
 storage:
   dbFile: juicytpa.db
 tpa:
-  requestDuration: 60
-  concurrency:
-    allowConcurrent: true
-    maxConcurrent: 3
-    cancelExistingOnAccept: true
-  receiverFeedback:
-    message: true
-    actionbar: true
-  senderFeedback:
-    message: true
-    actionbar: true
-  rejectFeedback:
-    message: true
-    actionbar: true
-  timeoutFeedback:
-    message: true
-    actionbar: true
-  warnings:
-    afkMinUnanswered: 3
-    afkMinPendingSeconds: 180
-    cancellerMinDenied: 3
-    cancellerMinPendingSeconds: 75
-    confirmWindowSeconds: 15
-    nudgeCooldownSeconds: 300
-    nudgeMinCancelStreak: 3
-    nudgeMinExpiryStreak: 3
-    harassMinRequests: 3
-    harassWindowSeconds: 600
-  cooldown:
-    enabled: true
-    defaultSeconds: 15
-    metaKey: juicytpa-cooldown
+  # (see the Requests page)
 commands:
   tpa:
     enabled: true
@@ -132,41 +116,6 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
   `global_stats`), each player's TPA mode (key `jtpa_mode`) and the
   warning statistics (`jtpa_warn_unanswered`, `jtpa_warn_pending_seconds`,
   `jtpa_warn_denied`, `jtpa_warn_denied_seconds`).
-
-### `tpa`
-
-- `requestDuration` » how long a request stays pending before it times
-  out, in seconds. Shown to both parties as a compact duration (`48s`,
-  `1m 30s`).
-- `concurrency.allowConcurrent` » let players hold several pending
-  requests at once (off means one outgoing at a time).
-- `concurrency.maxConcurrent` » maximum outgoing requests a player may
-  hold at once (zero or below means unlimited). `/tpall` bypasses the
-  cap and the toggle entirely.
-- `concurrency.cancelExistingOnAccept` » accepting one request cancels
-  the receiver's other pending requests. Only applies with
-  `allowConcurrent`.
-- `receiverFeedback` / `senderFeedback` / `rejectFeedback` /
-  `timeoutFeedback` » `message` toggles the chat message for that event,
-  `actionbar` toggles the actionbar. Request, deny and timeout events
-  each notify both parties; accepts always notify.
-- `warnings` » AFK and canceller thresholds: a receiver counts as AFK
-  past `afkMinUnanswered` expiries and `afkMinPendingSeconds` total
-  pending seconds (overlapping requests count once per second), and
-  as a canceller past `cancellerMinDenied` denies and
-  `cancellerMinPendingSeconds` denied-pending seconds. Senders warned
-  about such a receiver must re-send within `confirmWindowSeconds` to
-  confirm. Receivers get at most one nudge per `nudgeCooldownSeconds`:
-  after `nudgeMinCancelStreak` straight denies or
-  `nudgeMinExpiryStreak` straight expiries (any accept resets both) the
-  nudge offers one-click Block All; after `harassMinRequests` requests
-  from one sender within `harassWindowSeconds` it offers Block player.
-  `/tpall` skips warning confirmations.
-- `cooldown` » `enabled` gates a cooldown between `/tpa` and `/tpahere`
-  sends (bulk sends are exempt). Each player waits their LuckPerms
-  `metaKey` value in seconds, or `defaultSeconds` without (or with
-  unparseable) meta; zero or below means no cooldown. LuckPerms is
-  optional: without it everyone uses the default.
 
 ### `commands`
 

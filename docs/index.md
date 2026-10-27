@@ -30,11 +30,14 @@ and an SQLite store for stats and modes.
 ## Documentation
 
 - [Getting Started](getting-started.md)
-- [Commands](commands.md)
-- [Permissions](permissions.md)
-- [Configuration](configuration.md)
-- [Placeholders](placeholders.md)
-- [Plugin API](api.md)
+- Basics: [Commands](basics/commands.md),
+  [Requests](basics/requests.md), [Receiving](basics/receiving.md)
+- [Configuration](configuration.md): [Requests](configuration/requests.md),
+  [Warnings](configuration/warnings.md), [Messages](configuration/messages.md),
+  [Sounds](configuration/sounds.md)
+- Advanced: [Permissions](advanced/permissions.md),
+  [LuckPerms](advanced/luckperms.md), [Placeholders](advanced/placeholders.md),
+  [Plugin API](advanced/api.md)
 
 ## Build
 

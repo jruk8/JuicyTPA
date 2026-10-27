@@ -54,7 +54,7 @@ toggles how you receive them.
 | `/tpamode [mode]` | Cycle or set your TPA mode. |
 | `/juicytpa <help\\|version\\|reload>` | Help, version, and config reload (aliases `/jtpa`, `/jtp`, `/jt`). |
 
-See the full [Commands Page](https://jruk8.github.io/JuicyTPA/commands/) for more info.
+See the full [Commands Page](https://jruk8.github.io/JuicyTPA/basics/commands/) for more info.
 
 ### Permissions
 
@@ -79,7 +79,7 @@ Find `config.yml`, `messages.yml` and `sounds.yml` in `plugins/JuicyTPA/`:
 - `updateChecker` » checks for updates.
 - `aliases` » aliases for `/jtpa` root command (needs **R**estart).
 - `storage` » SQLite DB (stats plus TPA modes).
-- `tpa` » expiry, concurrency, feedback toggles.
+- `tpa` » expiry, concurrency, feedback toggles, warnings, cooldowns.
 - `commands` » /tpa, /tpahere, ... aliases (**R**).
 - `colors` » color palette for messages.
 - `metrics` » anonymous bStats stats (**R**).
