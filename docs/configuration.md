@@ -100,7 +100,8 @@ colors:
   acceptColor: '<#7be63e>'
   rejectColor: '<#e63e5a>'
   sentColor: '<#44e63e>'
-  lhColor: '<#e6db3e>'
+  lhColor: '<#bababa>'
+  warnColor: '<#e6db3e>'
 metrics:
   enabled: true
 ```
@@ -171,9 +172,10 @@ after a restart; `/juicytpa reload` reports when a restart is needed.
 ### `colors`
 
 The message color palette. Every `messages.yml` entry uses these via
-`{plain}`, `{brand}`, `{hl}`, `{error}`, `{ac}`, `{rc}`, `{sc}` and
-`{lh}`, resolved when the message is rendered; editing a color and
-reloading is enough, the messages themselves never hardcode colors.
+`{plain}`, `{brand}`, `{hl}`, `{error}`, `{ac}`, `{rc}`, `{sc}`,
+`{lh}` and `{wn}`, resolved when the message is rendered; editing a
+color and reloading is enough, the messages themselves never hardcode
+colors.
 
 ### `metrics`
 

@@ -55,7 +55,7 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment({
             "Color palette used by every message via {plain}, {brand}, {hl},",
-            "{error}, {ac}, {rc}, {sc} and {lh}. Values are MiniMessage color tags."
+            "{error}, {ac}, {rc}, {sc}, {lh} and {wn}. Values are MiniMessage color tags."
     })
     private Colors colors = new Colors();
 
@@ -252,7 +252,10 @@ public class PluginConfig extends OkaeriConfig {
         private String sentColor = "<#44e63e>";
 
         @Comment("MiniMessage color tag for warning highlights, used via {lh}.")
-        private String lhColor = "<#e6db3e>";
+        private String lhColor = "<#bababa>";
+
+        @Comment("MiniMessage color tag for warning bodies, used via {wn}.")
+        private String warnColor = "<#e6db3e>";
     }
 
     @Getter

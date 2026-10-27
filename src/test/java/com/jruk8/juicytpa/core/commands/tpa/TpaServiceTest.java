@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -531,6 +532,40 @@ class TpaServiceTest {
         }
 
         verify(messenger).send(eq(receiver), eq(messages.getTpa().getNudgeHarass()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should send the cancel nudge after the deny feedback")
+    void shouldOrderCancelNudgeLast() {
+        Player rival = player(UUID.randomUUID(), "Rival");
+        online.put(rival.getUniqueId(), rival);
+        Player third = player(UUID.randomUUID(), "Third");
+        online.put(third.getUniqueId(), third);
+        for (Player from : List.of(sender, rival, third)) {
+            when(source.getSender()).thenReturn(from);
+            service.send(source, receiver, false);
+            when(source.getSender()).thenReturn(receiver);
+            service.deny(source, Optional.empty());
+        }
+
+        var inOrder = inOrder(messenger);
+        inOrder.verify(messenger, times(3))
+                .send(eq(receiver), eq(messages.getTpa().getDenyReceiver()), anyMap());
+        inOrder.verify(messenger).send(eq(receiver), eq(messages.getTpa().getNudgeCancel()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should send the harass nudge after the request notice")
+    void shouldOrderHarassNudgeLast() {
+        for (int round = 0; round < 3; round++) {
+            service.send(source, receiver, false);
+            service.cancel(source, Optional.empty());
+        }
+
+        var inOrder = inOrder(messenger);
+        inOrder.verify(messenger, times(3))
+                .send(eq(receiver), eq(messages.getTpa().getRequestReceived()), anyMap());
+        inOrder.verify(messenger).send(eq(receiver), eq(messages.getTpa().getNudgeHarass()), anyMap());
     }
 
     @Test

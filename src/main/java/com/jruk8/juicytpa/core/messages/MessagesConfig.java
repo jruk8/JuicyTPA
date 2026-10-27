@@ -11,8 +11,8 @@ import lombok.Setter;
  * Every message starts with {prefix} and uses the config.yml color palette:
  * {plain} for body text, {brand} for headers and the brand name, {hl} for
  * numbers, player names and similar values, {error} for errors, {ac} for
- * accept prompts, {rc} for reject prompts, {sc} for sender feedback and
- * {lh} for warning highlights.
+ * accept prompts, {rc} for reject prompts, {sc} for sender feedback,
+ * {lh} for warning highlights and {wn} for warning bodies.
  * Commands insert runtime values through {bracket} placeholders: {version},
  * {authors}, {time}, {syntax}, {description}, {latest}, {current}, {url},
  * {modrinth-url}, {permission}, {player}, {mode}, {input}, {count}, {type},
@@ -219,24 +219,24 @@ public class MessagesConfig extends OkaeriConfig {
         private String requestTypeHere = "TP to them";
 
         @Comment("Warning sent before requesting from an AFK player (use {player} and {type})")
-        private String warnAfk = "{prefix}{plain}Looks like {hl}{player} {plain}has been {lh}AFK {plain}for a while. "
-                + "{hl}Re-send {plain}to confirm {hl}{type}{plain}.";
+        private String warnAfk = "{prefix}{wn}Looks like {hl}{player} {wn}has been {lh}AFK {wn}for a while. "
+                + "{hl}Re-send {wn}to confirm {hl}{type}{wn}.";
 
         @Comment("Warning sent before requesting from a frequent canceller (use {player} and {type})")
-        private String warnCanceller = "{prefix}{plain}Looks like {hl}{player} {plain}keeps rejecting "
-                + "{hl}TP requests{plain} lately. {hl}Re-send {plain}to confirm {hl}{type}{plain}.";
+        private String warnCanceller = "{prefix}{wn}Looks like {hl}{player} {wn}keeps rejecting "
+                + "{hl}TP requests{wn} lately. {hl}Re-send {wn}to confirm {hl}{type}{wn}.";
 
         @Comment("Nudge shown after rejecting several requests (use {button})")
-        private String nudgeCancel = "\\n{prefix}{plain}Looks like you've rejected multiple "
-                + "{hl}TP requests{plain} now.\\n{button}";
+        private String nudgeCancel = "\\n{prefix}{wn}Looks like you've rejected multiple "
+                + "{hl}TP requests{wn} now.\\n{button}";
 
         @Comment("Nudge shown after missing several requests while away (use {button})")
-        private String nudgeAfk = "\\n{prefix}{plain}Looks like you've missed multiple "
-                + "{hl}TP requests{plain} while away.\\n{button}";
+        private String nudgeAfk = "\\n{prefix}{wn}Looks like you've missed multiple "
+                + "{hl}TP requests{wn} while away.\\n{button}";
 
         @Comment("Nudge shown when one sender keeps requesting (use {player} and {button})")
-        private String nudgeHarass = "\\n{prefix}{plain}Looks like {hl}{player} {plain}keeps sending you "
-                + "{hl}TP requests{plain}.\\n{button}";
+        private String nudgeHarass = "\\n{prefix}{wn}Looks like {hl}{player} {wn}keeps sending you "
+                + "{hl}TP requests{wn}.\\n{button}";
 
         @Comment("Block-all button text in nudges, wrapped with its click action")
         private String warnBlockAllButton = "{lh}[💻 Block All]";

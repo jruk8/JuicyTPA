@@ -106,11 +106,12 @@ class MessageParserTest {
         @Test
         @DisplayName("should replace every color placeholder with its config tag")
         void shouldReplaceColorPlaceholders() {
-            String raw = "{plain}a{brand}b{hl}c{error}d{lh}e";
+            String raw = "{plain}a{brand}b{hl}c{error}d{lh}e{wn}f";
             Component result = parser.parse(raw, Map.of());
             String serialized = MINI_MESSAGE.serialize(result);
             assertTrue(serialized.contains("#b9e0b8"));
             assertTrue(serialized.contains("#87db84"));
+            assertTrue(serialized.contains("#bababa"));
             assertTrue(serialized.contains("#e6db3e"));
             assertTrue(serialized.contains("#ebf2eb"));
             assertTrue(serialized.contains("#eb5757"));

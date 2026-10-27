@@ -322,9 +322,9 @@ public class TpaService {
         ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
         pending.put(key, new Entry(request, task));
         warns.delivered(request);
+        sendRequestFeedback(sender, target, here);
         warns.nudgeForHarass(target.getUniqueId(), sender.getUniqueId())
                 .ifPresent(ignored -> sendHarassNudge(target, sender.getName()));
-        sendRequestFeedback(sender, target, here);
     }
 
     private boolean sendable(Player sender, Player target, boolean here) {
@@ -367,8 +367,6 @@ public class TpaService {
     private void denyRequest(Player receiver, TpaRequest request) {
         remove(request);
         warns.denied(request);
-        warns.nudgeForCancel(receiver.getUniqueId())
-                .ifPresent(ignored -> sendBlockAllNudge(receiver, m -> m.getTpa().getNudgeCancel()));
         var feedback = pluginConfig.getTpa().getRejectFeedback();
         if (feedback.isMessage()) {
             chat(receiver, m -> m.getTpa().getDenyReceiver(), Map.of("player", request.senderName()));
@@ -388,6 +386,8 @@ public class TpaService {
             bar(sender, m -> m.getTpa().getDenySenderActionbar(), Map.of("player", request.receiverName()));
         }
         ctx.soundPlayer().play(sender, ctx.sounds().getReject());
+        warns.nudgeForCancel(receiver.getUniqueId())
+                .ifPresent(ignored -> sendBlockAllNudge(receiver, m -> m.getTpa().getNudgeCancel()));
     }
 
     private void expire(RequestKey key) {
