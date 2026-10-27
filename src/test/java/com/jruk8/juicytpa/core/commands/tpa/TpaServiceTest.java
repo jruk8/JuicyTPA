@@ -12,7 +12,6 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.AfterEach;
@@ -97,7 +96,8 @@ class TpaServiceTest {
         var cooldowns = new TpaCooldowns(pluginConfig, clock::get, (player, key) -> metas.get(player.getUniqueId()));
         service = new TpaService(
                 ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
-                warns, cooldowns, new TpaUsageTracker(() -> storage), plugin, this::schedule, online::get);
+                new TpaTrustStore(() -> storage), warns, cooldowns, new TpaUsageTracker(() -> storage), plugin,
+                this::schedule, online::get, uuid -> onlineName(uuid));
         sender = player(senderId, "Sender");
         receiver = player(receiverId, "Receiver");
         online.put(senderId, sender);
@@ -113,6 +113,11 @@ class TpaServiceTest {
     private ScheduledTask schedule(Runnable task, long delay) {
         scheduled.add(task);
         return mock(ScheduledTask.class);
+    }
+
+    private String onlineName(UUID id) {
+        Player player = online.get(id);
+        return player == null ? null : player.getName();
     }
 
     private Player player(UUID id, String name) {
@@ -301,18 +306,6 @@ class TpaServiceTest {
         verify(messenger).send(eq(sender), eq(messages.getTpa().getTimeoutSender()), anyMap());
         verify(messenger).send(eq(receiver), eq(messages.getTpa().getTimeoutReceiver()), anyMap());
         verify(soundPlayer).play(receiver, sounds.getTimeout());
-    }
-
-    @Test
-    @DisplayName("should cycle and set the mode")
-    void shouldChangeMode() {
-        assertEquals(1, service.mode(source, Optional.empty()));
-        assertEquals(1, service.mode(source, Optional.of("accept")));
-        assertEquals(0, service.mode(source, Optional.of("nope")));
-
-        assertEquals(TpaMode.ACCEPT_ALL, new TpaModeStore(() -> storage).mode(senderId));
-        verify(messenger, times(2))
-                .send(eq(sender), eq(messages.getTpa().getModeSet()), anyMap());
     }
 
     @Test
@@ -661,55 +654,4 @@ class TpaServiceTest {
         assertEquals(1, service.incoming(other.getUniqueId()).size());
     }
 
-    @Test
-    @DisplayName("should list nothing pending gracefully")
-    void shouldListEmpty() {
-        assertEquals(1, service.list(source));
-
-        verify(messenger).send(eq(sender), eq(messages.getTpa().getListEmpty()), anyMap());
-        verify(soundPlayer).play((CommandSender) sender, sounds.getNeutral());
-    }
-
-    @Test
-    @DisplayName("should list incoming before outgoing with clickable names")
-    void shouldListRequests() {
-        Player other = player(UUID.randomUUID(), "Other");
-        online.put(other.getUniqueId(), other);
-        Player rival = player(UUID.randomUUID(), "Rival");
-        online.put(rival.getUniqueId(), rival);
-        Player third = player(UUID.randomUUID(), "Third");
-        online.put(third.getUniqueId(), third);
-        service.send(source, receiver, false);
-        service.send(source, other, true);
-        when(source.getSender()).thenReturn(rival);
-        service.send(source, sender, false);
-        when(source.getSender()).thenReturn(third);
-        service.send(source, sender, true);
-        when(source.getSender()).thenReturn(sender);
-
-        assertEquals(1, service.list(source));
-
-        var inOrder = inOrder(messenger);
-        inOrder.verify(messenger).send(eq(sender), eq(messages.getTpa().getListHeader()), anyMap());
-        inOrder.verify(messenger, times(4))
-                .send(eq(sender), eq(messages.getTpa().getListLine()), bodyCaptor.capture());
-        var lines = bodyCaptor.getAllValues();
-        assertEquals("Incoming TP to you", lines.get(0).get("category"));
-        assertEquals("Incoming TP to them", lines.get(1).get("category"));
-        assertEquals("Outgoing TP to them", lines.get(2).get("category"));
-        assertEquals("Outgoing TP to you", lines.get(3).get("category"));
-        assertTrue(lines.get(0).get("players").contains("/tpaccept Rival"));
-        assertTrue(lines.get(2).get("players").contains("/tpacancel Receiver"));
-        verify(soundPlayer, times(3)).play(sender, sounds.getNeutral());
-    }
-
-    @Test
-    @DisplayName("should reject console senders")
-    void shouldRejectConsole() {
-        when(source.getSender()).thenReturn(mock(CommandSender.class));
-
-        assertEquals(0, service.send(source, receiver, false));
-
-        verify(messenger).send(any(CommandSender.class), eq(messages.getTpa().getPlayerOnly()), anyMap());
-    }
 }

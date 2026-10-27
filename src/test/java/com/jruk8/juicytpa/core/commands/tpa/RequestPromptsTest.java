@@ -66,4 +66,14 @@ class RequestPromptsTest {
                         + "Steve</hover></click>",
                 RequestPrompts.listCancel("Steve"));
     }
+
+    @Test
+    @DisplayName("should link trusted names to tpatrust with a tooltip")
+    void shouldBuildListTrust() {
+        assertEquals(
+                "<click:run_command:'/tpatrust Steve'>"
+                        + "<hover:show_text:'{hl}Click to untrust {hl}Steve{hl}.'>"
+                        + "Steve</hover></click>",
+                RequestPrompts.listTrust("Steve"));
+    }
 }
