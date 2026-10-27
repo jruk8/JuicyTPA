@@ -26,4 +26,24 @@ class RequestPromptsTest {
                         + "{rc}[✕ Reject]</hover></click>",
                 RequestPrompts.reject("Steve", "[✕ Reject]"));
     }
+
+    @Test
+    @DisplayName("should link block-all to tpamode with a tooltip")
+    void shouldBuildBlockAll() {
+        assertEquals(
+                "<click:run_command:'/tpamode block'>"
+                        + "<hover:show_text:'{lh}Click to block all requests.'>"
+                        + "{lh}[💻 Block All]</hover></click>",
+                RequestPrompts.blockAll("{lh}[💻 Block All]"));
+    }
+
+    @Test
+    @DisplayName("should link block-player to tpablock with a tooltip")
+    void shouldBuildBlockPlayer() {
+        assertEquals(
+                "<click:run_command:'/tpablock Steve'>"
+                        + "<hover:show_text:'{lh}Click to block {hl}Steve{lh}.'>"
+                        + "{lh}[👤 Block Steve]</hover></click>",
+                RequestPrompts.blockPlayer("Steve", "{lh}[👤 Block Steve]"));
+    }
 }

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -77,18 +78,21 @@ class TpaServiceTest {
     private Player receiver;
     private final List<Runnable> scheduled = new ArrayList<>();
     private final Map<UUID, Player> online = new HashMap<>();
+    private final AtomicLong clock = new AtomicLong();
 
     @BeforeEach
     void setUp() {
         storage = new SqliteStorage("jdbc:sqlite::memory:", Logger.getLogger("tpa-service-test"));
         assertTrue(storage.init());
+        clock.set(1_000_000L);
         pluginConfig = new PluginConfig();
         messages = new MessagesConfig();
         sounds = new SoundsConfig();
         var ctx = new CommandContext(messages, sounds, messenger, soundPlayer);
+        var warns = new TpaWarnManager(new TpaWarnStore(() -> storage), pluginConfig, clock::get);
         service = new TpaService(
                 ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
-                new TpaUsageTracker(() -> storage), plugin, this::schedule, online::get);
+                warns, new TpaUsageTracker(() -> storage), plugin, this::schedule, online::get);
         sender = player(senderId, "Sender");
         receiver = player(receiverId, "Receiver");
         online.put(senderId, sender);
@@ -390,6 +394,90 @@ class TpaServiceTest {
         verify(messenger).send(eq(receiver), eq(messages.getTpa().getRequestReceived()), bodyCaptor.capture());
         var expected = messages.getTpa().getRequestHereBody().replace("{player}", "Sender");
         assertEquals(expected, bodyCaptor.getValue().get("body"));
+    }
+
+    @Test
+    @DisplayName("should warn once then send to AFK receivers on resend")
+    void shouldConfirmAfkWarning() {
+        var stats = new TpaWarnStore(() -> storage);
+        stats.recordExpiry(receiverId, 60);
+        stats.recordExpiry(receiverId, 60);
+        stats.recordExpiry(receiverId, 60);
+
+        assertEquals(0, service.send(source, receiver, false));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getWarnAfk()), anyMap());
+
+        assertEquals(1, service.send(source, receiver, false));
+        assertEquals(1, service.incoming(receiverId).size());
+    }
+
+    @Test
+    @DisplayName("should re-warn when the confirmation expires")
+    void shouldExpireConfirmations() {
+        var stats = new TpaWarnStore(() -> storage);
+        stats.recordExpiry(receiverId, 60);
+        stats.recordExpiry(receiverId, 60);
+        stats.recordExpiry(receiverId, 60);
+
+        assertEquals(0, service.send(source, receiver, false));
+        clock.addAndGet(16_000L);
+
+        assertEquals(0, service.send(source, receiver, false));
+        verify(messenger, times(2)).send(eq(sender), eq(messages.getTpa().getWarnAfk()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should warn before requesting from frequent cancellers")
+    void shouldWarnCancellers() {
+        var stats = new TpaWarnStore(() -> storage);
+        stats.recordDenied(receiverId, 30);
+        stats.recordDenied(receiverId, 30);
+        stats.recordDenied(receiverId, 30);
+
+        assertEquals(0, service.send(source, receiver, false));
+        verify(messenger).send(eq(sender), eq(messages.getTpa().getWarnCanceller()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should ignore modes for tpahere requests")
+    void shouldIgnoreModesForHere() {
+        new TpaModeStore(() -> storage).setMode(receiverId, TpaMode.BLOCK_ALL);
+        assertEquals(1, service.send(source, receiver, true));
+
+        service.cancel(source, Optional.empty());
+        new TpaModeStore(() -> storage).setMode(receiverId, TpaMode.ACCEPT_ALL);
+        assertEquals(1, service.send(source, receiver, true));
+
+        assertEquals(1, service.incoming(receiverId).size());
+        verify(sender, never()).teleport(any(Location.class));
+    }
+
+    @Test
+    @DisplayName("should nudge after three straight denies")
+    void shouldNudgeAfterCancelStreak() {
+        Player rival = player(UUID.randomUUID(), "Rival");
+        online.put(rival.getUniqueId(), rival);
+        Player third = player(UUID.randomUUID(), "Third");
+        online.put(third.getUniqueId(), third);
+        for (Player from : List.of(sender, rival, third)) {
+            when(source.getSender()).thenReturn(from);
+            service.send(source, receiver, false);
+            when(source.getSender()).thenReturn(receiver);
+            service.deny(source, Optional.empty());
+        }
+
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getNudgeCancel()), anyMap());
+    }
+
+    @Test
+    @DisplayName("should nudge when one sender keeps requesting")
+    void shouldNudgeHarassment() {
+        for (int round = 0; round < 3; round++) {
+            service.send(source, receiver, false);
+            service.cancel(source, Optional.empty());
+        }
+
+        verify(messenger).send(eq(receiver), eq(messages.getTpa().getNudgeHarass()), anyMap());
     }
 
     @Test

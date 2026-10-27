@@ -11,13 +11,14 @@ import lombok.Setter;
  * Every message starts with {prefix} and uses the config.yml color palette:
  * {plain} for body text, {brand} for headers and the brand name, {hl} for
  * numbers, player names and similar values, {error} for errors, {ac} for
- * accept prompts, {rc} for reject prompts and {sc} for sender feedback.
+ * accept prompts, {rc} for reject prompts, {sc} for sender feedback and
+ * {lh} for warning highlights.
  * Commands insert runtime values through {bracket} placeholders: {version},
  * {authors}, {time}, {syntax}, {description}, {latest}, {current}, {url},
- * {modrinth-url}, {permission}, {player}, {mode}, {input}, {count},
+ * {modrinth-url}, {permission}, {player}, {mode}, {input}, {count}, {type},
  * {modrinth}, {github}, {discord} and {donate},
- * {accept} and {reject}. Angle brackets are reserved for raw MiniMessage,
- * and \n breaks the line.
+ * {accept}, {reject}, {body} and {button}. Angle brackets are reserved for
+ * raw MiniMessage, and \n breaks the line.
  */
 @Getter
 @Setter
@@ -213,5 +214,37 @@ public class MessagesConfig extends OkaeriConfig {
 
         @Comment("Sent when a pending request is auto-cancelled by another accept (use {player})")
         private String autoCancelled = "{prefix}{plain}TP request to {hl}{player}{plain} was cancelled.";
+
+        @Comment("Request type word for /tpa, used via {type} in warnings")
+        private String requestTypeAsk = "TP request";
+
+        @Comment("Request type word for /tpahere, used via {type} in warnings")
+        private String requestTypeHere = "TP to them";
+
+        @Comment("Warning sent before requesting from an AFK player (use {player} and {type})")
+        private String warnAfk = "{prefix}{plain}Looks like {hl}{player} {plain}has been {lh}AFK {plain}for a while. "
+                + "{hl}Re-send {plain}to confirm {hl}{type}{plain}.";
+
+        @Comment("Warning sent before requesting from a frequent canceller (use {player} and {type})")
+        private String warnCanceller = "{prefix}{plain}Looks like {hl}{player} {plain}keeps rejecting "
+                + "{hl}TP requests{plain} lately. {hl}Re-send {plain}to confirm {hl}{type}{plain}.";
+
+        @Comment("Nudge shown after rejecting several requests (use {button})")
+        private String nudgeCancel = "\\n{prefix}{plain}Looks like you've rejected multiple "
+                + "{hl}TP requests{plain} now.\\n{button}";
+
+        @Comment("Nudge shown after missing several requests while away (use {button})")
+        private String nudgeAfk = "\\n{prefix}{plain}Looks like you've missed multiple "
+                + "{hl}TP requests{plain} while away.\\n{button}";
+
+        @Comment("Nudge shown when one sender keeps requesting (use {player} and {button})")
+        private String nudgeHarass = "\\n{prefix}{plain}Looks like {hl}{player} {plain}keeps sending you "
+                + "{hl}TP requests{plain}.\\n{button}";
+
+        @Comment("Block-all button text in nudges, wrapped with its click action")
+        private String warnBlockAllButton = "{lh}[💻 Block All]";
+
+        @Comment("Block-player button text in nudges, wrapped with its click action (use {player})")
+        private String warnBlockPlayerButton = "{lh}[👤 Block {player}]";
     }
 }

@@ -55,7 +55,7 @@ public class PluginConfig extends OkaeriConfig {
 
     @Comment({
             "Color palette used by every message via {plain}, {brand}, {hl},",
-            "{error}, {ac}, {rc} and {sc}. Values are MiniMessage color tags."
+            "{error}, {ac}, {rc}, {sc} and {lh}. Values are MiniMessage color tags."
     })
     private Colors colors = new Colors();
 
@@ -96,6 +96,12 @@ public class PluginConfig extends OkaeriConfig {
 
         @Comment("Chat message and actionbar sent when a request times out.")
         private Feedback timeoutFeedback = new Feedback();
+
+        @Comment({
+                "AFK and canceller warnings: thresholds, resend confirmations,",
+                "receiver nudges and harassment detection."
+        })
+        private Warnings warnings = new Warnings();
     }
 
     @Getter
@@ -111,6 +117,45 @@ public class PluginConfig extends OkaeriConfig {
                 "accepted. Only applies when allowConcurrent is true."
         })
         private boolean cancelExistingOnAccept = true;
+    }
+
+    @Getter
+    @Setter
+    @SuppressWarnings("FieldMayBeFinal")
+    public static class Warnings extends OkaeriConfig {
+
+        @Comment("Unanswered (expired) requests before a receiver counts as AFK.")
+        private int afkMinUnanswered = 3;
+
+        @Comment({
+                "Cumulative seconds with any request pending before a receiver",
+                "counts as AFK. Overlapping requests count once per second."
+        })
+        private int afkMinPendingSeconds = 180;
+
+        @Comment("Denied requests before a receiver counts as a canceller.")
+        private int cancellerMinDenied = 3;
+
+        @Comment("Cumulative seconds denied requests sat pending before a receiver counts as a canceller.")
+        private int cancellerMinPendingSeconds = 75;
+
+        @Comment("Seconds a warning stays confirmable: re-send within this window to send anyway.")
+        private int confirmWindowSeconds = 15;
+
+        @Comment("Minimum seconds between warning nudges to the same player.")
+        private int nudgeCooldownSeconds = 300;
+
+        @Comment("Consecutive denies (no accept between) before the block-all nudge shows.")
+        private int nudgeMinCancelStreak = 3;
+
+        @Comment("Consecutive expiries (no accept between) before the block-all nudge shows.")
+        private int nudgeMinExpiryStreak = 3;
+
+        @Comment("Requests from one sender within the harassment window before the block-player nudge shows.")
+        private int harassMinRequests = 3;
+
+        @Comment("Sliding window in seconds for counting one sender's requests.")
+        private int harassWindowSeconds = 600;
     }
 
     @Getter
@@ -199,6 +244,9 @@ public class PluginConfig extends OkaeriConfig {
 
         @Comment("MiniMessage color tag for sender feedback, used via {sc}.")
         private String sentColor = "<#44e63e>";
+
+        @Comment("MiniMessage color tag for warning highlights, used via {lh}.")
+        private String lhColor = "<#e6db3e>";
     }
 
     @Getter

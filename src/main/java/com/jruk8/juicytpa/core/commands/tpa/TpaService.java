@@ -31,6 +31,7 @@ public class TpaService {
     private final PluginConfig pluginConfig;
     private final TpaModeStore modes;
     private final TpaBlockStore blocks;
+    private final TpaWarnManager warns;
     private final TpaUsageTracker tracker;
     private final Plugin plugin;
     private final TaskScheduler scheduler;
@@ -42,6 +43,7 @@ public class TpaService {
             PluginConfig pluginConfig,
             TpaModeStore modes,
             TpaBlockStore blocks,
+            TpaWarnManager warns,
             TpaUsageTracker tracker,
             Plugin plugin,
             TaskScheduler scheduler,
@@ -51,6 +53,7 @@ public class TpaService {
         this.pluginConfig = pluginConfig;
         this.modes = modes;
         this.blocks = blocks;
+        this.warns = warns;
         this.tracker = tracker;
         this.plugin = plugin;
         this.scheduler = scheduler;
@@ -83,8 +86,14 @@ public class TpaService {
             ctx.error(source, m -> m.getTpa().getRequestBlocked(), Map.of("player", target.getName()));
             return 0;
         }
-        if (modes.mode(target.getUniqueId()) == TpaMode.BLOCK_ALL) {
+        if (!here && modes.mode(target.getUniqueId()) == TpaMode.BLOCK_ALL) {
             ctx.error(source, m -> m.getTpa().getReceiverBlocked(), Map.of("player", target.getName()));
+            return 0;
+        }
+        var warn = warns.warnKind(target.getUniqueId());
+        if (warn.isPresent() && !warns.confirm(sender.getUniqueId(), target.getUniqueId(), here)) {
+            warns.noteWarned(sender.getUniqueId(), target.getUniqueId(), here);
+            sendWarnFeedback(source, target, here, warn.get());
             return 0;
         }
         deliver(sender, target, here);
@@ -93,7 +102,8 @@ public class TpaService {
 
     /**
      * Sends one request to every listed target, skipping the sender,
-     * duplicates, blocked pairs and receivers in block-all mode. Needs
+     * duplicates and blocked pairs. Block-all mode only skips ask
+     * requests, and warning confirmations are skipped. Needs
      * concurrent requests enabled.
      *
      * @param source the command source
@@ -305,15 +315,19 @@ public class TpaService {
     private void deliver(Player sender, Player target, boolean here) {
         var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
         var request = new TpaRequest(
-                sender.getUniqueId(), sender.getName(), target.getUniqueId(), target.getName(), here);
+                sender.getUniqueId(), sender.getName(), target.getUniqueId(), target.getName(), here,
+                warns.now());
         tracker.recordSent(sender.getUniqueId());
         tracker.recordReceived(target.getUniqueId());
-        if (modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL) {
+        if (!here && modes.mode(target.getUniqueId()) == TpaMode.ACCEPT_ALL) {
             acceptRequest(request);
             return;
         }
         ScheduledTask task = scheduler.runLater(() -> expire(key), durationTicks());
         pending.put(key, new Entry(request, task));
+        warns.delivered(request);
+        warns.nudgeForHarass(target.getUniqueId(), sender.getUniqueId())
+                .ifPresent(ignored -> sendHarassNudge(target, sender.getName()));
         sendRequestFeedback(sender, target, here);
     }
 
@@ -324,7 +338,7 @@ public class TpaService {
         var key = new RequestKey(sender.getUniqueId(), target.getUniqueId(), here);
         return !pending.containsKey(key)
                 && !blocks.isBlocked(target.getUniqueId(), sender.getUniqueId())
-                && modes.mode(target.getUniqueId()) != TpaMode.BLOCK_ALL;
+                && (here || modes.mode(target.getUniqueId()) != TpaMode.BLOCK_ALL);
     }
 
     private void dropIncoming(Player blocker, Player target) {
@@ -340,6 +354,7 @@ public class TpaService {
 
     private void acceptRequest(TpaRequest request) {
         remove(request);
+        warns.accepted(request);
         Player sender = playerLookup.apply(request.sender());
         Player receiver = playerLookup.apply(request.receiver());
         if (sender == null || receiver == null) {
@@ -355,6 +370,9 @@ public class TpaService {
 
     private void denyRequest(Player receiver, TpaRequest request) {
         remove(request);
+        warns.denied(request);
+        warns.nudgeForCancel(receiver.getUniqueId())
+                .ifPresent(ignored -> sendBlockAllNudge(receiver, m -> m.getTpa().getNudgeCancel()));
         var feedback = pluginConfig.getTpa().getRejectFeedback();
         if (feedback.isMessage()) {
             chat(receiver, m -> m.getTpa().getDenyReceiver(), Map.of("player", request.senderName()));
@@ -382,6 +400,8 @@ public class TpaService {
             return;
         }
         TpaRequest request = entry.request();
+        warns.removed(request);
+        warns.expired(request);
         var feedback = pluginConfig.getTpa().getTimeoutFeedback();
         Player sender = playerLookup.apply(request.sender());
         if (sender != null) {
@@ -402,6 +422,8 @@ public class TpaService {
                 bar(receiver, m -> m.getTpa().getTimeoutReceiverActionbar(), Map.of("player", request.senderName()));
             }
             ctx.soundPlayer().play(receiver, ctx.sounds().getTimeout());
+            warns.nudgeForExpiry(receiver.getUniqueId())
+                    .ifPresent(ignored -> sendBlockAllNudge(receiver, m -> m.getTpa().getNudgeAfk()));
         }
     }
 
@@ -518,9 +540,37 @@ public class TpaService {
     private void remove(TpaRequest request) {
         var key = new RequestKey(request.sender(), request.receiver(), request.here());
         Entry entry = pending.remove(key);
-        if (entry != null && entry.task() != null) {
+        if (entry == null) {
+            return;
+        }
+        warns.removed(request);
+        if (entry.task() != null) {
             entry.task().cancel();
         }
+    }
+
+    private void sendWarnFeedback(
+            CommandSourceStack source, Player target, boolean here, TpaWarnManager.WarnKind kind) {
+        Function<MessagesConfig, String> selector = kind == TpaWarnManager.WarnKind.AFK
+                ? m -> m.getTpa().getWarnAfk()
+                : m -> m.getTpa().getWarnCanceller();
+        String type = here
+                ? ctx.messages().getTpa().getRequestTypeHere()
+                : ctx.messages().getTpa().getRequestTypeAsk();
+        ctx.send(source, selector, Map.of("player", target.getName(), "type", type));
+    }
+
+    private void sendBlockAllNudge(Player receiver, Function<MessagesConfig, String> selector) {
+        String button = RequestPrompts.blockAll(ctx.messages().getTpa().getWarnBlockAllButton());
+        chat(receiver, selector, Map.of("button", button));
+        ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
+    }
+
+    private void sendHarassNudge(Player receiver, String senderName) {
+        String text = ctx.messages().getTpa().getWarnBlockPlayerButton().replace("{player}", senderName);
+        chat(receiver, m -> m.getTpa().getNudgeHarass(),
+                Map.of("player", senderName, "button", RequestPrompts.blockPlayer(senderName, text)));
+        ctx.soundPlayer().play(receiver, ctx.sounds().getNeutral());
     }
 
     private void chat(CommandSender to,

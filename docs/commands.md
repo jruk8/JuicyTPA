@@ -37,15 +37,21 @@ for `/tpahere`; `/tpacc` for `/tpaccept`; `/tpad`, `/tpdeny`,
 - **Answering** bare (`/tpaccept`, `/tpadeny`) answers the single pending
   request; with several pending (concurrency on), name the player.
   `/tpacancel` mirrors this for outgoing requests.
-- **Modes** (`/tpamode`, bare cycles): Normal receives requests as
-  usual; Block all refuses them at once (the sender is told); Accept all
-  teleports at once. Modes persist across restarts.
+- **Modes** (`/tpamode`, bare cycles, `/tpa` only): Normal receives
+  requests as usual; Block All refuses them at once (the sender is
+  told); Accept All teleports at once. Modes persist across restarts;
+  `/tpahere` always goes through.
 - **Concurrency** off (default) means one outgoing request at a time.
   With it on, players may hold several; accepting one then cancels the
   receiver's other pending requests (toggleable).
 - **Blocking** (`/tpablock`) toggles a persistent per-player block: a
   blocked sender's requests always fail, whatever the receiver's mode.
   Blocking drops the sender's pending requests to the blocker.
+- **Warnings** flag receivers that let requests expire (AFK) or deny
+  them often: senders must re-send within 15 seconds to confirm, and
+  repeat offenders get a nudge with a one-click Block All (or Block
+  player, when one sender spams) button. Thresholds live under
+  `tpa.warnings` and long-term counters persist in the database.
 - **Everyone** (`/tpall`, OP) sends a plain request to every online
   player. It needs concurrent requests enabled; the sender, duplicates,
   blocked pairs and block-all receivers are skipped. Holders of

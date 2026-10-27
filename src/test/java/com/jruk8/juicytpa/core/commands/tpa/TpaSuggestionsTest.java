@@ -73,9 +73,12 @@ class TpaSuggestionsTest {
         storage = new SqliteStorage("jdbc:sqlite::memory:", Logger.getLogger("suggest-test"));
         assertTrue(storage.init());
         var ctx = new CommandContext(new MessagesConfig(), new SoundsConfig(), messenger, soundPlayer);
+        var pluginConfig = new PluginConfig();
+        var warns = new TpaWarnManager(
+                new TpaWarnStore(() -> storage), pluginConfig, System::currentTimeMillis);
         service = new TpaService(
-                ctx, new PluginConfig(), new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
-                new TpaUsageTracker(() -> storage), plugin, (task, delay) -> mock(ScheduledTask.class),
+                ctx, pluginConfig, new TpaModeStore(() -> storage), new TpaBlockStore(() -> storage),
+                warns, new TpaUsageTracker(() -> storage), plugin, (task, delay) -> mock(ScheduledTask.class),
                 online::get);
     }
 

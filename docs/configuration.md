@@ -38,6 +38,17 @@ tpa:
   timeoutFeedback:
     message: true
     actionbar: true
+  warnings:
+    afkMinUnanswered: 3
+    afkMinPendingSeconds: 180
+    cancellerMinDenied: 3
+    cancellerMinPendingSeconds: 75
+    confirmWindowSeconds: 15
+    nudgeCooldownSeconds: 300
+    nudgeMinCancelStreak: 3
+    nudgeMinExpiryStreak: 3
+    harassMinRequests: 3
+    harassWindowSeconds: 600
 commands:
   tpa:
     enabled: true
@@ -88,6 +99,7 @@ colors:
   acceptColor: '<#7be63e>'
   rejectColor: '<#e63e5a>'
   sentColor: '<#44e63e>'
+  lhColor: '<#e6db3e>'
 metrics:
   enabled: true
 ```
@@ -111,7 +123,9 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
 
 - `dbFile` » name of the SQLite database file created in the plugin's data
   folder. The database holds request counters (tables `player_stats` and
-  `global_stats`) and each player's TPA mode (key `jtpa_mode`).
+  `global_stats`), each player's TPA mode (key `jtpa_mode`) and the
+  warning statistics (`jtpa_warn_unanswered`, `jtpa_warn_pending_seconds`,
+  `jtpa_warn_denied`, `jtpa_warn_denied_seconds`).
 
 ### `tpa`
 
@@ -127,6 +141,18 @@ Applies on restart; `/juicytpa reload` reports when a restart is needed.
   `timeoutFeedback` » `message` toggles the chat message for that event,
   `actionbar` toggles the actionbar. Request, deny and timeout events
   each notify both parties; accepts always notify.
+- `warnings` » AFK and canceller thresholds: a receiver counts as AFK
+  past `afkMinUnanswered` expiries and `afkMinPendingSeconds` total
+  pending seconds (overlapping requests count once per second), and
+  as a canceller past `cancellerMinDenied` denies and
+  `cancellerMinPendingSeconds` denied-pending seconds. Senders warned
+  about such a receiver must re-send within `confirmWindowSeconds` to
+  confirm. Receivers get at most one nudge per `nudgeCooldownSeconds`:
+  after `nudgeMinCancelStreak` straight denies or
+  `nudgeMinExpiryStreak` straight expiries (any accept resets both) the
+  nudge offers one-click Block All; after `harassMinRequests` requests
+  from one sender within `harassWindowSeconds` it offers Block player.
+  `/tpall` skips warning confirmations.
 
 ### `commands`
 
@@ -141,9 +167,9 @@ after a restart; `/juicytpa reload` reports when a restart is needed.
 ### `colors`
 
 The message color palette. Every `messages.yml` entry uses these via
-`{plain}`, `{brand}`, `{hl}`, `{error}`, `{ac}`, `{rc}` and `{sc}`,
-resolved when the message is rendered; editing a color and reloading is
-enough, the messages themselves never hardcode colors.
+`{plain}`, `{brand}`, `{hl}`, `{error}`, `{ac}`, `{rc}`, `{sc}` and
+`{lh}`, resolved when the message is rendered; editing a color and
+reloading is enough, the messages themselves never hardcode colors.
 
 ### `metrics`
 

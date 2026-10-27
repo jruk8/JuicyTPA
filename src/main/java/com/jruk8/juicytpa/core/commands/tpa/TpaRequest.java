@@ -12,12 +12,14 @@ import java.util.UUID;
  * @param receiver the player that must answer the request
  * @param receiverName the receiver's name when the request was sent
  * @param here whether the receiver teleports to the sender
+ * @param createdAt when the request was sent, in epoch milliseconds
  */
 public record TpaRequest(
         UUID sender,
         String senderName,
         UUID receiver,
         String receiverName,
-        boolean here
+        boolean here,
+        long createdAt
 ) {
 }

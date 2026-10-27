@@ -5,6 +5,8 @@ import com.jruk8.juicytpa.core.commands.CommandsRegistrar;
 import com.jruk8.juicytpa.core.commands.tpa.TpaBlockStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaModeStore;
 import com.jruk8.juicytpa.core.commands.tpa.TpaService;
+import com.jruk8.juicytpa.core.commands.tpa.TpaWarnManager;
+import com.jruk8.juicytpa.core.commands.tpa.TpaWarnStore;
 import com.jruk8.juicytpa.core.configs.ConfigRegistrar;
 import com.jruk8.juicytpa.core.messages.MessageBootstrap;
 import com.jruk8.juicytpa.core.messages.MessagesConfig;
@@ -99,11 +101,16 @@ public final class JuicyTPAPlugin extends JavaPlugin {
 
     private TpaService tpaService(
             CommandContext context, ConfigRegistrar configRegistrar, TpaUsageTracker usageTracker) {
+        var warns = new TpaWarnManager(
+                new TpaWarnStore(this.storageBootstrap::getStorage),
+                configRegistrar.getPluginConfig(),
+                System::currentTimeMillis);
         return new TpaService(
                 context,
                 configRegistrar.getPluginConfig(),
                 this.modeStore,
                 this.blockStore,
+                warns,
                 usageTracker,
                 this,
                 (task, delay) -> Bukkit.getGlobalRegionScheduler().runDelayed(this, scheduled -> task.run(), delay),

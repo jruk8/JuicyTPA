@@ -13,11 +13,13 @@ and an SQLite store for stats and modes.
 
 - **Requests** » `/tpa` to go to them, `/tpahere` to summon them, with
   chat prompts plus actionbar nudges.
-- **Modes** » Normal, Block all and Accept all per player, persisted in
-  `juicytpa.db` and cycled with a bare `/tpamode`.
+- **Modes** » Normal, Block All and Accept All per player, persisted in
+  `juicytpa.db` and cycled with a bare `/tpamode` (`/tpa` only).
 - **Concurrency** » one pending request at a time by default, or many
   with an accept-sweeps-the-rest option.
 - **Blocking** » persistent per-player blocks that beat every mode.
+- **Warnings** » AFK/canceller sender warnings with resend confirmations,
+  plus block-all and block-player nudges.
 - **Placeholders** » `%jtpa_sent%`, `%jtpa_received%` and `%jtpa_mode%`
   with per-player and global variants.
 - **Update checker** » async GitHub releases check with console and
