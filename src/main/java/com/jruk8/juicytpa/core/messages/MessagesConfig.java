@@ -91,7 +91,7 @@ public class MessagesConfig extends OkaeriConfig {
         private String requestAskBody = "{hl}{player} {plain}has sent you a {hl}TP request{plain}.";
 
         @Comment("Receiver notice body for /tpahere requests (use {player})")
-        private String requestHereBody = "{hl}{player} {plain}wants you to {hl}TP to them{plain}.";
+        private String requestHereBody = "{hl}{player} {plain}wants you to {wn}TP to them{plain}.";
 
         @Comment("Request actionbar shown to the receiver (use {player})")
         private String requestReceivedActionbar = "{ac}{hl}{player} {ac}wants to TP!";
