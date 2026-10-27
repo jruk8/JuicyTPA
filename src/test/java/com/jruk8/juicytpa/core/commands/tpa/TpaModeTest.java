@@ -33,8 +33,8 @@ class TpaModeTest {
     void shouldDisplay() {
         var names = new MessagesConfig();
         assertEquals("Normal", TpaMode.NORMAL.display(names));
-        assertEquals("Block All", TpaMode.BLOCK_ALL.display(names));
-        assertEquals("Accept All", TpaMode.ACCEPT_ALL.display(names));
+        assertEquals("<#f5c542>Block All", TpaMode.BLOCK_ALL.display(names));
+        assertEquals("<#f5535e>Accept All", TpaMode.ACCEPT_ALL.display(names));
     }
 
     @Test

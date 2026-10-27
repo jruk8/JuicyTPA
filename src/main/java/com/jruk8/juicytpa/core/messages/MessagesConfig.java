@@ -154,10 +154,10 @@ public class MessagesConfig extends OkaeriConfig {
         private String modeNormal = "Normal";
 
         @Comment("Display name of the block-all TPA mode, used in messages and placeholders")
-        private String modeBlockAll = "Block All";
+        private String modeBlockAll = "<#f5c542>Block All";
 
         @Comment("Display name of the accept-all TPA mode, used in messages and placeholders")
-        private String modeAcceptAll = "Accept All";
+        private String modeAcceptAll = "<#f5535e>Accept All";
 
         @Comment("Sent when the sender targets themselves")
         private String selfRequest = "{prefix}{error}You cannot send a TP request to yourself.";

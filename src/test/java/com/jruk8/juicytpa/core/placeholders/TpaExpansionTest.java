@@ -125,8 +125,8 @@ class TpaExpansionTest {
         when(modes.mode(selfId)).thenReturn(TpaMode.BLOCK_ALL);
         when(modes.mode(otherId)).thenReturn(TpaMode.ACCEPT_ALL);
 
-        assertEquals("Block All", expansion().onRequest(player(selfId), "mode"));
-        assertEquals("Accept All", expansion().onRequest(mock(OfflinePlayer.class), "mode_Alex"));
+        assertEquals("<#f5c542>Block All", expansion().onRequest(player(selfId), "mode"));
+        assertEquals("<#f5535e>Accept All", expansion().onRequest(mock(OfflinePlayer.class), "mode_Alex"));
     }
 
     @Test
